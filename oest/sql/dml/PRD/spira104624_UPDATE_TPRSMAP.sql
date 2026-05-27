@@ -1,0 +1,14 @@
+-- TABLE INSERT STATEMENTS dans TPRSMAP 9.6
+
+USE BREF
+go
+
+-- TABLE INSERT STATEMENTS dans TPRSMAP
+select * from  BREF..TPRSMAP where PRS_CF=751 and ACMTRS_NT in (4011,7029)
+go
+
+update BREF..TPRSMAP set PARM4='0' where PRS_CF=751 and ACMTRS_NT in (4011,7029)
+go
+
+select * from  BREF..TPRSMAP where PRS_CF=751 and ACMTRS_NT in (4011,7029)
+go

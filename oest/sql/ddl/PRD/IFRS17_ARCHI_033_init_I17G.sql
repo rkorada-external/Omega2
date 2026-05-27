@@ -1,0 +1,1314 @@
+------------------------------------------------------
+--  Mapping IFRS17_ARCHI_03_init_I17G.sql 
+------------------------------------------------------
+USE BEST
+go
+
+--[000] 02/08/2019 R. Cassis :spira:70671 mappings
+--[001] 19/08/2019 JYP/TY : spira 77798 : merge ESFD3630/ESFD3670 req 11.1 req 11.2
+--[002] 20/08/2019 JYP/Linh : spira 77079: mapping ESFD3730/3740 for INI 
+--[003] 21/08/2019 JYP : spira 70377: req 12.1 mapping ESF_RARAT 
+--[004] 22/08/2019 JYP : spira 70377: req 12.1 mapping ESFD3650 input file ESCOMPTE 
+--[005] 22/08/2019 JYP/Linh : spira 77079 : bugfix ESF_GTSII_ESCOMPTE_RAD_LKI_STD 
+--[006] 26/08/2019 JYP: spira 70377 : req 12.1 : new input file EPO_FCTRGRO
+--[007] 26/08/2019 JYP: spira 70377 : mapping ESFD3650/ESFD3730
+--[008] 29/08/2019 JYP/Linh/Lahcen: spira 77079 : mapping ESFD3740
+--[009] 29/08/2019 JYP/Linh/Lahcen: spira 77079 : new mapping ESFD3740
+--[010] 02/09/2019 JYP/Linh/Lahcen: spira 77079 : new mapping ESFD3740/ESFD3730/ESFD3690
+--[011] 04/09/2019 JYP/Lahcen: spira 77798 : mapping ESFD3630 EPO_DLDGTAA/EST_IGTAA0 , ESFD3690 FBOPRSLNK_TXT
+--[012] 05/09/2019 JYP/Linh: spira 70537 : mapping req 11.7 Inception :  ESFD3740/ESFD3730/ESFD3610
+--[013] 06/09/2019 JYP/Raf: spira 70537 : req 11.7 req 12.2 : mapping ESFD3620/ESFD3710 INI
+--[014] 09/09/2019 JYP/lahcen: spira 70537 : req 11.7: mapping ESFD3630/ESFD3710 INI
+--[015] 10/09/2019 JYP/lahcen: spira 70537 : req 11.7: mapping ESFD3630/ESFD3710 INI
+--[016] 11/09/2019 JYP/Martin: spira 70537 : req 11.7: mapping ESFD2220
+--[017] 13/09/2019 JYP/Martin: spira 70537 : req 11.7: mapping ESFD2220
+--[018] 16/09/2019 JYP/Linh: SPIRA 77079 mapping ESFD3730 ESFD3740 ESFD8100 
+--[019] 18/09/2019 JYP/Lahcen: SPIRA 70537 81087 : mapping ESFD3650/ESFD0060/ESFD3630  
+--[020] 19/09/2019 JYP: SPIRA 70537 : mapping ESFD1130/ESFD3620 INI  
+--[021] 19/09/2019 Lahcen/JYP: SPIRA 70537 : mapping ESFD3630/ESFD3690 
+--[022] 19/09/2019 Martin/JYP: SPIRA 70537 : bugfix EST_ARCSTATGTA 
+--[023] 19/09/2019 Martin/JYP: SPIRA 70537 : bugfix PERICASE_INI CLODAT
+--[024] 20/09/2019 Martin/JYP: SPIRA 73772 : bugfix EPO_DLDGTAR_E
+--[025] 20/09/2019 Lahcen/JYP: SPIRA 77798 : bugfix FBOTRLNSK_TXT
+--[026] 23/09/2019 Antoine/JYP: SPIRA 77475: mapping ESFD0060/ESFD3720
+--[027] 24/09/2019 Lahcen/JYP: SPIRA 77475 : bugfix mapping PERICASE_INI
+--[028] 26/09/2019 JYP: SPIRA 70537 : ESFD3610/ESFD3620 for inception
+--[029] 27/09/2019 Maxence/JYP: SPIRA 77475 req 11.4: mapping ESFD0060/ESFD3720 
+--[030] 01/10/2019 Lahcen/JYP: SPIRA 70537 : bugfix req 11.7
+--[031] 02/10/2019 JYP: SPIRA 70537 : req 11.7 change mapping EST_FTRSLNK_TXT
+----------------------------------------------------------------------------------------------------------
+--
+--   IDF_CT = 'I17G___'  , 'I17___' ,'IFRS4___'
+-- 
+delete BEST..TI17PERMFIL where IDF_CT in ( 'I17G___','I17___','IFRS4___' ,"*") 
+delete BEST..TI17REQCHN where   IDF_CT in (  'I17G___','I17___' ,'IFRS4___',"*") 
+--delete BEST..TI17CHN  where  IDF_CT = 'I17G___'
+delete BEST..TI17FNC where IDF_CT in   ( 'I17G___','I17___' ,'IFRS4___',"*") 
+go
+
+
+----------------------------------------------------------------------------------------------------------
+--
+-- CHAIN ESFD2220
+--
+----------------------------------------------------------------------------------------------------------
+
+delete BEST..TI17PERMFIL where IDF_CT = 'I17G_FUT_ALL_INI'
+delete BEST..TI17REQCHN where   IDF_CT = 'I17G_FUT_ALL_INI' and  CHAIN_CT="ESFD2220"
+delete BEST..TI17FNC where IDF_CT  =  "I17G_FUT_ALL_INI"
+GO
+delete BEST..TI17CHN  where CHAIN_CT="ESFD2220"
+insert into BEST..TI17CHN values ("ESFD2220","Future at inception")
+GO
+
+insert into BEST..TI17FNC values ("I17G_FUT_ALL_INI","Future at inception")
+
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD2220","I17G_FUT_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD2220","I17G_FUT_ALL_INI","")
+go
+
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EPO_FBOPRSLNK','${DFILP}/${PCH}ESPT0000_FBOPRSLNK.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EPO_FBOPRSLNK_TXT','${DFILP}/${PCH}ESPT0000_FBOPRSLNK_TXT.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EPO_FCURQUOT','${DFILP}/${PCH}ESPT0000_FCURQUOT.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EPO_FCURQUOT_TXT','${DFILP}/${PCH}ESPT0000_FCURQUOT_TXT.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FCURQUOT','${DFILP}/${PCH}ESPT0000_FCURQUOT.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FCURQUOT_TXT','${DFILP}/${PCH}ESPT0000_FCURQUOT_TXT.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FCPLACC','${DFILP}/${PCH}ESPT0000_FCPLACC.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FCLIENT','${DFILP}/${PCH}ESPT0000_FCLIENT.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FTRSLNK','${DFILP}/${PCH}ESPT0000_FTRSLNK.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FTRSLNK_TXT','${DFILP}/${PCH}ESPT0000_FTRSLNK_TXT.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FBOPRSLNK','${DFILP}/${PCH}ESPT0000_FBOPRSLNK.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FBOPRSLNK_TXT','${DFILP}/${PCH}ESPT0000_FBOPRSLNK_TXT.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FCTRFWH','${DFILP}/${PCH}ESPD0060_FCTRFWH.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FCTRGRO','${DFILP}/${PCH}ESPT0000_FCTRGRO.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FCURSII','${DFILP}/${PCH}ESPT0000_FCURSII.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FDETTRS','${DFILP}/${PCH}ESPT0000_FDETTRS.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FDETTRS_TXT','${DFILP}/${PCH}ESPT0000_FDETTRS_TXT.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FWHGTA','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FWHGTR','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_IADPERICASE','${DFILI}/${PCH}ESEH1100_IADPERICASE_INI_${CLODAT}.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_ARCSTATGTA','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_IADPERIFCI','${DFILP}/${PCH}ESPT0000_IADPERIFCI.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_IADPERIFR','${DFILP}/${PCH}ESPT0000_IADPERIFR.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FTHRHLDUWY','${DFILP}/${PCH}ESPT0000_FTHRHLDUWY.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FLOARAT','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FPRMLOA','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_DLCUMGTAA','${DFILP}/empty.dat','I','') 
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_DLCUMGTAATOT','${DFILP}/empty.dat','I','') 
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_DLGTAAPA','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_CTRESTLOSPBPAP','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FSEGEST_SOLVENCY','${DFILP}/${PCH}ESPD0060_FSEGEST_SOLVENCY${TYPEINV0}.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_DLDGTAA_CUMULS_COUR','${DFILP}/empty.dat','I','') 
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EPO_FTECLEDASO','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EPO_FTECLEDASIISO','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_DLGTAAPNAE','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_DLGTAAPRE','${DFILP}/empty.dat','I','')
+
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_DLDGTAA_E_TRNCODEBS','${DFILP}/${PCH}ESFD2220_I17G_FUT_ALL_INI_DLDGTAASII${TYPEINV0}.dat','O','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_FUTURE_EBS','${DFILP}/${PCH}ESFD2220_I17G_FUT_ALL_INI_FUTURE_${TYPEINV}.dat','O','')
+insert into TI17PERMFIL values('I17G_FUT_ALL_INI','EST_DLGTAUPUC','${DFILP}/${PCH}ESFD2220_I17G_FUT_ALL_INI_DLGTAUPUC_${TYPEINV}.dat','O','')
+
+
+GO
+
+
+----------------------------------------------------------------------------------------------------------
+--
+-- CHAIN ESFD3610
+--
+----------------------------------------------------------------------------------------------------------
+
+delete  BEST..TI17PERMFIL where IDF_CT in ( 'I17G_CSF_ALL_INI' )
+delete  BEST..TI17REQCHN where   IDF_CT in ( 'I17G_CSF_ALL_INI' ) and  CHAIN_CT="ESFD3610"
+delete  BEST..TI17FNC where IDF_CT  in ('I17G_CSF_ALL_INI')
+delete  BEST..TI17CHN  where CHAIN_CT="ESFD3610"
+
+insert into BEST..TI17CHN values ("ESFD3610","Cash flow at inception")
+insert into BEST..TI17FNC values ("I17G_CSF_ALL_INI","cashflow at inception")
+
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3610","I17G_CSF_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3610","I17G_CSF_ALL_INI","")
+
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_CURGTA','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_DLDGTAA','${DFILP}/${PCH}ESFD2220_I17G_FUT_ALL_INI_DLDGTAASII${TYPEINV0}.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_DLREGTAR','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_DLREMAJGTAR','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_DLRGTAA','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_DLSGTAA','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_DLSGTAR','${DFILP}/empty.dat','I','') 
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','DLCUMGTAA','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FBOPRSLNK','${DFILP}/${PCH}ESPT0000_FBOPRSLNK.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FBOPRSLNK_TXT','${DFILP}/${PCH}ESCJ0060_FBOPRSLNK_TXT.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FCTRFWH','${DFILP}/${PCH}ESPD0060_FCTRFWH.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FCTRGRO','${DFILP}/${PCH}ESPT0000_FCTRGRO.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FCURSII','${DFILP}/${PCH}ESPT0000_FCURSII.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FDETTRS','${DFILP}/${PCH}ESPT0000_FDETTRS.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FLIBEL2','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FPLATXCUMALL','${DFILP}/${PCH}ESPT0000_FPLATXCUMALL.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FPRSMAP','${DFILP}/${PCH}ESPT0000_FPRSMAP.dat','I','') 
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FPRSMAP_TXT','${DFILP}/${PCH}ESPT0000_FPRSMAP_TXT.dat','I','') 
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FSEGPATTERN_CSF','${DFILP}/${PCH}ESPD0060_FSEGPATTERN_CSF.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FSEGPATTERN_INF','${DFILP}/${PCH}ESPD0060_FSEGPATTERN_INF.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FSEGPATTERN_ICR','${DFILP}/${PCH}ESPD0060_FSEGPATTERN_ICR.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FSEGPATTERNFWH','${DFILP}/${PCH}ESPD0060_FSEGPATTERNFWH.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FTECLEDASII','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FTRSLNK','${DFILP}/${PCH}ESPT0000_FTRSLNK.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FTRSLNK_TXT','${DFILP}/${PCH}ESCJ0060_FTRSLNK_TXT_${PARM0_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FULAERAT','${DFILP}/${PCH}ESPD0060_FULAERAT${TYPEINV0}.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FWHGTA','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FWHGTR','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EPO_DLDGTAR_E','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_IRDPERICASE0','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_IADPERICASE','${DFILI}/${PCH}ESEH1100_IADPERICASE_INI_${CLODAT}.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_FTECLEDSII','${DFILI}/${PCH}ESFD3610_I17G_CSF_ALL_INI_FTECLEDSII.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_DLDSIIGTAA','${DFILI}/${PCH}ESFD3610_I17G_CSF_ALL_INI_DLDSIIGTAA.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_DLDSIIGTAR','${DFILI}/${PCH}ESFD3610_I17G_CSF_ALL_INI_DLDSIIGTAR.dat','I','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_DLDSIIGTR','${DFILI}/${PCH}ESFD3610_I17G_CSF_ALL_INI_DLDSIIGTR.dat','I','')
+
+
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_DLCUMGTAAR','${DFILI}/${PCH}ESFD3610_I17G_CSF_ALL_INI_DLCUMGTAAR.dat','O','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_DLCUMGTAAR_IBNR_FUTCLAIMS','${DFILP}/${PCH}ESFD3610_I17G_CSF_ALL_INI_DLCUMGTAAR_IBNR_FUTCLAIMS.dat','O','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_GTSII_CASHFLOW','${DFILP}/${PCH}ESFD3610_I17G_CSF_ALL_INI_GTSII_CASHFLOW_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_GTSII_REMAINTOPAY_ULAE','${DFILP}/${PCH}ESFD3610_I17G_CSF_ALL_INI_GTSII_RMTP_ULAE_SII${TYPEINV0}.dat','O','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_GTSII_REMAINTOPAY_ULAEINF','${DFILP}/${PCH}ESFD3610_I17G_CSF_ALL_INI_GTSII_RMTP_ULAEINF_SII${TYPEINV0}.dat','O','')
+insert into TI17PERMFIL values('I17G_CSF_ALL_INI','EST_GTSII_GLOBAL_CASHFLOW','${DFILP}/${PCH}ESFD3610_I17G_CSF_ALL_INI_GTSII_GLOBAL_CASHFLOW${TYPEINV0}_${PARM_ICLODAT_D}.dat','O','')
+
+
+
+GO
+
+
+
+----------------------------------------------------------------------------------------------------------
+--
+-- CHAIN ESFD3620
+--
+----------------------------------------------------------------------------------------------------------
+
+delete BEST..TI17PERMFIL where IDF_CT in ( 'I17G_DSC_LKI_INI', 'I17G_DSC_LKI_STD', 'I17G_DSC_DSI_STD' ,'I17G_RAD_LKI_STD','I17G_RAD_DSI_STD','I17G_RAD_LKI_INI')
+delete BEST..TI17REQCHN where   IDF_CT in ( 'I17G_DSC_LKI_INI', 'I17G_DSC_LKI_STD', 'I17G_DSC_DSI_STD','I17G_RAD_LKI_STD','I17G_RAD_DSI_STD','I17G_RAD_LKI_INI' ) and  CHAIN_CT="ESFD3620"
+delete BEST..TI17CHN  where CHAIN_CT="ESFD3620"
+
+insert into BEST..TI17CHN values ("ESFD3620","Discount at lock in rate")
+
+delete BEST..TI17FNC where IDF_CT  in ( "I17G_DSC_LKI_INI" , 'I17G_DSC_LKI_STD', 'I17G_DSC_DSI_STD', 'I17G_RAD_LKI_STD','I17G_RAD_DSI_STD','I17G_RAD_LKI_INI')
+insert into BEST..TI17FNC values ("I17G_DSC_LKI_INI","RA Discount Calculation at inception")
+insert into BEST..TI17FNC values ("I17G_DSC_LKI_STD","RA Discount Forward Calculation  current rate")
+insert into BEST..TI17FNC values ("I17G_DSC_DSI_STD","RA Discount Forward Calculation  current rate")
+insert into BEST..TI17FNC values ("I17G_RAD_LKI_STD","RA Discount risk adjustement lock in rate")
+insert into BEST..TI17FNC values ("I17G_RAD_DSI_STD","RA Discount risk adjustement current rate")
+insert into BEST..TI17FNC values ("I17G_RAD_LKI_INI","RA Discount risk adjustement at inception")
+
+
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3620","I17G_DSC_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3620","I17G_DSC_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3620","I17G_DSC_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3620","I17G_RAD_LKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3620","I17G_RAD_DSI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3620","I17G_RAD_LKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3620","I17G_RAD_LKI_INI","")
+
+
+
+
+
+--
+-- IDF_CT=I17G_DSC_LKI_INI
+--
+insert into TI17PERMFIL values('I17G_DSC_LKI_INI','EPO_FCURSII','${DFILP}/${PCH}ESPT0000_FCURSII.dat','I','')
+insert into TI17PERMFIL values('I17G_DSC_LKI_INI','ESF_FSEGPATTERNDSCf17','${DFILP}/${PCH}ESFD1130_FSEGPATTERNDSCf17.dat','I','')
+insert into TI17PERMFIL values('I17G_DSC_LKI_INI','ESF_TRERETFACCTR','${DFILP}/${PCH}ESFD1130_FRERETFACCTR_INI.dat','I','')
+insert into TI17PERMFIL values('I17G_DSC_LKI_INI','ESF_GTSII_GLOBAL_CASHFLOW','${DFILP}/${PCH}ESFD3630_I17G_IEX_ALL_INI_GTSII_GLOBAL_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_DSC_LKI_INI','ESF_GTSII_ESCOMPTE','${DFILP}/${PCH}ESFD3620_I17G_DSC_LKI_INI_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','O','')
+insert into TI17PERMFIL values('I17G_DSC_LKI_INI','ESF_GTSII_ESCOMPTE_RMNTP','${DFILP}/${PCH}ESFD3620_I17G_DSC_LKI_INI_GTSII_ESCOMPTE_RMNTP.dat','O','')
+
+
+
+--
+-- IDF_CT = I17G_RAD_LKI_INI
+--		
+insert into TI17PERMFIL values('I17G_RAD_LKI_INI','EPO_FCURSII','${DFILP}/${PCH}ESPT0000_FCURSII.dat','I','')		
+insert into TI17PERMFIL values('I17G_RAD_LKI_INI','ESF_FSEGPATTERNDSCf17','${DFILP}/${PCH}ESFD1130_FSEGPATTERNDSCf17.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_LKI_INI','ESF_TRERETFACCTR','${DFILP}/${PCH}ESFD1130_FRERETFACCTR_INI.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_LKI_INI','ESF_GTSII_GLOBAL_CASHFLOW','${DFILP}/${PCH}ESFD3650_I17G_RAD_CKI_INI_GTSII_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_LKI_INI','ESF_GTSII_ESCOMPTE','${DFILP}/${PCH}ESFD3620_I17G_RAD_LKI_INI_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','O','')
+insert into TI17PERMFIL values('I17G_RAD_LKI_INI','ESF_GTSII_ESCOMPTE_RMNTP','${DFILP}/${PCH}ESFD3620_I17G_RAD_LKI_INI_GTSII_ESCOMPTE_RMNTP.dat','O','')
+
+
+
+--
+-- IDF_CT = I17G_DSC_LKI_STD
+--
+insert into TI17PERMFIL values('I17G_DSC_LKI_STD','EPO_FCURSII','${DFILP}/${PCH}ESPT0000_FCURSII.dat','I','')		
+insert into TI17PERMFIL values('I17G_DSC_LKI_STD','ESF_FSEGPATTERNDSCf17','${DFILP}/${PCH}ESFD1130_FSEGPATTERNDSCf17.dat','I','')
+insert into TI17PERMFIL values('I17G_DSC_LKI_STD','ESF_TRERETFACCTR','${DFILP}/${PCH}ESFD1130_TRERETFACCTR.dat','I','')
+insert into TI17PERMFIL values('I17G_DSC_LKI_STD','ESF_GTSII_GLOBAL_CASHFLOW','${DFILP}/${PCH}ESFD3630_I17G_IEX_ALL_STD_GTSII_GLOBAL_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_DSC_LKI_STD','ESF_GTSII_ESCOMPTE','${DFILP}/${PCH}ESFD3620_I17G_DSC_LKI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','O','')
+insert into TI17PERMFIL values('I17G_DSC_LKI_STD','ESF_GTSII_ESCOMPTE_RMNTP','${DFILP}/${PCH}ESFD3620_I17G_DSC_LKI_STD_GTSII_ESCOMPTE_RMNTP.dat','O','')
+
+--
+-- IDF_CT = I17G_DSC_DSI_STD
+--		
+insert into TI17PERMFIL values('I17G_DSC_DSI_STD','EPO_FCURSII','${DFILP}/${PCH}ESPT0000_FCURSII.dat','I','')		
+insert into TI17PERMFIL values('I17G_DSC_DSI_STD','ESF_FSEGPATTERNDSCf17','${DFILP}/${PCH}ESFD1130_FSEGPATTERNDSCf17.dat','I','')
+insert into TI17PERMFIL values('I17G_DSC_DSI_STD','ESF_TRERETFACCTR','${DFILP}/${PCH}ESFD1130_TRERETFACCTR.dat','I','')
+insert into TI17PERMFIL values('I17G_DSC_DSI_STD','ESF_GTSII_GLOBAL_CASHFLOW','${DFILP}/${PCH}ESFD3630_I17G_IEX_ALL_STD_GTSII_GLOBAL_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_DSC_DSI_STD','ESF_GTSII_ESCOMPTE','${DFILP}/${PCH}ESFD3620_I17G_DSC_DSI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','O','')
+insert into TI17PERMFIL values('I17G_DSC_DSI_STD','ESF_GTSII_ESCOMPTE_RMNTP','${DFILP}/${PCH}ESFD3620_I17G_DSC_DSI_STD_GTSII_ESCOMPTE_RMNTP.dat','O','')
+
+
+--
+-- IDF_CT = I17G_RAD_LKI_STD
+--		
+insert into TI17PERMFIL values('I17G_RAD_LKI_STD','EPO_FCURSII','${DFILP}/${PCH}ESPT0000_FCURSII.dat','I','')		
+insert into TI17PERMFIL values('I17G_RAD_LKI_STD','ESF_FSEGPATTERNDSCf17','${DFILP}/${PCH}ESFD1130_FSEGPATTERNDSCf17.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_LKI_STD','ESF_TRERETFACCTR','${DFILP}/${PCH}ESFD1130_TRERETFACCTR.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_LKI_STD','ESF_GTSII_GLOBAL_CASHFLOW','${DFILP}/${PCH}ESFD3650_I17G_RAD_CKI_STD_GTSII_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_LKI_STD','ESF_GTSII_ESCOMPTE','${DFILP}/${PCH}ESFD3620_I17G_RAD_LKI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','O','')
+insert into TI17PERMFIL values('I17G_RAD_LKI_STD','ESF_GTSII_ESCOMPTE_RMNTP','${DFILP}/${PCH}ESFD3620_I17G_RAD_LKI_STD_GTSII_ESCOMPTE_RMNTP.dat','O','')
+
+--
+-- IDF_CT = I17G_RAD_DSI_STD
+--		
+insert into TI17PERMFIL values('I17G_RAD_DSI_STD','EPO_FCURSII','${DFILP}/${PCH}ESPT0000_FCURSII.dat','I','')		
+insert into TI17PERMFIL values('I17G_RAD_DSI_STD','ESF_FSEGPATTERNDSCf17','${DFILP}/${PCH}ESFD1130_FSEGPATTERNDSCf17.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_DSI_STD','ESF_TRERETFACCTR','${DFILP}/${PCH}ESFD1130_TRERETFACCTR.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_DSI_STD','ESF_GTSII_GLOBAL_CASHFLOW','${DFILP}/${PCH}ESFD3650_I17G_RAD_CUR_STD_GTSII_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_DSI_STD','ESF_GTSII_ESCOMPTE','${DFILP}/${PCH}ESFD3620_I17G_RAD_DSI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','O','')
+insert into TI17PERMFIL values('I17G_RAD_DSI_STD','ESF_GTSII_ESCOMPTE_RMNTP','${DFILP}/${PCH}ESFD3620_I17G_RAD_DSI_STD_GTSII_ESCOMPTE_RMNTP.dat','O','')
+
+
+go
+
+
+-- CHAIN ESFD3670 - OLD
+--
+----------------------------------------------------------------------------------------------------------
+-- remove old data
+delete BEST..TI17PERMFIL where IDF_CT = 'I17G_IAE_ALL_STD'
+delete  BEST..TI17REQCHN where   IDF_CT = 'I17G_IAE_ALL_STD' and  CHAIN_CT="ESFD3670"
+delete  BEST..TI17FNC where IDF_CT  =  "I17G_IAE_ALL_STD"
+delete  BEST..TI17CHN  where CHAIN_CT="ESFD3670"
+
+go
+
+
+----------------------------------------------------------------------------------------------------------
+--
+-- CHAIN ESFD3630 
+--
+----------------------------------------------------------------------------------------------------------
+
+---- old IDF_CT
+delete BEST..TI17PERMFIL where IDF_CT in ( 'I17G_IME_ALL_INI','I17G_IME_ALL_STD')
+delete BEST..TI17REQCHN where IDF_CT in ( 'I17G_IME_ALL_INI','I17G_IME_ALL_STD')
+delete BEST..TI17FNC where IDF_CT in ( 'I17G_IME_ALL_INI','I17G_IME_ALL_STD')
+
+----- new IDF_CT
+delete BEST..TI17PERMFIL where IDF_CT in ( 'I17G_IEX_ALL_INI','I17G_IEX_ALL_STD')
+delete BEST..TI17REQCHN where IDF_CT in ( 'I17G_IEX_ALL_INI','I17G_IEX_ALL_STD')
+delete BEST..TI17FNC where IDF_CT in ( 'I17G_IEX_ALL_INI','I17G_IEX_ALL_STD')
+
+
+delete  BEST..TI17CHN  where CHAIN_CT="ESFD3630"
+
+
+insert into BEST..TI17CHN values ("ESFD3630","Maintenance/Acquisition expenses CSF")
+
+--
+-- IDF_CT=I17G_IEX_ALL_INI
+--
+
+insert into BEST..TI17FNC values ("I17G_IEX_ALL_INI","Maintenance/Acquisition expenses CSF INI")
+
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3630","I17G_IEX_ALL_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3630","I17G_IEX_ALL_INI","")
+
+--Inputs
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'ESF_FEXPRAT', '${DFILP}/${PCH}ESFD0060_I17G____EXPRAT_${param_Context_id}_${PARM_ICLODAT_D}.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'ESF_FEXPRAT_PREVQ', '${DFILP}/${PCH}ESFD0060_I17G____EXPRAT_${param_Context_id}_${PARM_PREV_ICLODAT_D}.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'EST_FCLIENT_TXT', '${DFILP}/${PCH}ESCJ0060_FCLIENT_TXT.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'EPO_FCURQUOT', '${DFILP}/${PCH}ESPT0000_FCURQUOT.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'EST_FULAERAT', '${DFILP}/${PCH}ESPD0060_FULAERAT${TYPEINV0}.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'ESF_FMARKET', '${DFILI}/${PCH}ESFD0060_FMARKET.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'ESF_FPRSMAP_TXT', '${DFILP}/${PCH}ESFD0060_I17G____FPRSMAP_TXT_${PARM_ICLODAT_D}.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'EST_FBOPRSLNK_TXT', '${DFILP}/${ENV_PREFIX}_ESCJ0060_FBOPRSLNK_TXT.dat', 'I')
+
+
+
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'EST_IGTAA0', '${DFILP}/empty.dat' , 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'EPO_DLDGTAAPNAE', '${DFILP}/empty.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values('I17G_IEX_ALL_INI','EPO_DLDGTAA','${DFILP}/empty.dat' ,'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'EPO_DLGTAAPRE', '${DFILP}/empty.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'EPO_IADPERICASE', '${DFILI}/${PCH}ESEH1100_IADPERICASE_INI_${CLODAT}.dat', 'I')  
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'EST_FSEGPATTERN_CSF', '${DFILP}/empty.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values('I17G_IEX_ALL_INI','EPO_FCTRGRO','${DFILP}/${PCH}ESPT0000_FCTRGRO.dat','I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'EPO_GTSII_GLOBAL_CASHFLOW', '${DFILP}/${PCH}ESFD3610_I17G_CSF_ALL_INI_GTSII_GLOBAL_CASHFLOW${TYPEINV0}_${PARM_ICLODAT_D}.dat', 'I')
+
+--Outputs
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'ESF_EXPENSES', '${DFILP}/${PCH}ESFD3630_I17G_IEX_ALL_INI_EXPENSES.dat', 'O')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_INI', 'ESF_GTSII_GLOBAL_CASHFLOW', '${DFILP}/${PCH}ESFD3630_I17G_IEX_ALL_INI_GTSII_GLOBAL_CASHFLOW_${PARM_ICLODAT_D}.dat', 'O')
+
+go
+
+
+--
+-- IDF_CT = I17G_IEX_ALL_STD
+--
+insert into BEST..TI17FNC values ("I17G_IEX_ALL_STD","Maintenance/Acquisition expenses CSF STD")
+
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3630","I17G_IEX_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3630","I17G_IEX_ALL_STD","")
+
+
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'EST_IGTAA0', '`ls ${DFILI}/${PCH}ESID1900_IGTAA0_*.dat $DFILP/empty.dat 2>/dev/null | head -1`' , 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'ESF_EXPENSES', '${DFILP}/${PCH}ESFD3630_I17G_IEX_ALL_STD_EXPENSES.dat', 'O')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'ESF_FEXPRAT', '${DFILP}/${PCH}ESFD0060_I17G____EXPRAT_${param_Context_id}_${PARM_ICLODAT_D}.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'ESF_FEXPRAT_PREVQ', '${DFILP}/${PCH}ESFD0060_I17G____EXPRAT_${param_Context_id}_${PARM_PREV_ICLODAT_D}.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'EPO_DLDGTAAPNAE', '${DFILP}/${PCH}ESPT0000_DLGTAAPNAE.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values('I17G_IEX_ALL_STD','EPO_DLDGTAA','`case $TYPEINV0 in SO|CO)echo "$DFILP/${PCH}ESID2220_DLDGTAASII$TYPEINV0.dat";;*)echo "$DFILP/empty.dat";;esac`' ,'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'EPO_DLGTAAPRE', '${DFILP}/${PCH}ESPT0000_DLGTAAPRE.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'EST_FCLIENT_TXT', '${DFILP}/${PCH}ESCJ0060_FCLIENT_TXT.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'EPO_FCURQUOT', '${DFILP}/${PCH}ESPT0000_FCURQUOT.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'EPO_IADPERICASE', '${DFILP}/${PCH}ESPT0000_IADPERICASE.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'ESF_FMARKET', '${DFILI}/${PCH}ESFD0060_FMARKET.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'EST_FBOPRSLNK_TXT', '${DFILP}/${ENV_PREFIX}_ESCJ0060_FBOPRSLNK_TXT.dat', 'I')
+
+
+
+
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'EST_FSEGPATTERN_CSF', '${DFILP}/${ENV_PREFIX}_ESPD0060_FSEGPATTERN_CSF.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'EPO_FCTRGRO', '${DFILP}/${ENV_PREFIX}_ESPT0000_FCTRGRO.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'ESF_FPRSMAP_TXT', '${DFILP}/${PCH}ESFD0060_I17G____FPRSMAP_TXT_${PARM_ICLODAT_D}.dat', 'I')
+
+
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'EPO_GTSII_GLOBAL_CASHFLOW', '${DFILP}/${PCH}ESPD3610_GTSII_GLOBAL_CASHFLOW${TYPEINV0}_${PARM_ICLODAT_D}.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'EST_FULAERAT', '${DFILP}/${PCH}ESPD0060_FULAERAT${TYPEINV0}.dat', 'I')
+insert into BEST..TI17PERMFIL (idf_ct, permfil_ct, PATHPATTRN_LL, IO )
+values ('I17G_IEX_ALL_STD', 'ESF_GTSII_GLOBAL_CASHFLOW', '${DFILP}/${PCH}ESFD3630_I17G_IEX_ALL_STD_GTSII_GLOBAL_CASHFLOW_${PARM_ICLODAT_D}.dat', 'O')
+
+
+go
+
+
+----------------------------------------------------------------------------------------------------------
+--
+-- CHAIN ESFD3650
+--
+----------------------------------------------------------------------------------------------------------
+
+delete BEST..TI17PERMFIL where IDF_CT in ( 'I17G_RAD_CSF_INI', 'I17G_RAD_CKI_STD', 'I17G_RAD_CUR_STD','I17G_RAD_CKI_INI' )
+delete  BEST..TI17REQCHN where   IDF_CT in ( 'I17G_RAD_CSF_INI', 'I17G_RAD_CKI_STD', 'I17G_RAD_CUR_STD','I17G_RAD_CKI_INI' ) and  CHAIN_CT="ESFD3650"
+delete  BEST..TI17FNC where IDF_CT  in ( "I17G_RAD_CSF_INI" , 'I17G_RAD_CKI_STD', 'I17G_RAD_CUR_STD','I17G_RAD_CKI_INI' )
+delete  BEST..TI17CHN  where CHAIN_CT="ESFD3650"
+
+insert into BEST..TI17CHN values ("ESFD3650","Risk Adjustment")
+
+insert into BEST..TI17FNC values ("I17G_RAD_CSF_INI","RA at lock in rate CSF ")
+insert into BEST..TI17FNC values ("I17G_RAD_CKI_INI","RA at inception")
+insert into BEST..TI17FNC values ("I17G_RAD_CKI_STD","Risk Adjustment lock in rate")
+insert into BEST..TI17FNC values ("I17G_RAD_CUR_STD","Risk Adjustment current rate")
+
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3650","I17G_RAD_CSF_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3650","I17G_RAD_CSF_INI","")
+
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3650","I17G_RAD_CKI_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3650","I17G_RAD_CKI_STD","")
+
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3650","I17G_RAD_CUR_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3650","I17G_RAD_CUR_STD","")
+
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3650","I17G_RAD_CKI_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3650","I17G_RAD_CKI_INI","")
+
+insert into TI17PERMFIL values('I17G_RAD_CKI_STD','ESF_FRARAT','${DFILP}/${PCH}ESFD0060_I17G____RARAT_${param_Context_id}_${PARM_ICLODAT_D}.dat','I','')  
+insert into TI17PERMFIL values('I17G_RAD_CKI_STD','EPO_IADPERICASE','${DFILP}/${PCH}ESPT0000_IADPERICASE.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_STD','EPO_IRDPERICASE0','${DFILP}/${PCH}ESPT0000_IRDPERICASE0.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_STD','EPO_FSEGPATTERN_ICR','${DFILP}/${PCH}ESPD0060_FSEGPATTERN_ICR.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_STD','ESF_GTSII_ESCOMPTE','${DFILP}/${PCH}ESFD3620_I17G_DSC_LKI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_STD','ESF_GTSII_CASHFLOW_WK','${DFILI}/${PCH}ESFD3650_I17G_RAD_CKI_STD_GTSII_CASHFLOW_WK.dat','O','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_STD','ESF_GTSII_RMTP_ULAE','${DFILI}/${PCH}ESFD3650_I17G_RAD_CKI_STD_GTSII_RMTP_ULAE.dat','O','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_STD','ESF_GTSII_RMTP_ULAEINF','${DFILI}/${PCH}ESFD3650_I17G_RAD_CKI_STD_GTSII_RMTP_ULAEINF.dat','O','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_STD','ESF_GTSII_CASHFLOW','${DFILP}/${PCH}ESFD3650_I17G_RAD_CKI_STD_GTSII_CASHFLOW_${PARM_ICLODAT_D}.dat','O','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_STD','ESF_FMARKET','${DFILI}/${PCH}ESFD0060_FMARKET.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_STD','EPO_FCTRGRO','${DFILP}/${PCH}ESPT0000_FCTRGRO.dat','I','')
+
+
+insert into TI17PERMFIL values('I17G_RAD_CUR_STD','ESF_FRARAT','${DFILP}/${PCH}ESFD0060_I17G____RARAT_${param_Context_id}_${PARM_ICLODAT_D}.dat','I','')  
+insert into TI17PERMFIL values('I17G_RAD_CUR_STD','EPO_IADPERICASE','${DFILP}/${PCH}ESPT0000_IADPERICASE.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_CUR_STD','EPO_IRDPERICASE0','${DFILP}/${PCH}ESPT0000_IRDPERICASE0.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_CUR_STD','EPO_FSEGPATTERN_ICR','${DFILP}/${PCH}ESPD0060_FSEGPATTERN_ICR.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_CUR_STD','ESF_GTSII_ESCOMPTE','${DFILP}/${PCH}ESFD3620_I17G_DSC_DSI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_CUR_STD','ESF_GTSII_CASHFLOW_WK','${DFILI}/${PCH}ESFD3650_I17G_RAD_CUR_STD_GTSII_CASHFLOW_WK.dat','O','')
+insert into TI17PERMFIL values('I17G_RAD_CUR_STD','ESF_GTSII_RMTP_ULAE','${DFILI}/${PCH}ESFD3650_I17G_RAD_CUR_STD_GTSII_RMTP_ULAE.dat','O','')
+insert into TI17PERMFIL values('I17G_RAD_CUR_STD','ESF_GTSII_RMTP_ULAEINF','${DFILI}/${PCH}ESFD3650_I17G_RAD_CUR_STD_GTSII_RMTP_ULAEINF.dat','O','')
+insert into TI17PERMFIL values('I17G_RAD_CUR_STD','ESF_GTSII_CASHFLOW','${DFILP}/${PCH}ESFD3650_I17G_RAD_CUR_STD_GTSII_CASHFLOW_${PARM_ICLODAT_D}.dat','O','')
+insert into TI17PERMFIL values('I17G_RAD_CUR_STD','ESF_FMARKET','${DFILI}/${PCH}ESFD0060_FMARKET.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_CUR_STD','EPO_FCTRGRO','${DFILP}/${PCH}ESPT0000_FCTRGRO.dat','I','')
+
+
+insert into TI17PERMFIL values('I17G_RAD_CKI_INI','ESF_FRARAT','${DFILP}/${PCH}ESFD0060_I17G____RARAT_${param_Context_id}_${PARM_ICLODAT_D}.dat','I','')  
+insert into TI17PERMFIL values('I17G_RAD_CKI_INI','EPO_IADPERICASE','${DFILI}/${PCH}ESEH1100_IADPERICASE_INI_${CLODAT}.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_INI','EPO_IRDPERICASE0','${DFILP}/empty.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_INI','EPO_FSEGPATTERN_ICR','${DFILP}/${PCH}ESPD0060_FSEGPATTERN_ICR.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_INI','ESF_GTSII_ESCOMPTE','${DFILP}/${PCH}ESFD3620_I17G_DSC_LKI_INI_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_INI','ESF_GTSII_CASHFLOW_WK','${DFILI}/${PCH}ESFD3650_I17G_RAD_CKI_INI_GTSII_CASHFLOW_WK.dat','O','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_INI','ESF_GTSII_RMTP_ULAE','${DFILI}/${PCH}ESFD3650_I17G_RAD_CKI_INI_GTSII_RMTP_ULAE.dat','O','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_INI','ESF_GTSII_RMTP_ULAEINF','${DFILI}/${PCH}ESFD3650_I17G_RAD_CKI_INI_GTSII_RMTP_ULAEINF.dat','O','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_INI','ESF_GTSII_CASHFLOW','${DFILP}/${PCH}ESFD3650_I17G_RAD_CKI_INI_GTSII_CASHFLOW_${PARM_ICLODAT_D}.dat','O','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_INI','ESF_FMARKET','${DFILI}/${PCH}ESFD0060_FMARKET.dat','I','')
+insert into TI17PERMFIL values('I17G_RAD_CKI_INI','EPO_FCTRGRO','${DFILP}/${PCH}ESPT0000_FCTRGRO.dat','I','')
+
+
+go
+
+
+
+
+----------------------------------------------------------------------------------------------------------
+--
+-- CHAIN ESFD3690
+--
+----------------------------------------------------------------------------------------------------------
+
+delete BEST..TI17PERMFIL where IDF_CT in ( 'I17G_IRV_ALL_STD' )
+delete  BEST..TI17REQCHN where   IDF_CT in ( 'I17G_IRV_ALL_STD' ) and  CHAIN_CT="ESFD3690"
+delete  BEST..TI17FNC where IDF_CT  in ( 'I17G_IRV_ALL_STD' )
+delete  BEST..TI17CHN  where CHAIN_CT="ESFD3690"
+
+insert into BEST..TI17CHN values ("ESFD3690","Revenue Calculation")
+
+insert into BEST..TI17FNC values ("I17G_IRV_ALL_STD","revenue calculation")
+
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3690","I17G_IRV_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3690","I17G_IRV_ALL_STD","")
+
+insert into TI17PERMFIL values('I17G_IRV_ALL_STD','EPO_GTSII_GLOBAL_CASHFLOW','${DFILP}/${PCH}ESPD3610_GTSII_GLOBAL_CASHFLOW${TYPEINV0}_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_IRV_ALL_STD','EPO_GTSII_GLOBAL_CASHFLOW_PREV','${DFILP}/${PCH}ESPD3610_GTSII_GLOBAL_CASHFLOW${TYPEINV0}_${PARM_PREV_ICLODAT_D}.dat','I','')  
+insert into TI17PERMFIL values('I17G_IRV_ALL_STD','ESF_GTSII_CASHFLOW_INI','${DFILP}/${PCH}ESFD3610_CASHFLOW_INI.dat','I','')  
+
+insert into TI17PERMFIL values('I17G_IRV_ALL_STD','EPO_FTECLEDASII','${DFILP}/${PCH}ESPD3800_FTECLEDA${TYPEINV0}.dat','I','')  
+insert into TI17PERMFIL values('I17G_IRV_ALL_STD','EPO_FTECLEDRSII','${DFILP}/${PCH}ESPD3800_FTECLEDR${TYPEINV0}.dat','I','')  
+
+insert into TI17PERMFIL values('I17G_IRV_ALL_STD','EST_IADPERICASE','${DFILP}/${PCH}ESPT0000_IADPERICASE.dat','I','')
+insert into TI17PERMFIL values('I17G_IRV_ALL_STD','EST_IRDPERICASE0','${DFILP}/${PCH}ESPT0000_IRDPERICASE0.dat','I','')
+
+insert into TI17PERMFIL values('I17G_IRV_ALL_STD','ESF_GTSII_DSC_LKI_ESCOMPTE','${DFILP}/${PCH}ESFD3620_I17G_DSC_LKI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_IRV_ALL_STD','ESF_GTSII_RAD_LKI_ESCOMPTE','${DFILP}/${PCH}ESFD3620_I17G_RAD_LKI_STD_GTSII_ESCOMPTE.dat','I','')
+insert into TI17PERMFIL values('I17G_IRV_ALL_STD','ESF_GTSII_DSC_FWD_ESCOMPTE','${DFILP}/${PCH}ESFD3660_I17G_UWD_ALL_STD_GTSII_ESCOMPTE_FWD_${PARM_ICLODAT_D}.dat','I','')
+
+insert into TI17PERMFIL values('I17G_IRV_ALL_STD','EST_FBOPRSLNK_TXT','${DFILP}/${ENV_PREFIX}_ESCJ0060_FBOPRSLNK_TXT.dat','I','')
+insert into TI17PERMFIL values('I17G_IRV_ALL_STD','EST_FCURQUOT','${DFILP}/${PCH}ESCJ0060_FCURQUOT.dat','I','')
+
+insert into TI17PERMFIL values('I17G_IRV_ALL_STD','ESF_GTSII_IFRS17_REVENUE','${DFILP}/${PCH}ESFD3690_I17G_IRV_ALL_STD_GTSII_IFRS17_REVENUE${TYPEINV0}_${PARM_ICLODAT_D}.dat','O','')
+insert into TI17PERMFIL values('I17G_IRV_ALL_STD','ESF_GTSII_IFRS17_CSM','${DFILP}/${PCH}ESFD3690_I17G_IRV_ALL_STD_GTSII_IFRS17_CSM${TYPEINV0}_${PARM_ICLODAT_D}.dat','O','')
+
+
+
+go
+
+
+----------------------------------------------------------------------------------------------------------
+--
+-- CHAIN ESFD3710
+--
+----------------------------------------------------------------------------------------------------------
+
+delete  BEST..TI17PERMFIL where IDF_CT  in ( 'I17G_CSM_CSU_INI' , 'I17G_CSM_ALL_INI') 
+delete  BEST..TI17REQCHN where   IDF_CT in  ('I17G_CSM_CSU_INI','I17G_CSM_ALL_INI')  and  CHAIN_CT="ESFD3710"
+delete  BEST..TI17CHN  where CHAIN_CT="ESFD3710"
+delete  BEST..TI17FNC  where IDF_CT in ( "I17G_CSM_CSU_INI", "I17G_CSM_ALL_INI")
+
+insert into BEST..TI17CHN values ("ESFD3710","CSM at inception")
+insert into BEST..TI17FNC values ("I17G_CSM_CSU_INI","")
+
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3710","I17G_CSM_CSU_INI","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3710","I17G_CSM_CSU_INI","")
+
+
+insert into TI17PERMFIL values('I17G_CSM_CSU_INI','ESF_GTSII_ESCOMPTE_DSC','${DFILP}/${PCH}ESFD3620_I17G_DSC_LKI_INI_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_CSM_CSU_INI','ESF_GTSII_ESCOMPTE_RAD','${DFILP}/${PCH}ESFD3620_I17G_RAD_LKI_INI_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_CSM_CSU_INI','ESF_GTSII_CSM','${DFILP}/${PCH}ESFD3710_I17G_CSM_CSU_INI_GTSII_${PARM_ICLODAT_D}.dat','O','')
+
+
+
+go
+
+
+
+----------------------------------------------------------------------------------------------------------
+--
+-- CHAIN ESFD3720
+--
+----------------------------------------------------------------------------------------------------------
+
+---
+-- IDF_CT=I17G_CSM_CRE_INI
+---
+
+delete BEST..TI17PERMFIL where IDF_CT in ('I17G_CSM_CRE_INI')
+delete BEST..TI17REQCHN where IDF_CT in ('I17G_CSM_CRE_INI')
+delete BEST..TI17FNC where IDF_CT in ('I17G_CSM_CRE_INI')
+delete BEST..TI17CHN where CHAIN_CT='ESFD3720'
+
+insert into BEST..TI17CHN values ('ESFD3720','IFRS17 - Group - UOA definition at inception')
+insert into BEST..TI17FNC values ('I17G_CSM_CRE_INI','IFRS17 - Group - UOA definition at inception')
+
+insert into BEST..TI17REQCHN values ('I17GMINV','ESFD3720','I17G_CSM_CRE_INI','IFRS17 - Group - UOA definition at T0 (at inception) at monthly (M) initial closing (INV)')
+insert into BEST..TI17REQCHN values ('I17GMINVB','ESFD3720','I17G_CSM_CRE_INI','IFRS17 - Group - Booking UOA definition at T0 (at inception) at monthly (M) initial closing (INV)')
+insert into BEST..TI17REQCHN values ('I17GMPOS','ESFD3720','I17G_CSM_CRE_INI','IFRS17 - Group - UOA definition at T0 (at inception) at monthly (M) Post Omega Social (POS)')
+insert into BEST..TI17REQCHN values ('I17GMPOSB','ESFD3720','I17G_CSM_CRE_INI','IFRS17 - Group - Booking UOA definition at T0 (at inception) at monthly (M) initial Post Omega Social (POS)')
+insert into BEST..TI17REQCHN values ('I17GMPOC','ESFD3720','I17G_CSM_CRE_INI','IFRS17 - Group - UOA definition at T0 (at inception) at monthly (M) initial Post Omega Consolidate (POC)')						
+insert into BEST..TI17REQCHN values ('I17GMPOCB','ESFD3720','I17G_CSM_CRE_INI','')						 
+insert into BEST..TI17REQCHN values ('I17GQINV','ESFD3720','I17G_CSM_CRE_INI','')						
+insert into BEST..TI17REQCHN values ('I17GQINVB','ESFD3720','I17G_CSM_CRE_INI','')						
+insert into BEST..TI17REQCHN values ('I17GQPOS','ESFD3720','I17G_CSM_CRE_INI','')						  
+insert into BEST..TI17REQCHN values ('I17GQPOSB','ESFD3720','I17G_CSM_CRE_INI','')						
+insert into BEST..TI17REQCHN values ('I17GQPOC','ESFD3720','I17G_CSM_CRE_INI','')						
+insert into BEST..TI17REQCHN values ('I17GQPOCB','ESFD3720','I17G_CSM_CRE_INI','')						 
+insert into BEST..TI17REQCHN values ('I17GYINV','ESFD3720','I17G_CSM_CRE_INI','')						
+insert into BEST..TI17REQCHN values ('I17GYINVB','ESFD3720','I17G_CSM_CRE_INI','')						
+insert into BEST..TI17REQCHN values ('I17GYPOS','ESFD3720','I17G_CSM_CRE_INI','')						 
+insert into BEST..TI17REQCHN values ('I17GYPOSB','ESFD3720','I17G_CSM_CRE_INI','')						
+insert into BEST..TI17REQCHN values ('I17GYPOC','ESFD3720','I17G_CSM_CRE_INI','')						
+insert into BEST..TI17REQCHN values ('I17GYPOCB','ESFD3720','I17G_CSM_CRE_INI','')						 
+
+
+--Inputs
+insert into BEST..TI17PERMFIL values ('I17G_CSM_CRE_INI','ESF_IADPERICASE_INI','${DFILI}/${ENV_PREFIX}_ESEH1100_IADPERICASE_INI_${CLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values ('I17G_CSM_CRE_INI','ESF_GTSII_CSM','${DFILP}/${PCH}ESFD3710_I17G_CSM_CSU_INI_GTSII_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values ('I17G_CSM_CRE_INI','ESF_GTSII_ESCOMPTE','${DFILP}/${PCH}ESFD3620_I17G_DSC_LKI_INI_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values ('I17G_CSM_CRE_INI','ESF_TRERETFACCTR','${DFILP}/${PCH}ESFD1130_TRERETFACCTR.dat','I','')
+insert into BEST..TI17PERMFIL values ('I17G_CSM_CRE_INI','EST_FCURQUOT_TXT','${DFILP}/${PCH}ESCJ0060_FCURQUOT_TXT_${ICLODAT}.dat','I','')
+insert into BEST..TI17PERMFIL values ('I17G_CSM_CRE_INI','ESF_FUOASII','${DFILI}/${ENV_PREFIX}_ESFD0060_I17G___TUOASII_${PARM_ICLODAT_D}.dat','I','')
+
+
+--Outputs
+insert into BEST..TI17PERMFIL values ('I17G_CSM_CRE_INI','ESF_FSECIFRS','${DFILP}/${ENV_PREFIX}_ESFD3720_I17G_CSM_CRE_INI_FSECIFRS.dat','O','')
+insert into BEST..TI17PERMFIL values ('I17G_CSM_CRE_INI','ESF_FCR','${DFILP}/${ENV_PREFIX}_ESFD3720_I17G_CSM_CRE_INI_FCR.dat','O','')
+insert into BEST..TI17PERMFIL values ('I17G_CSM_CRE_INI','ESF_FSEGPROF','${DFILP}/${ENV_PREFIX}_ESFD3720_I17G_CSM_CRE_INI_FSEGPROF.dat','O','')
+
+
+GO
+
+
+
+
+----------------------------------------------------------------------------------------------------------
+--
+-- CHAIN ESFD3730 	-- I17G_SII_ALL_STD
+--
+----------------------------------------------------------------------------------------------------------
+
+delete BEST..TI17PERMFIL where IDF_CT = 'I17G_SII_ALL_STD'
+delete BEST..TI17REQCHN where   IDF_CT = 'I17G_SII_ALL_STD' and  CHAIN_CT="ESFD3730"
+delete BEST..TI17CHN  where CHAIN_CT="ESFD3730"
+delete BEST..TI17FNC  where IDF_CT =  "I17G_SII_ALL_STD"
+
+insert into BEST..TI17CHN values ("ESFD3730","Merge cashflow and discount")
+insert into BEST..TI17FNC values ("I17G_SII_ALL_STD","")
+
+insert into BEST..TI17REQCHN values ('I17GMINV',   "ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB',"ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB',"ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINV',   "ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB',"ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB',"ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINV',    "ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINVB',  "ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',   "ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',   "ESFD3730","I17G_SII_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3730","I17G_SII_ALL_STD","")
+
+
+-- output
+
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','ESF_FTECLEDSII','${DFILP}/${PCH}ESFD3730_I17G_SII_ALL_STD_FTECLEDSII_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+
+-- temporary for ESFD8601.cmd, all lines below should be moved to new chain ESFD8600.cmd
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','EPO_FTECLEDSIISO','${DFILP}/${PCH}ESPD3700_FTECLEDSIISO.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','EPO_GTSII_RISKMARGINSO','${DFILP}/${PCH}ESPD3700_GTSII_RISKMARGINSO.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','EPO_FTECLEDSIICO','${DFILP}/${PCH}ESPD3700_FTECLEDSIICO.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','EPO_GTSII_RISKMARGINCO','${DFILP}/${PCH}ESPD3700_GTSII_RISKMARGINCO.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','EPO_GTSII_RISKMARGIN','${DFILP}/${PCH}ESPD3700_GTSII_RISKMARGIN.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','EPO_FTECLEDSII','${DFILP}/${PCH}ESPD3700_FTECLEDSII.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_IFRS17_CSM_ESCOMPTE','${DFILP}/${PCH}ESFD3710_I17G_CSM_CSU_INI_GTSII_${PARM_ICLODAT_D}.dat','I','')
+
+-- input
+--**INI
+
+
+-- ESF_GTSII_GLOBAL_CASHFLOW >> ESF_GTSII_GLOBAL_CASHFLOW_STD
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_GLOBAL_CASHFLOW_INI','${DFILP}/${PCH}ESFD3630_I17G_IEX_ALL_INI_GTSII_GLOBAL_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_ESCOMPTE_LKI_INI','${DFILP}/${PCH}ESFD3620_I17G_DSC_LKI_INI_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_CASHFLOW_RAD_CKI_INI','${DFILP}/${PCH}ESFD3650_I17G_RAD_CKI_INI_GTSII_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+
+
+
+-- _I17G_DSC_ >> _ESCOMPTE_
+--**STD
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_GLOBAL_CASHFLOW_STD','${DFILP}/${PCH}ESFD3630_I17G_IEX_ALL_STD_GTSII_GLOBAL_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+
+-- 11.4 
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_ESCOMPTE_DSI_STD','${DFILP}/${PCH}ESFD3620_I17G_DSC_DSI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_ESCOMPTE_LKI_STD','${DFILP}/${PCH}ESFD3620_I17G_DSC_LKI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+
+-- 12.1
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_CASHFLOW_RAD_CUR_STD','${DFILP}/${PCH}ESFD3650_I17G_RAD_CUR_STD_GTSII_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_CASHFLOW_RAD_CKI_STD','${DFILP}/${PCH}ESFD3650_I17G_RAD_CKI_STD_GTSII_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+
+-- 11.4
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_ESCOMPTE_RAD_DSI_STD','${DFILP}/${PCH}ESFD3620_I17G_RAD_DSI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_ESCOMPTE_RAD_LKI_STD','${DFILP}/${PCH}ESFD3620_I17G_RAD_LKI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_ESCOMPTE_RAD_LKI_INI','${DFILP}/${PCH}ESFD3620_I17G_RAD_LKI_INI_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+
+
+-- 11.5 à enlever plus tard  : ESF_GTSII_UNWIND_DISCOUNT >> ESF_GTSII_ESCOMPTE_UWD_STD, ESF_GTSII_ESF_FWD_ESCOMPTE >> ESF_GTSII_ESCOMPTE_FWD_STD
+
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_ESCOMPTE_UWD_STD','${DFILP}/${PCH}ESFD3660_I17G_UWD_ALL_STD_GTSII_UNWIND_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_ESCOMPTE_FWD_STD','${DFILP}/${PCH}ESFD3660_I17G_UWD_ALL_STD_GTSII_ESCOMPTE_FWD_${PARM_ICLODAT_D}.dat','I','')
+
+
+-- temporaire 12.4
+
+insert into TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_IFRS17_REVENUE','${DFILP}/${PCH}ESFD3690_I17G_IRV_ALL_STD_GTSII_IFRS17_REVENUE${TYPEINV0}_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_SII_ALL_STD','ESF_GTSII_IFRS17_CSM','${DFILP}/${PCH}ESFD3690_I17G_IRV_ALL_STD_GTSII_IFRS17_CSM${TYPEINV0}_${PARM_ICLODAT_D}.dat','I','')
+
+
+
+go
+
+----------------------------------------------------------------------------------------------------------
+--
+-- CHAIN ESFD3740
+--
+----------------------------------------------------------------------------------------------------------
+
+delete BEST..TI17PERMFIL where IDF_CT = 'I17G_SII_GLT_STD'
+delete  BEST..TI17REQCHN where   IDF_CT = 'I17G_SII_GLT_STD' and  CHAIN_CT="ESFD3740"
+delete  BEST..TI17CHN  where CHAIN_CT="ESFD3740"
+delete  BEST..TI17FNC  where IDF_CT =  "I17G_SII_GLT_STD"
+
+insert into BEST..TI17CHN values ("ESFD3740","Calculation Paid")
+insert into BEST..TI17FNC values ("I17G_SII_GLT_STD","")
+
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3740","I17G_SII_GLT_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3740","I17G_SII_GLT_STD","")
+
+-- output
+
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_MAINT_EXPENSES_PAID','${DFILP}/${PCH}ESFD3740_I17G_SII_GLT_STD_MAINTENANCE_EXPENSES_PAID_${PARM_ICLODAT_D}.dat','O','')
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_FTECLEDA','${DFILP}/${PCH}ESFD3740_I17G_SII_GLT_STD_FTECLEDA_${PARM_ICLODAT_D}.dat','O','')
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_FTECLEDR','${DFILP}/${PCH}ESFD3740_I17G_SII_GLT_STD_FTECLEDR_${PARM_ICLODAT_D}.dat','O','')
+
+
+
+-- input
+--**INI
+
+
+-- ESF_GTSII_GLOBAL_CASHFLOW >> ESF_GTSII_GLOBAL_CASHFLOW_STD
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_GLOBAL_CASHFLOW_INI','${DFILP}/${PCH}ESFD3630_I17G_IEX_ALL_INI_GTSII_GLOBAL_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_ESCOMPTE_LKI_INI','${DFILP}/${PCH}ESFD3620_I17G_DSC_LKI_INI_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_CASHFLOW_RAD_CKI_INI','${DFILP}/${PCH}ESFD3650_I17G_RAD_CKI_INI_GTSII_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+
+
+
+-- _I17G_DSC_ >> _ESCOMPTE_
+--**STD
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_GLOBAL_CASHFLOW_STD','${DFILP}/${PCH}ESFD3630_I17G_IEX_ALL_STD_GTSII_GLOBAL_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_GLOBAL_CASHFLOW_PREV','${DFILP}/${PCH}ESFD3630_I17G_IEX_ALL_STD_GTSII_GLOBAL_CASHFLOW_${PARM_PREV_ICLODAT_D}.dat','I','')
+
+
+
+-- 11.4 
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_ESCOMPTE_DSI_STD','${DFILP}/${PCH}ESFD3620_I17G_DSC_DSI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_ESCOMPTE_LKI_STD','${DFILP}/${PCH}ESFD3620_I17G_DSC_LKI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_ESCOMPTE_RAD_LKI_INI','${DFILP}/${PCH}ESFD3620_I17G_RAD_LKI_INI_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+
+-- 12.1
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_CASHFLOW_RAD_CUR_STD','${DFILP}/${PCH}ESFD3650_I17G_RAD_CUR_STD_GTSII_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_CASHFLOW_RAD_CKI_STD','${DFILP}/${PCH}ESFD3650_I17G_RAD_CKI_STD_GTSII_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+
+-- 12.2
+insert into TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_IFRS17_CSM_ESCOMPTE','${DFILP}/${PCH}ESFD3710_I17G_CSM_CSU_INI_GTSII_${PARM_ICLODAT_D}.dat','I','')
+
+-- 11.4
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_ESCOMPTE_RAD_DSI_STD','${DFILP}/${PCH}ESFD3620_I17G_RAD_DSI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_ESCOMPTE_RAD_LKI_STD','${DFILP}/${PCH}ESFD3620_I17G_RAD_LKI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+
+
+-- 11.5 à enlever plus tard  : ESF_GTSII_UNWIND_DISCOUNT >> ESF_GTSII_ESCOMPTE_UWD_STD, ESF_GTSII_ESF_FWD_ESCOMPTE >> ESF_GTSII_ESCOMPTE_FWD_STD
+
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_ESCOMPTE_UWD_STD','${DFILP}/${PCH}ESFD3660_I17G_UWD_ALL_STD_GTSII_UNWIND_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_ESCOMPTE_FWD_STD','${DFILP}/${PCH}ESFD3660_I17G_UWD_ALL_STD_GTSII_ESCOMPTE_FWD_${PARM_ICLODAT_D}.dat','I','')
+
+
+-- temporaire 12.4
+insert into TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_IFRS17_REVENUE','${DFILP}/${PCH}ESFD3690_I17G_IRV_ALL_STD_GTSII_IFRS17_REVENUE${TYPEINV0}_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_SII_GLT_STD','ESF_GTSII_IFRS17_CSM','${DFILP}/${PCH}ESFD3690_I17G_IRV_ALL_STD_GTSII_IFRS17_CSM${TYPEINV0}_${PARM_ICLODAT_D}.dat','I','')
+
+
+
+
+go
+
+
+
+----------------------------------------------------------------------------------------------------------
+--
+-- CHAIN ESFD8100 	-- I17G_OMG_RA_STD
+--
+----------------------------------------------------------------------------------------------------------
+
+delete BEST..TI17PERMFIL where IDF_CT = 'I17G_OMG_RA_STD'
+delete  BEST..TI17REQCHN where   IDF_CT = 'I17G_OMG_RA_STD' and  CHAIN_CT="ESFD8100"
+delete  BEST..TI17CHN  where CHAIN_CT="ESFD8100"
+delete  BEST..TI17FNC  where IDF_CT =  "I17G_OMG_RA_STD"
+
+insert into BEST..TI17CHN values ("ESFD8100","Generating IFRS 17 Group RA files")
+insert into BEST..TI17FNC values ("I17G_OMG_RA_STD","")
+
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD8100","I17G_OMG_RA_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD8100","I17G_OMG_RA_STD","")
+
+-- input
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','ESF_FTECLEDSII','${DFILP}/${PCH}ESFD3730_I17G_SII_ALL_STD_FTECLEDSII_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','ESF_GTSII_RISKMARGIN','${DFILP}/${PCH}ESFD3730_I17G_SII_ALL_STD_GTSII_RISKMARGIN${TYPEINV0}_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','ESF_FTECLEDACO_ANNULMVT','${DFILP}/${PCH}ESFD3730_I17G_SII_ALL_STD_FTECLEDACO_ANNULMVT_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','') ---???
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','ESF_FTECLEDRCO_ANNULMVT','${DFILP}/${PCH}ESFD3730_I17G_SII_ALL_STD_FTECLEDRCO_ANNULMVT_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','') ---???
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','ESF_FTECLEDA','${DFILP}/${PCH}ESFD3740_I17G_SII_GLT_STD_FTECLEDA_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','ESF_FTECLEDR','${DFILP}/${PCH}ESFD3740_I17G_SII_GLT_STD_FTECLEDR_${PARM_ICLODAT_D}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','EST_FTECLEDASII','${DFILP}/${PCH}ESPD3800_FTECLEDASII${TYPEINV0}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','EST_FTECLEDA','${DFILP}/${PCH}ESPD3800_FTECLEDA${TYPEINV0}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','EST_FTECLEDRSII','${DFILP}/${PCH}ESPD3800_FTECLEDRSII${TYPEINV0}.dat','I','')
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','EST_FTECLEDR','${DFILP}/${PCH}ESPD3800_FTECLEDR${TYPEINV0}.dat','I','')
+
+
+
+-- output
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','ESF_FTECLEDARA','${PCH}ESFD8100_BSAR_${IDF_CT}_FTECLEDARA_${CLODATMAX_YEA}_${CLODATMAX_QTR}Q_${HOST_PRDSIT}.dat','O','')
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','ESF_FTECLEDRRA','${PCH}ESFD8100_BSAR_${IDF_CT}_FTECLEDRRA_${CLODATMAX_YEA}_${CLODATMAX_QTR}Q_${HOST_PRDSIT}.dat','O','')
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','ESF_FTECLEDAYTD','${PCH}ESFD8100_BSAR_${IDF_CT}_FTECLEDAYTD_${CLODATMAX_YEA}_${CLODATMAX_QTR}Q_${HOST_PRDSIT}.dat','O','')
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','ESF_FTECLEDRYTD','${PCH}ESFD8100_BSAR_${IDF_CT}_FTECLEDRYTD_${CLODATMAX_YEA}_${CLODATMAX_QTR}Q_${HOST_PRDSIT}.dat','O','')
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','ESF_FULTIMATESRA','${PCH}ESFD8100_BSAR_${IDF_CT}_FULTIMATESRA_${CLODATMAX_YEA}_${CLODATMAX_QTR}Q_${HOST_PRDSIT}.dat','O','')
+insert into BEST..TI17PERMFIL values('I17G_OMG_RA_STD','ESF_FTECLEDSIIRA','${PCH}ESFD8100_BSAR_${IDF_CT}_FTECLEDSIIRA_${CLODATMAX_YEA}_${CLODATMAX_QTR}Q_${HOST_PRDSIT}.dat','O','')
+go
+
+
+----------------------------------------------------------------------------------------------------------
+--
+-- CHAIN ESFD0060
+--
+----------------------------------------------------------------------------------------------------------
+
+delete BEST..TI17PERMFIL where IDF_CT in ( 'I17___', 'I17G___' )
+delete  BEST..TI17REQCHN where   IDF_CT in ( 'I17___', 'I17G___' )
+delete  BEST..TI17CHN  where CHAIN_CT="ESFD0060"
+
+insert into BEST..TI17CHN values ("ESFD0060","Data extraction")
+
+
+---
+-- IDF_CT=I17G___
+---
+delete  BEST..TI17FNC  where IDF_CT in ( 'I17G___'  )
+insert into BEST..TI17FNC values ("I17G___","Get data IFRS 17 GROUP")
+
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD0060","I17G___","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD0060","I17G___","")
+
+
+insert into BEST..TI17PERMFIL values('I17G___','ESF_FMARKET', '${DFILI}/${PCH}ESFD0060_FMARKET.dat','O','')
+insert into BEST..TI17PERMFIL values('I17G___','ESF_FEXPRAT', '${DFILP}/${PCH}ESFD0060_I17G____EXPRAT_${param_Context_id}_${PARM_ICLODAT_D}.dat','O','')
+insert into BEST..TI17PERMFIL values('I17G___','ESF_FRARAT', '${DFILP}/${PCH}ESFD0060_I17G____RARAT_${param_Context_id}_${PARM_ICLODAT_D}.dat','O','')
+insert into BEST..TI17PERMFIL values('I17G___','ESF_FPRSMAP_TXT', '${DFILP}/${PCH}ESFD0060_I17G____FPRSMAP_TXT_${PARM_ICLODAT_D}.dat','O','')
+insert into BEST..TI17PERMFIL values ('I17G___','ESF_FUOASII','${DFILI}/${ENV_PREFIX}_ESFD0060_I17G___TUOASII_${PARM_ICLODAT_D}.dat','O','')
+
+
+go
+
+
+----------------------------------------------------------------------------------------------------------
+--
+-- CHAIN ESFD1130
+--
+----------------------------------------------------------------------------------------------------------
+
+delete BEST..TI17PERMFIL where IDF_CT = 'I17G_DSC_ALL_STD'
+delete BEST..TI17REQCHN where IDF_CT = 'I17G_DSC_ALL_STD'
+delete BEST..TI17CHN  where CHAIN_CT='ESFD1130'
+delete BEST..TI17FNC  where IDF_CT = 'I17G_DSC_ALL_STD'
+insert into BEST..TI17FNC values ('I17G_DSC_ALL_STD','Data extraction')
+
+insert into BEST..TI17CHN values ('ESFD1130','Data extraction')
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD1130","I17G_DSC_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD1130","I17G_DSC_ALL_STD","")
+
+insert into BEST..TI17PERMFIL values('I17G_DSC_ALL_STD','ESF_FSEGPATTERNDSCf17','${DFILP}/${PCH}ESFD1130_FSEGPATTERNDSCf17.dat','O','')
+insert into BEST..TI17PERMFIL values('I17G_DSC_ALL_STD','ESF_FRERETFACCTR_INI','${DFILP}/${PCH}ESFD1130_FRERETFACCTR_INI.dat','O','')
+insert into BEST..TI17PERMFIL values('I17G_DSC_ALL_STD','ESF_TRERETFACCTR','${DFILP}/${PCH}ESFD1130_TRERETFACCTR.dat','O','')
+go
+
+
+
+----------------------------------------------------------------------------------------------------------
+--
+-- CHAIN ESFD8000
+--
+----------------------------------------------------------------------------------------------------------
+
+
+delete BEST..TI17PERMFIL where IDF_CT in ('I17G_OMG_TP_STD')
+delete BEST..TI17REQCHN where IDF_CT in ('I17G_OMG_TP_STD')
+delete BEST..TI17FNC where IDF_CT in ('I17G_OMG_TP_STD')
+delete BEST..TI17CHN where CHAIN_CT='ESFD8000'
+
+insert into BEST..TI17CHN values ('ESFD8000','IFRS17 - Group - Loading TP O2 Tables')
+insert into BEST..TI17FNC values ('I17G_OMG_TP_STD','IFRS17 - Group - Loading TP O2 Tables')
+insert into BEST..TI17REQCHN values ('I17GMINV','ESFD8000','I17G_OMG_TP_STD','IFRS17 - Group - Loading TP OMEGA Tables (at inception) at monthly (M) initial closing (INV)')
+insert into BEST..TI17REQCHN values ('I17GMINVB','ESFD8000','I17G_OMG_TP_STD','IFRS17 - Group - Booking Loading TP OMEGA Tables (at inception) at monthly (M) initial closing (INV)')
+insert into BEST..TI17REQCHN values ('I17GMPOS','ESFD8000','I17G_OMG_TP_STD','')
+insert into BEST..TI17REQCHN values ('I17GMPOSB','ESFD8000','I17G_OMG_TP_STD','')
+insert into BEST..TI17REQCHN values ('I17GMPOC','ESFD8000','I17G_OMG_TP_STD','')
+insert into BEST..TI17REQCHN values ('I17GMPOCB','ESFD8000','I17G_OMG_TP_STD','')
+insert into BEST..TI17REQCHN values ('I17GQINV','ESFD8000','I17G_OMG_TP_STD','')
+insert into BEST..TI17REQCHN values ('I17GQINVB','ESFD8000','I17G_OMG_TP_STD','')
+insert into BEST..TI17REQCHN values ('I17GQPOS','ESFD8000','I17G_OMG_TP_STD','')
+insert into BEST..TI17REQCHN values ('I17GQPOSB','ESFD8000','I17G_OMG_TP_STD','')
+insert into BEST..TI17REQCHN values ('I17GQPOC','ESFD8000','I17G_OMG_TP_STD','')
+insert into BEST..TI17REQCHN values ('I17GQPOCB','ESFD8000','I17G_OMG_TP_STD','')
+insert into BEST..TI17REQCHN values ('I17GYINV','ESFD8000','I17G_OMG_TP_STD','')
+insert into BEST..TI17REQCHN values ('I17GYINVB','ESFD8000','I17G_OMG_TP_STD','')
+insert into BEST..TI17REQCHN values ('I17GYPOS','ESFD8000','I17G_OMG_TP_STD','')
+insert into BEST..TI17REQCHN values ('I17GYPOSB','ESFD8000','I17G_OMG_TP_STD','')
+insert into BEST..TI17REQCHN values ('I17GYPOC','ESFD8000','I17G_OMG_TP_STD','')
+insert into BEST..TI17REQCHN values ('I17GYPOCB','ESFD8000','I17G_OMG_TP_STD','')
+
+
+insert into BEST..TI17PERMFIL values ('I17G_OMG_TP_STD','ESF_FSECIFRS','${DFILP}/${ENV_PREFIX}_ESFD3720_I17G_CSM_CRE_INI_FSECIFRS.dat','I','')
+insert into BEST..TI17PERMFIL values ('I17G_OMG_TP_STD','ESF_FCR','${DFILP}/${ENV_PREFIX}_ESFD3720_I17G_CSM_CRE_INI_FCR.dat','I','')
+insert into BEST..TI17PERMFIL values ('I17G_OMG_TP_STD','ESF_FSEGPROF','${DFILP}/${ENV_PREFIX}_ESFD3720_I17G_CSM_CRE_INI_FSEGPROF.dat','I','')
+
+
+
+
+----------------------------------------------------------------------------------------------------------
+--
+-- CHAIN ESFD3660
+--
+----------------------------------------------------------------------------------------------------------
+
+delete BEST..TI17PERMFIL where IDF_CT = 'I17G_UWD_ALL_STD'
+delete  BEST..TI17REQCHN where   IDF_CT = 'I17G_UWD_ALL_STD' and  CHAIN_CT="ESFD3660"
+delete  BEST..TI17CHN  where CHAIN_CT="ESFD3660"
+insert into BEST..TI17CHN values ("ESFD3660","Discount forward")
+
+delete  BEST..TI17FNC where IDF_CT  =  "I17G_UWD_ALL_STD"
+insert into BEST..TI17FNC values ("I17G_UWD_ALL_STD","Discount forward") 
+
+insert into BEST..TI17REQCHN values ('I17GMINV',  "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMINVB', "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOS',  "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOSB', "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOC',  "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GMPOCB', "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINV',  "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQINVB', "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOS',  "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOSB', "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOC',  "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GQPOCB', "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINV',  "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYINVB', "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOS',  "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOSB', "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOC',  "ESFD3660","I17G_UWD_ALL_STD","")
+insert into BEST..TI17REQCHN values ('I17GYPOCB', "ESFD3660","I17G_UWD_ALL_STD","")
+
+--
+-- IDF_CT = I17G_UWD_ALL_STD
+--
+insert into TI17PERMFIL values('I17G_UWD_ALL_STD','ESF_TRERETFACCTR','${DFILP}/${PCH}ESFD1130_TRERETFACCTR.dat','I','')
+insert into TI17PERMFIL values('I17G_UWD_ALL_STD','EPO_FCURSII','${DFILP}/${PCH}ESPT0000_FCURSII.dat','I','')
+insert into TI17PERMFIL values('I17G_UWD_ALL_STD','ESF_GTSII_GLOBAL_CASHFLOW_PREV','${DFILP}/${PCH}ESFD3630_I17G_IEX_ALL_STD_GTSII_GLOBAL_CASHFLOW_${PARM_PREV_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_UWD_ALL_STD','ESF_GTSII_GLOBAL_CASHFLOW','${DFILP}/${PCH}ESFD3630_I17G_IEX_ALL_STD_GTSII_GLOBAL_CASHFLOW_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_UWD_ALL_STD','ESF_GTSII_ESCOMPTE','${DFILP}/${PCH}ESFD3620_I17G_DSC_LKI_STD_GTSII_ESCOMPTE_${PARM_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_UWD_ALL_STD','ESF_GTSII_ESCOMPTE_PREVCLODAT','${DFILP}/${PCH}ESFD3620_I17G_DSC_LKI_STD_GTSII_ESCOMPTE_${PARM_PREV_ICLODAT_D}.dat','I','')
+insert into TI17PERMFIL values('I17G_UWD_ALL_STD','ESF_FSEGPATTERNDSCf17','${DFILP}/${PCH}ESFD1130_FSEGPATTERNDSCf17.dat','I','')
+insert into TI17PERMFIL values('I17G_UWD_ALL_STD','ESF_GTSII_ESCOMPTE_FWD','${DFILP}/${PCH}ESFD3660_I17G_UWD_ALL_STD_GTSII_ESCOMPTE_FWD_${PARM_ICLODAT_D}.dat','O','')
+insert into TI17PERMFIL values('I17G_UWD_ALL_STD','ESF_GTSII_ESCOMPTE_FWD_RMNTP','${DFILP}/${PCH}ESFD3660_I17G_UWD_ALL_STD_GTSII_ESCOMPTE_FWD_RMNTP_${PARM_ICLODAT_D}.dat','O','')
+insert into TI17PERMFIL values('I17G_UWD_ALL_STD','ESF_GTSII_UNWIND','${DFILP}/${PCH}ESFD3660_I17G_UWD_ALL_STD_GTSII_UNWIND_${PARM_ICLODAT_D}.dat','O','')
+go
+----------------------------------------------------------------------------------------------------------
+
+
+
+--select * from BEST..TI17PERMFIL

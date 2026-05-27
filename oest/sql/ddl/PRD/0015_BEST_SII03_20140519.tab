@@ -1,0 +1,10 @@
+USE BEST
+-- To alter the existing table BEST..TCTRULT
+--The script adds 3 collumns to the existing table and are used to store comment numbers.
+GO
+ALTER TABLE TCTRULT ADD
+    EGPILRMODIF_CF tinyint NULL,
+    CMTLR_NT UCMT_NT NULL,
+    CMTWP_NT UCMT_NT NULL
+GO
+

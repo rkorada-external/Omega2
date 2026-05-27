@@ -1,0 +1,12 @@
+#                               :spot:23794       LRAK
+# Chaine parameter file
+# 1 parameter
+# - mail address
+
+ADRESSE SGLA_OnGoing@scor.com
+
+# Spot : 27483 USUSA
+# Parameter indicating the number of days of SGLA GEACIN01/GEACINO2 to 
+# be retained in ${DTRANSFER}/${REMOTE_SITE}/to
+DEL_REP_DAYS 7
+

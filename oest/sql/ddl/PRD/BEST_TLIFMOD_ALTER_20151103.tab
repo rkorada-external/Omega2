@@ -1,0 +1,9 @@
+use BEST
+go
+
+/*==============================================================*/
+/* Table: TLIFMOD                                  */
+/*==============================================================*/
+
+ALTER TABLE dbo.TLIFMOD ADD DISPLAY_B UBOOLEAN_B DEFAULT 1 NOT NULL
+go

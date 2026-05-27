@@ -1,0 +1,89 @@
+
+use BEST
+go
+
+-- create domaine
+go
+IF EXISTS (SELECT * FROM systypes WHERE name='UACTIONTYP_CT')
+BEGIN
+    drop table dbo.TI17PERMFIL_H
+
+    exec sp_droptype 'UACTIONTYP_CT'
+END   
+   
+ EXEC sp_addtype 'UACTIONTYP_CT','char(1)','NOT NULL'
+   
+ IF EXISTS (SELECT * FROM systypes WHERE name='UACTIONTYP_CT')
+     PRINT '<<< CREATED DATATYPE UACTIONTYP_CT >>>'
+ ELSE
+     PRINT '<<< FAILED CREATING DATATYPE UACTIONTYP_CT >>>'
+
+go
+
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('dbo.TI17PERMFIL_H')
+            and   type = 'U')
+   drop table dbo.TI17PERMFIL_H
+go
+
+CREATE TABLE dbo.TI17PERMFIL_H
+(
+   IDF_CT               varchar(30)                    not null,
+   PERMFIL_CT           varchar(50)                    not null,
+   PATHPATTRN_LL        varchar(512)                   null,
+   IO                   char(1)                        null,
+   PERM_LL              varchar(64)                    null,
+   ACTION_D             UUPD_D
+       default getdate() not null,
+   ACTIONTYP_CT         UACTIONTYP_CT                  not null,
+   CRE_D                UUPD_D
+       default getdate() null,
+   CREUSR_CF            UL16                           null,
+   [TIMESTAMP]            TIMESTAMP                      not null,
+    CONSTRAINT TI17PERMFIL_H
+    PRIMARY KEY CLUSTERED (ACTION_D,IDF_CT,PERMFIL_CT,ACTIONTYP_CT,[TIMESTAMP])
+)
+go
+
+
+GRANT DELETE ON dbo.TI17PERMFIL_H TO GOMEGA
+go
+GRANT DELETE ON dbo.TI17PERMFIL_H TO GDBBATCH
+go
+GRANT DELETE STATISTICS ON dbo.TI17PERMFIL_H TO GOMEGA
+go
+GRANT DELETE STATISTICS ON dbo.TI17PERMFIL_H TO GDBBATCH
+go
+GRANT INSERT ON dbo.TI17PERMFIL_H TO GOMEGA
+go
+GRANT INSERT ON dbo.TI17PERMFIL_H TO GDBBATCH
+go
+GRANT REFERENCES ON dbo.TI17PERMFIL_H TO GOMEGA
+go
+GRANT REFERENCES ON dbo.TI17PERMFIL_H TO GDBBATCH
+go
+GRANT SELECT ON dbo.TI17PERMFIL_H TO GCONSULT
+go
+GRANT SELECT ON dbo.TI17PERMFIL_H TO GOMEGA
+go
+GRANT SELECT ON dbo.TI17PERMFIL_H TO GDBBATCH
+go
+GRANT TRANSFER TABLE ON dbo.TI17PERMFIL_H TO GOMEGA
+go
+GRANT TRANSFER TABLE ON dbo.TI17PERMFIL_H TO GDBBATCH
+go
+GRANT TRUNCATE TABLE ON dbo.TI17PERMFIL_H TO GOMEGA
+go
+GRANT TRUNCATE TABLE ON dbo.TI17PERMFIL_H TO GDBBATCH
+go
+GRANT UPDATE ON dbo.TI17PERMFIL_H TO GOMEGA
+go
+GRANT UPDATE ON dbo.TI17PERMFIL_H TO GDBBATCH
+go
+GRANT UPDATE STATISTICS ON dbo.TI17PERMFIL_H TO GOMEGA
+go
+GRANT UPDATE STATISTICS ON dbo.TI17PERMFIL_H TO GDBBATCH
+go
+

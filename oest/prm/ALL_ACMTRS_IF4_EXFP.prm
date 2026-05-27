@@ -1,0 +1,267 @@
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDA"
+EXTRT="ALL ACMTRS MACRO TTECLEDA IF4"
+
+
+//------------------------------------------------------------------------------------//
+// Il est possible d'utiliser une varibale VAR dans la requete QRY (sql)              //
+// Si la variable "${VAR}" n'est pas declare ici ou dans le fichier de configuration  //
+// c'est la valeur dans le fichier {EST_PARAM} qui est utilise par defaut             //
+//------------------------------------------------------------------------------------//
+QRY="
+/* REQUETE 1 */
+
+Select @@servername SERV, SSD_cf,tbo.ACMTRSL3_NT, tte.TRNCOD_CF, CUR_CF, sum (AMT_M)as AccAmount, sum (RETAMT_M) as RetAmount, count(*) as nbLines 
+from bsar..${TTECLEDA} tte,  bsar..TBOPRSLNK tbo
+where tte.BALSHEY_NF = ${BLCSHTYEA_NF}
+and tte.TRNCOD_CF = tbo.dettrs_cf
+and tte.ssd_cf in ( ${SSDCLO_LL} )
+group by SSD_cf, tbo.ACMTRSL3_NT, TRNCOD_CF, CUR_CF
+order by SSD_cf, tbo.ACMTRSL3_NT, TRNCOD_CF, CUR_CF
+
+"
+
+EOQ
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDR"
+EXTRT="ALL ACMTRS MACRO TTECLEDR IF4"
+
+QRY="
+/* REQUETE 2 */
+Select @@servername SERV, SSD_cf,tbo.ACMTRSL3_NT, tte.TRNCOD_CF, CUR_CF, sum (RETAMT_M) as RetAmount, count(*) as nbLines 
+from bsar..${TTECLEDR} tte,  bsar..TBOPRSLNK tbo
+where tte.BALSHEY_NF = ${BLCSHTYEA_NF}
+and tte.TRNCOD_CF = tbo.dettrs_cf
+and tte.ssd_cf in ( ${SSDCLO_LL} )
+group by SSD_cf, tbo.ACMTRSL3_NT, TRNCOD_CF, CUR_CF
+order by SSD_cf, tbo.ACMTRSL3_NT, TRNCOD_CF, CUR_CF
+"
+
+EOQ
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDSII"
+EXTRT="ALL ACMTRS MACRO TTECLEDSII IF4"
+
+QRY="
+/* REQUETE 3 */
+Select @@servername SERV, CLOTYP_CT, SSD_cf, ACMTRS_nt, ACMTRS3_nt, CUR_CF,PATCAT_Ct, PATTYP_Ct,  Norme_cf,DSCCUR_CF, sum (ACMAMT_M)as InitAmount, sum(totaux) as totAmount, sum(AN1) as Annee1, count(*) as nbLines
+from bsar..${TTECLEDSII}
+where  BALSHEY_NF = ${BLCSHTYEA_NF}
+and ssd_cf in ( ${SSDCLO_LL} )
+group by CLOTYP_CT, SSD_cf, ACMTRS_nt, ACMTRS3_nt, CUR_CF,PATCAT_Ct, PATTYP_Ct,Norme_cf ,  DSCCUR_CF
+order by CLOTYP_CT, SSD_cf, ACMTRS_nt, ACMTRS3_nt, CUR_CF,PATCAT_Ct, PATTYP_Ct,Norme_cf ,  DSCCUR_CF
+"
+
+EOQ
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDA"
+EXTRT="ALL ACMTRS DETAILED TTECLEDA IF4"
+
+QRY="
+/* REQUETE 4 */
+Select  @@servername SERV, SSD_cf, ACMTRSL3_NT, tte.TRNCOD_CF, CUR_CF, CTR_NF, END_NT, SEC_NF,	UWY_NF, UW_NT, RETCTR_NF, RETEND_NT, RETSEC_NF, RETRTY_NF, RETUW_NT, PLC_NT, RTO_NF,  sum (AMT_M)as AccAmount, sum (RETAMT_M) as RetAmount, count(*) as nbLines 
+from bsar..${TTECLEDA} tte,  bsar..TBOPRSLNK tbo
+where  tte.BALSHEY_NF = ${BLCSHTYEA_NF}
+and tte.TRNCOD_CF = tbo.dettrs_cf
+and tte.ssd_cf in ( ${SSDCLO_LL} )
+group by SSD_cf, ACMTRSL3_NT, tte.TRNCOD_CF, CUR_CF, CTR_NF, END_NT, SEC_NF,	UWY_NF, UW_NT,  RETCTR_NF, RETEND_NT, RETSEC_NF, RETRTY_NF, RETUW_NT, PLC_NT, RTO_NF
+order by SSD_cf, ACMTRSL3_NT, tte.TRNCOD_CF, CUR_CF, CTR_NF, END_NT, SEC_NF,	UWY_NF, UW_NT, RETCTR_NF, RETEND_NT, RETSEC_NF, RETRTY_NF, RETUW_NT, PLC_NT, RTO_NF
+"
+
+EOQ
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDR"
+EXTRT="ALL ACMTRS DETAILED TTECLEDR IF4"
+
+QRY="
+/* REQUETE 5 */
+Select @@servername SERV, SSD_cf,tbo.ACMTRSL3_NT, tte.TRNCOD_CF, tte.CUR_CF, tte.CTR_NF, tte.RETCTR_NF,  tte.RETEND_NT, tte.RETSEC_NF, tte.RETRTY_NF, tte.RETUW_NT, tte.PLC_NT, tte.RTO_NF,  sum (RETAMT_M) as RetAmount, count(*) as nbLines 
+from bsar..${TTECLEDR} tte,  bsar..TBOPRSLNK tbo
+where tte.BALSHEY_NF = ${BLCSHTYEA_NF}
+and tte.TRNCOD_CF = tbo.dettrs_cf
+and tte.ssd_cf in ( ${SSDCLO_LL} )
+group by SSD_cf,tbo.ACMTRSL3_NT, tte.TRNCOD_CF, tte.CUR_CF, tte.CTR_NF,  tte.RETCTR_NF,  tte.RETEND_NT, tte.RETSEC_NF, tte.RETRTY_NF, tte.RETUW_NT, tte.PLC_NT, tte.RTO_NF
+order by SSD_cf,tbo.ACMTRSL3_NT, tte.TRNCOD_CF, tte.CUR_CF, tte.CTR_NF,  tte.RETCTR_NF,  tte.RETEND_NT, tte.RETSEC_NF, tte.RETRTY_NF, tte.RETUW_NT, tte.PLC_NT, tte.RTO_NF
+"
+
+EOQ
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDSII"
+EXTRT="ALL ACMTRS DETAILED TTECLEDSII IF4"
+
+
+QRY="
+/* REQUETE 6 */
+Select @@servername SERV, CLOTYP_CT, SSD_cf, ACMTRS_nt, ACMTRS3_nt, CUR_CF, PATCAT_Ct, PATTYP_Ct, Norme_cf, DSCCUR_CF ,CTR_NF, END_NT,	SEC_NF,	UWY_NF,UW_NT, 
+   RETCTR_NF, RETEND_NT, RETSEC_NF, RETRTY_NF, RETUW_NT, PLC_NT, RTO_NF,
+   sum (ACMAMT_M)as InitAmount, sum(totaux) as totAmount, sum(AN1) as Annee1,count(*) as nbLines
+from bsar..${TTECLEDSII}
+where BALSHEY_NF = ${BLCSHTYEA_NF}
+and ssd_cf in ( ${SSDCLO_LL} )
+group by CLOTYP_CT, SSD_cf, ACMTRS_nt, ACMTRS3_nt, CUR_CF, PATCAT_Ct, PATTYP_Ct, Norme_cf, DSCCUR_CF ,CTR_NF, END_NT, SEC_NF,	UWY_NF,UW_NT, RETCTR_NF, RETEND_NT, RETSEC_NF, RETRTY_NF, RETUW_NT, PLC_NT, RTO_NF 
+order by CLOTYP_CT, SSD_cf, ACMTRS_nt, ACMTRS3_nt, CUR_CF, PATCAT_Ct, PATTYP_Ct, Norme_cf, DSCCUR_CF ,CTR_NF, END_NT, SEC_NF,	UWY_NF,UW_NT, RETCTR_NF, RETEND_NT, RETSEC_NF, RETRTY_NF, RETUW_NT, PLC_NT, RTO_NF
+"
+
+EOQ
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDSII"
+EXTRT="FUTUR MACRO TTECLEDSII IF4"
+
+QRY="
+/* REQUETE 7 */
+select CLOTYP_CT, norme_cf, acmtrs_nt, ACMTRS3_NT, patcat_ct, pattyp_ct, sum(acmamt_m) as 'ACMAMT',sum(Totaux) as 'Totaux', ssd_cf, cur_cf, count(*) as nbLines into #result 
+from bsar..${TTECLEDSII}
+where ACMTRS3_NT in (
+'1052',
+'1053',
+'2051',
+'2052',
+'2053',
+'2054',
+'3017',
+'3201',
+'1051',
+'1052',
+'2051',
+'3017',
+'3201')
+and  norme_cf in ('I17G', 'I17P','I17L')
+and balshey_nf = ${BLCSHTYEA_NF}
+and prs_cf=751
+and ssd_cf in ( ${SSDCLO_LL} )
+group by CLOTYP_CT, norme_cf , ssd_cf, cur_cf, acmtrs_nt, ACMTRS3_NT, patcat_ct, pattyp_ct
+order by CLOTYP_CT, norme_cf , ssd_cf, cur_cf, acmtrs_nt, ACMTRS3_NT,patcat_ct, pattyp_ct
+
+--select * from #result
+
+/*convertion all amounts in euro*/
+select CLOTYP_CT, a.ssd_cf, a.acmtrs_nt, ACMTRS3_NT, a.patcat_ct, a.pattyp_ct, nbLines, acmamt_eur=acmamt*exc_r into #result_convert_eur
+from #result a , bref..tcurquot b
+where b.ssd_cf = a.ssd_cf and b.cur_cf = a.cur_cf
+and b.exc_d = '${BLCSHTYEA_NF}0331'
+--group by  CLOTYP_CT, a.ssd_cf, a.acmtrs_nt ,acmtrs3_nt,a.patcat_ct, a.pattyp_ct
+--order by  CLOTYP_CT, a.ssd_cf, a.acmtrs_nt ,acmtrs3_nt,a.patcat_ct, a.pattyp_ct
+
+/* acmtrs label
+select c.CLOTYP_CT, c.ssd_cf, a.acmtrs_nt, a.acmtrs_gl , ACMTRS3_NT, patcat_ct, pattyp_ct, nbLines, ISNULL(convert(decimal(20,3), sum(acmamt_eur)),NULL) as acmamt_eur 
+from #result_convert_eur c, bref..TACMTRS a 
+where a.acmtrs_nt= c.acmtrs_nt
+and prs_cf =750
+group by  CLOTYP_CT, c.ssd_cf, a.acmtrs_nt, a.acmtrs_gl ,acmtrs3_nt,patcat_ct, pattyp_ct
+order by  CLOTYP_CT, c.ssd_cf, a.acmtrs_nt, a.acmtrs_gl ,acmtrs3_nt,patcat_ct, pattyp_ct
+ 
+drop table #result_convert_eur */
+drop table #result
+"
+
+EOQ
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDA"
+EXTRT="FUTUR MACRO TTECLEDA IF4"
+
+QRY="
+/* REQUETE 8 */
+select  'REQ 10.13' Req, 'Cancel Fixed Commission Written Remaining Retro Estimates' Label, '2A120122' trncod_cf, ${BLCSHTYEA_NF} balshey_nf into #tmpcod
+
+insert into #tmpcod values (  'REQ 10.04','Future Variable Premium' , '1A100022', ${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.01', 'Premium Written Remaining Estimates' , '1A100112', ${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  ' ', 'Cancel Premium Written Remaining Estimates' , '1A100122', ${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.05','Future Fixed Charges','1A120012',${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.04','Future Variable Charges', '1A120022', ${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.04','Future Brokerage', '1A120032',${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.13','Fixed Commission Written Remaining Estimates', '1A120112',${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.13','Cancel Fixed Commission Written Remaining Estimates', '1A120122',${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.12','Future Loss corridor', '1A200702',${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  ' ','Futures Profit and Loss Commissions', '1A120042', ${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.13','Brokerage Written Remaining Estimates', '1A120412', ${BLCSHTYEA_NF})
+insert into #tmpcod values (  'REQ 10.13','Variable�Written Remaining Estimates', '1A120312', ${BLCSHTYEA_NF})
+insert into #tmpcod values (  'REQ 10.13','Cancel Brokerage Written Remaining Estimates', '1A120422', ${BLCSHTYEA_NF})
+insert into #tmpcod values (  'REQ 10.13','Cancel Variable Written Remaining Estimates', '1A120322', ${BLCSHTYEA_NF})
+insert into #tmpcod values (  'REQ 10.06','Future Claims', '1A494302',${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ10.04','Future Fixed Premium', '1A100012',${BLCSHTYEA_NF}) 
+
+insert into #tmpcod values (  'REQ10.04','Future Retro Fixed Premium', '2A100012',${BLCSHTYEA_NF})
+insert into #tmpcod values (  'REQ 10.04','Future Retro Variable Premium', '2A100022',${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.01','Premium Written Remaining Retro Estimates', '2A100112',${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.04','Future Retro Brokerage', '2A120032',${BLCSHTYEA_NF})
+insert into #tmpcod values (  ' ','Cancel Premium Written Remaining Retro Estimates', '2A100122',${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.05','Future Retro Fixed Charges', '2A120012',${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.04','Future Retro Variable Charges', '2A120022',${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.04','Future Retro Brokerage', '2A120032',${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.13', 'Fixed Commission Written Remaining Retro Estimates', '2A120112',${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ10.04','Future Retro Override Commission ', '2A121212',${BLCSHTYEA_NF})
+insert into #tmpcod values (  'REQ10.12','Future Loss corridor', '2A200702',${BLCSHTYEA_NF}) --
+insert into #tmpcod values (  'REQ 10.06','Future Retro Claims', '2A494302',${BLCSHTYEA_NF}) --
+insert into #tmpcod values (  ' ','Futures Profit and Loss Commissions Retro', '2A120042', ${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.13','Brokerage Written Remaining Estimates Retro- REQ 10.13', '2A120412', ${BLCSHTYEA_NF}) 
+insert into #tmpcod values (  'REQ 10.13','Variable�Written Remaining Estimates Retro- REQ 10.13', '2A120312', ${BLCSHTYEA_NF}) 
+
+
+select distinct (b.Label), b.trncod_cf ,b.Req, count (a.TRNCOD_CF) as 'NB_ROWS', ISNULL(sum(AMT_M),NULL) as 'AMT_M', ssd_cf, cur_cf into #result
+from BSAR..${TTECLEDA} a right  join #tmpcod b on (a.TRNCOD_CF = b.trncod_cf and a.BALSHEY_NF = b.balshey_nf) where a.ssd_cf in ( ${SSDCLO_LL} )
+group by b.Label, b.trncod_cf , b.Req, a.ssd_cf, cur_cf
+order by b.Label, b.trncod_cf , b.Req, a.ssd_cf, cur_cf
+
+--select * from #result
+
+
+--convertion des montants en euro
+select a.*,mt_eur=amt_m*exc_r into #result_convert_eur 
+from #result a , bref..tcurquot b
+where b.ssd_cf = a.ssd_cf and b.cur_cf = a.cur_cf
+and b.exc_d = '${BLCSHTYEA_NF}0331'
+
+--select * from #result_convert_eur
+--
+
+select a.ssd_cf, b.Label, b.trncod_cf , b.req, ISNULL(sum(a.NB_ROWS),0) as nb_rows,  ISNULL(convert(decimal(20,3), sum(mt_eur)),NULL) as 'mt_eur'
+from #result_convert_eur a right  join #tmpcod b on (a.TRNCOD_CF = b.trncod_cf)
+group by b.Label, b.trncod_cf , b.Req, a.ssd_cf, cur_cf
+order by b.Label, b.trncod_cf , b.Req, a.ssd_cf, cur_cf
+
+drop table #tmpcod
+drop table #result
+drop table #result_convert_eur
+"
+
+EOQ
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDA"
+EXTRT="TC MACRO TTECLEDA IF4"
+
+QRY="
+/* REQUETE 9 */
+select  trncod_cf , count (TRNCOD_CF) as 'NB_ROWS', ISNULL(sum(AMT_M),NULL) as 'AMT_M', cur_cf, ssd_cf into #result
+from BSAR..${TTECLEDA}
+where balshey_nf = ${BLCSHTYEA_NF}
+and ssd_cf in (2,20)
+and cur_cf = 'EUR'
+--and ssd_cf in ( 1,2,3,4,5,6,7,12,15,16,17,18,19,23 )
+group by ssd_cf, TRNCOD_CF, cur_cf
+order by ssd_cf, TRNCOD_CF, cur_cf
+
+select trncod_cf, NB_ROWS, AMT_M, cur_cf, ssd_cf from #result
+
+
+--convertion des montants en euro
+--select a.*,mt_eur=amt_m*exc_r into #result_convert_eur
+--from #result a , bref..tcurquot b
+--where b.ssd_cf = a.ssd_cf and b.cur_cf = a.cur_cf
+--and b.exc_d = '${BLCSHTYEA_NF}0331'
+--group by a.ssd_cf, TRNCOD_CF
+--order by a.ssd_cf, TRNCOD_CF
+--
+--select * from #result_convert_eur
+
+drop table #result
+--drop table #result_convert_eur
+"

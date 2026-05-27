@@ -1,0 +1,22 @@
+# Parameters List
+
+# BLCSHT_D         Balance sheet date
+# BALSHEY_NF       Balance sheet year
+# BALSHTMTH_NF     Balance sheet_month
+# ESTIM_B          0/1 -> si 1, on traite les postes Estimations
+# FORCEBILAN       Flag Forcé Bilan à à 31/12/N-1 (1=Oui par Défaut / 0= Bilan N préservé)
+# GTRETRO          0/1 -> 0= sans retro / 1= avec retro
+# ENVOI            0/1 -> 0= traitement de reception des fichiers uniquement / 1= generation des fichiers et envoi
+# RECEPT           0/1 -> 0= traitement d'envoi des fichiers uniquement / 1= reception et integration des fichiers
+
+BLCSHT_D 20071031
+BALSHEY_NF 2007
+BALSHTMTH_NF 10
+ESTIM_B 0
+FORCEBILAN 0
+GTRETRO 0
+ENVOI 1
+RECEPT 0
+
+
+

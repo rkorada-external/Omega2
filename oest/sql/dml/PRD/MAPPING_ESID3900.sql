@@ -1,0 +1,52 @@
+-------------------------------
+--mapping of  ESID3900
+
+	----------   Clean tables   ---------------------
+
+	delete BEST..TI17PERMFIL where IDF_CT in  ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESID3900')
+	delete BEST..TI17REQFNC where     IDF_CT  in ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESID3900')
+	delete BEST..TI17FNC where CHAIN_CT='ESID3900'
+	delete BEST..TI17CHN  where CHAIN_CT='ESID3900'
+
+	insert into BEST..TI17CHN values ('ESID3900',  '')
+
+	----------IDF_CT:   ESID3900 ------------------
+
+		insert into BEST..TI17FNC values ('ESID3900',' ','ESID3900',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FCESANT','${DFILP}/${ENV_PREFIX}_ESIX7000_FCESANT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FDETTRS','${DFILP}/${ENV_PREFIX}_ESCJ0060_FDETTRS.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FPLCANT','${DFILP}/${ENV_PREFIX}_ESIX7000_FPLCANT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FTRSLNK','${DFILP}/${ENV_PREFIX}_ESCJ0060_FTRSLNK.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FCURQUOT','${DFILP}/${ENV_PREFIX}_ESCJ0060_FCURQUOT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_ARCSTATGTA','${DFILP}/${ENV_PREFIX}_ESIX7000_ARCSTATGTA.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FCPLACC','${DFILP}/${ENV_PREFIX}_ESID0560_FCPLACC_INV_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FAPR','${DFILP}/${ENV_PREFIX}_ESID0560_FAPR_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FSOBBLOB','${DFILP}/${ENV_PREFIX}_ESCJ0060_FSOBBLOB_INV_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FAMPROT','${DFILP}/${ENV_PREFIX}_ESID0560_FAMPROT_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FCTRULT','${DFILP}/${ENV_PREFIX}_ESID0560_FCTRULT_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_TOTGTAA','${DFILP}/${ENV_PREFIX}_ESID2060_TOTGTAA_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_IADPERICASE','${DFILP}/${ENV_PREFIX}_ESID0560_IADPERICASE_INV_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FBSEGEST','${DFILP}/${ENV_PREFIX}_ESEH1110_FBSEGEST_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FCESSION','${DFILP}/${ENV_PREFIX}_ESID0560_FCESSION_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FPLACEMT','${DFILP}/${ENV_PREFIX}_ESID0560_FPLACEMT_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FUNDSTA0','${DFILP}/${ENV_PREFIX}_ESEH1110_FUNDSTA0_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FCTRGROBO','${DFILP}/${ENV_PREFIX}_ESID0560_FCTRGROBO_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_IADPERIFCT','${DFILP}/${ENV_PREFIX}_ESID0560_IADPERIFCT_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FCTRSTAT','${DFILP}/${ENV_PREFIX}_ESID3900_FCTRSTAT_I4I_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FSEGSTAT','${DFILP}/${ENV_PREFIX}_ESID3900_FSEGSTAT_I4I_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FCTRSTAT_EBS','${DFILP}/${ENV_PREFIX}_ESID3900_FCTRSTAT_EBS_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FSEGSTAT_EBS','${DFILP}/${ENV_PREFIX}_ESID3900_FSEGSTAT_EBS_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FCTRSTAT_IFRS','${DFILP}/${ENV_PREFIX}_ESID3900_FCTRSTAT_I4I_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESID3900',  'EST_FSEGSTAT_IFRS','${DFILP}/${ENV_PREFIX}_ESID3900_FSEGSTAT_I4I_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I4IMINV',  'ESID3900','')
+			insert into BEST..TI17REQFNC values ('I4IQINV',  'ESID3900','@variante')
+			insert into BEST..TI17REQFNC values ('I4IYINV',  'ESID3900','@variante')
+go
+

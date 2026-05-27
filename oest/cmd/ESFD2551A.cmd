@@ -1,0 +1,317 @@
+#!/bin/ksh
+#=============================================================================
+# nom de l'application    : ESTIMATIONS - INVENTAIRE
+#                                 Fusion des GT retrocession
+#                                 Ajout du poste de contrepartie
+# nom du script SHELL : ESID2563.cmd
+# revision            :
+# date de creation    : 14/10/2015
+# auteur              : Philippe PEZOUT
+# references des specifications : :spot:
+#-----------------------------------------------------------------------------
+# description
+#   Retrocession merge
+#   Double entry transaction code addition
+#
+# Input files
+#       EST_DLDVGTR                 DFILI
+#       EST_DLGTRSNEM               DFILI
+#       EST_DLREGTR                 DFILP
+#       EST_DLREMAJGTR              DFILP
+#       EST_DLRNPGTR                DFILP
+#       EST_DLRPGTR                 DFILP
+#       EST_DLRTCGTR                DFILP
+#       EST_DLRTFGTR                DFILP
+#       EST_DLRTGTR                 DFILP
+#       EST_DLSGTR                  DFILI
+#       EST_DLVGTR                  DFILP
+#       EST_FDETTRS                 DFILI
+#       EST_IRDVPERICASE            DFILP
+#
+# Output files
+#       EST_DLDVGTR       DFILI
+#
+# Launch C program ESTM2561 ESTM7603
+#
+# job launched by ESID4000.cmd
+#
+#-----------------------------------------------------------------------------
+# historiques des modifications
+#_________________
+#[01] 02/11/2015 P PEZOUT :spot:29615 EST45 gestion des doubles bouclettes RETRO et D�connexion de l'EBS en variante 3 en INV
+#[02] 22/01/2016 Florent  :spot:30087 prise en compte de 4 versions des ES dans EST_DLSGTR
+#[03] 17/11/2016 Florent  :spot:31263 :spira:57394 Correction car les ES �taient mise 2 fois dans un SORT pour le POC EBS
+#[04] 17/04/2019 R. Cassis :spira:65656 Normalisation fichiers entre IFRS et EBS
+#[05] 01/10/2020 JYP :spira:83609 : microAOC : add IB into DFILT files
+#[06] 22/12/2020 : M.NAJI   :. SPIRA 91531 
+#						 	 . Remplacement du mapping en dur par un mapping directement dans la table BES..TI17PERMFIL
+#[07] 21/06/2021  M.NAJI   : Spira 95833  remplacment de EST_ESPD2550_COND2 par NORME_CF
+#[07] 24/03/2023  MZM   : SPIRA 108791 PROD - Missing Internal Assumed generated from AE booked on Internal Retro /  Prise en compte du fichier des AE 
+#[08] 17/04/2024 M.NAJI	  :Spira 111511 Optimisation ESFD2550
+#[09] 06/11/2024 Mr JYP	  :Spira 111665/112295 wrong SSD/ESB for retro
+#[10] 02/12/2024 MZM  spira 111435 OMEGA Life IFRS17 IO mirroring management /  Prise en compte des AE I17 LIFE
+#=================================================================================================================================
+#set -x
+
+# Call generic functions
+. ${DUTI}/fctgen.cmd
+
+# Initialisation of the Job
+JOBINIT
+
+# Parameters
+
+RETTHRESHOLD=$1
+CRE_D=$2
+DBCLO_D=$3
+TYPEINV=$4
+NORME=$5
+
+
+
+
+
+NSTEP=${NJOB}_02
+#-----------------------------------------------------------------------------
+LIBEL="Tri de ${EST_IRDVPERICASE} Extended with TFAMCHG_O"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${EST_IRDVPERICASE} 1000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_IRDVPERICASE_O.dat 1000 1"
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS CTR_NF 3:1 - 3:, END_NT 4:1 - 4:, SEC_NF 5:1 - 5:, UWY_NF 6:1 - 6:, UW_NT 7:1 - 7:
+/KEYS CTR_NF, END_NT, SEC_NF, UWY_NF, UW_NT
+exit
+EOF
+SORT
+
+if [ "${EST_ESID2560_COND1}" = "Y" -a "${TYPEINV}" = "INV" ]
+then
+  NSTEP=${NJOB}_12
+  #-----------------------------------------------------------------------------
+  LIBEL="Merging and sorting acceptance TL SNEM files..."
+  SORT_WDIR=${SORTWORK}
+  SORT_CMD=`CFTMP`
+  SORT_I=${EST_DLGTRSNEM}
+  SORT_O=${DFILT}/${NSTEP}_${IB}_SORT_DLGTRSNEM_O.dat
+  INPUT_TEXT $SORT_CMD <<EOF
+/FIELDS SSD_CF     1:1 - 1:EN,
+        TRNCOD_CF  6:1 - 6:,
+        RETCTR_NF 24:1 - 24:,
+        RETEND_NT 25:1 - 25:,
+        RETSEC_NF 26:1 - 26:,
+        RTY_NF    27:1 - 27:,
+        RETUW_NT  28:1 - 28:
+/KEYS RETCTR_NF,
+      RETEND_NT,
+      RETSEC_NF,
+      RTY_NF,
+      RETUW_NT
+/CONDITION DECENNALE ((TRNCOD_CF = '21423002' OR TRNCOD_CF = '21494102') AND (SSD_CF = 2 OR SSD_CF = 3 OR SSD_CF = 12))
+/OUTFILE ${SORT_O}
+/OMIT DECENNALE
+exit
+EOF
+  SORT
+
+    NSTEP=${NJOB}_15
+    #----------------------------------------------------------------------------
+    LIBEL="DLGTRSNEM  treatment"
+    PRG=ESTM2567
+    export ${PRG}_I1=${DFILT}/${NJOB}_02_${IB}_SORT_IRDVPERICASE_O.dat
+    export ${PRG}_I2=${DFILT}/${NJOB}_12_${IB}_SORT_DLGTRSNEM_O.dat
+    export ${PRG}_O1=${DFILT}/${NSTEP}_${IB}_${PRG}_DLGTRSNEM_O.dat
+    EXECPRG
+else
+    NSTEP=${NJOB}_15
+    #----------------------------------------------------------------------------
+    LIBEL="touch files _DLGTRSNEM_O"
+    EXECKSH_MODE=P
+    EXECKSH "touch ${DFILT}/${NJOB}_15_${IB}_ESTM2567_DLGTRSNEM_O.dat"
+fi
+
+
+NSTEP=${NJOB}_18
+#-----------------------------------------------------------------------------
+LIBEL="Fusion des GT retrocession"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_NOINFILE=YES
+SORT_I="${DFILP}/empty.dat    1000 1"
+SORT_I2="${DFILP}/empty.dat    1000 1"
+SORT_I3="${EST_DLSGTR} 1000 1"
+SORT_I4="${ESF_DLSGTR_AE}  1000 1"
+SORT_I5="${DFILT}/${NJOB}_15_${IB}_ESTM2567_DLGTRSNEM_O.dat 1000 1"
+if [ "${TYPEINV}" = "INV" ]
+then
+  SORT_I6="${EST_DLVGTR} 1000 1"
+  SORT_I7="${EST_DLRTCGTR} 1000 1"
+  SORT_I8="${EST_DLRTGTR} 1000 1"
+  SORT_I9="${EST_DLRPGTR} 1000 1"
+  SORT_I10="${EST_DLRNPGTR} 1000 1"
+  SORT_I11="${EST_DLRTFGTR} 1000 1"
+  #SORT_I11="${EST_DLASIIGTR} 1000 1" #�tait pour l'EBS en INV
+fi
+# inventaire solvency EBS, [01] plus d'EBS en variante 3 en INV
+#[007]
+#if [ "${EST_ESPD2550_COND2}" = "Y" -a "${TYPEINV}" != "INV" ]
+if [ "${NORME_CF}" = "EBS"  ]
+then
+  SORT_I12="${EST_DLDSIIGTR} 1000 1"
+fi
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_DVGTR_O.dat 1000 1"
+INPUT_TEXT $SORT_CMD <<EOF
+/FIELDS TRNCOD_CF    6:1 -  6:,
+        ORICOD_LS   57:1 - 57:,
+        RETRO       24:1 - 34:,
+        PLCRTO      36:1 - 37:
+/KEYS TRNCOD_CF
+/OUTFILE ${SORT_O}
+exit
+EOF
+SORT
+
+
+NSTEP=${NJOB}_20
+#------------------------------------------------------------------------------
+LIBEL="Get SSD/ESB from Pericase retro $EST_IRDVPERICASE "
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_18_${IB}_SORT_DVGTR_O.dat 1000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_DVGTR_O.dat  1000 1 "
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS SSD_CF           1:1 -  1:,
+        ESB_CF           2:1 -  2:,
+        CTR_NF          24:1 - 24:,
+        END_NT          25:1 - 25:,
+        SEC_NF          26:1 - 26:,
+        UWY_NF          27:1 - 27:,
+        UW_NT           28:1 - 28:,
+        all_cols1        1:1 - 118:,
+        PER_SSD_CF       1:1 -  1:,
+        PER_CTR_NF       3:1 -  3:,
+        PER_END_NT       4:1 -  4:,
+        PER_SEC_NF       5:1 -  5:,
+        PER_UWY_NF       6:1 -  6:,
+        PER_UW_NT        7:1 -  7:,
+        PER_ESB_CF       8:1 -  8:
+/joinkeys
+        CTR_NF
+       ,END_NT
+       ,SEC_NF
+       ,UWY_NF
+       ,UW_NT
+/INFILE ${EST_IRDVPERICASE} 1000 1 "~"
+/joinkeys
+        PER_CTR_NF
+       ,PER_END_NT
+       ,PER_SEC_NF
+       ,PER_UWY_NF
+       ,PER_UW_NT
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE   ${SORT_O}
+/REFORMAT
+        leftside:all_cols1
+       ,rightside:PER_ESB_CF,PER_SSD_CF
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_22
+#------------------------------------------------------------------------------
+LIBEL="Replace SSD/ESB into FTECLEDR DVGTR "
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_20_${IB}_SORT_DVGTR_O.dat 1000 1 "
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_DVGTR_O.dat 1000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS SSD_CF           1:1 -   1:,
+        ESB_CF           2:1 -   2:,
+        TRNCOD1_CF       6:1 -   6:1,
+        CTR_NF           8:1 -   8:,
+        END_NT           9:1 -   9:,
+        SEC_NF          10:1 -  10:,
+        UWY_NF          11:1 -  11:,
+        UW_NT           12:1 -  12:,
+        all_cols1        3:1 - 118:,
+        PER_ESB_CF     119:1 - 119:,
+        PER_SSD_CF     120:1 - 120:
+/CONDITION retro (TRNCOD1_CF = "2" OR TRNCOD1_CF = "4") and PER_ESB_CF != "" and PER_SSD_CF != ""
+/DERIVEDFIELD PER2_ESB_CF if retro then PER_ESB_CF else ESB_CF
+/DERIVEDFIELD PER2_SSD_CF if retro then PER_SSD_CF else SSD_CF
+/OUTFILE   ${SORT_O}
+/REFORMAT PER2_SSD_CF, PER2_ESB_CF, all_cols1
+exit
+EOF
+SORT
+
+
+
+NSTEP=${NJOB}_35
+#-----------------------------------------------------------------------------
+LIBEL="Double entry transaction code addition in dDVGTR in progress ..."
+PRG=ESTM7603
+export ${PRG}_I1=${DFILT}/${NJOB}_22_${IB}_SORT_DVGTR_O.dat
+export ${PRG}_I2=${EST_FDETTRS}
+export ${PRG}_O1=${EST_DLDVGTR1}
+EXECPRG
+
+
+
+NSTEP=${NJOB}_40
+# Begin sort
+#-----------------------------------------------------------------------------
+LIBEL="Sorting DLDVGTR TL file"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${EST_DLDVGTR1}  1000 1"
+SORT_O=${DFILT}/${NSTEP}_${IB}_SORT_GTR_O.dat
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS TRNCOD_CF        6:1 - 6 :,
+        TRNCOD3_CF       6:3 - 6 :6,
+        RETCTR_NF       24:1 - 24:,
+        RETEND_NT       25:1 - 25:,
+        RETSEC_NF       26:1 - 26:,
+        RTY_NF          27:1 - 27:,
+        RETUW_NT        28:1 - 28:,
+        RETOCCYEA_NF    29:1 - 29:,
+        RETACY_NF       30:1 - 30:,
+        RETSCOSTRMTH_NF 31:1 - 31:,
+        RETSCOENDMTH_NF 32:1 - 32:,
+        RCL_NF          33:1 - 33:,
+        RETCUR_CF       34:1 - 34:,
+        PLC_NT          36:1 - 36:
+/KEYS RETCTR_NF,
+      RETSEC_NF,
+      RTY_NF,
+      PLC_NT
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_45
+# Begin C program
+#------------------------------------------------------------------------------
+LIBEL="Computing acceptance TL from retrocessionaire subsidiaries...DLDVGTR => DLEIGTAA"
+PRG=ESTC2315
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+CLOPRD_D ${CLOPRD}
+DBCLO_D ${DBCLO_D}
+CRE_D ${CRE_D}
+TYPETRT_CT GT_STD
+NORME_CF ${NORME_CF}
+PATCAT_CT ${PATCAT_CT}
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1=${DFILT}/${NJOB}_40_${IB}_SORT_GTR_O.dat
+export ${PRG}_I2=${EST_FPLC}
+export ${PRG}_I3=${EST_FSSDACTR}
+export ${PRG}_I4=${EST_FDETTRS}
+export ${PRG}_O1=${ESF_DLEILGTAA0}
+export ${PRG}_O2=${DFILT}/${NSTEP}_${IB}_${PRG}_GTR_O.dat
+EXECPRG
+
+
+JOBEND

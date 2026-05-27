@@ -1,0 +1,29 @@
+# Chain Parameter File
+#
+#  server name;prefix of path /scor01/livraison/tmp
+#
+#[001] 20/08/2014 Roger Cassis   :spot:25773 - Adaptations to 2B, add CNLD0030.prm for server names
+#[002] 07/01/2016 Roger Cassis   :spot:29988 - Adaptations to Mai new path
+#[003] 27/05/2016 Roger Cassis   :spot:28469 - Ajout serveur Conversion 2 et mutre
+#[004] 13/10/2020 Thomas Deutsch :SPIRA:90500 - Ajout serveur AZURE
+#[005] 27/08/2021 David Teixeira :SPIRA:90500 - Change to MAI new prefix of path 
+
+dcvtsto2db02;CN2
+dcvcnvobbatch;CNV
+dcvdevobbatch;DEV
+dcvin2obbatch;IN2
+dcvintobbatch;INT
+dcvprdobbatch;PRD
+dcvuatobbatch;UAT
+dcvmaiobbatch;TMAI
+dcvtstobmutbat;TST_1B_MUT
+dcvprdobmutbat;PRD_1B_MUT
+AEnIntO2Batch;INT_AZURE
+AEnCn2O2Batch;CN2_AZURE
+AEnCnvO2Batch;CNV_AZURE
+AEnDevO2Batch;DEV
+AEnIn2O2Batch;IN2_AZURE
+AEnPrdO2Batch;PRD_AZURE
+AEnUatO2Batch;UAT_AZURE
+AEnMaiO2Batch;TMAI_AZURE
+AEnItkO2Batch;ITK

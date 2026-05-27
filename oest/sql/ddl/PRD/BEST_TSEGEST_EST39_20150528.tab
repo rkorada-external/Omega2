@@ -1,0 +1,33 @@
+use best
+go
+
+select '===================== > debut de script', getdate()
+go
+
+-- Drop primary key index
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TSEGEST') AND name='ISEGEST_00')
+BEGIN
+	DROP INDEX TSEGEST.ISEGEST_00
+	if @@error!=0 select syb_quit()
+	IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TSEGEST') AND name='ISEGEST_00')
+		PRINT '<<< FAILED DROPPING INDEX dbo.TSEGEST.ISEGEST_00 >>>'
+END
+go
+
+alter table TSEGEST   add
+    ACY_NF    UUWY_NF       DEFAULT 0 NOT NULL
+go
+if @@error!=0 select syb_quit()
+go
+
+CREATE UNIQUE CLUSTERED INDEX ISEGEST_00
+    ON dbo.TSEGEST(VRS_NF,SSD_CF,SEGTYP_CT,SEG_NF,UWY_NF,ACY_NF)
+go
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TSEGEST') AND name='ISEGEST_00')
+    PRINT '<<< CREATED INDEX dbo.ISEGEST_00 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING INDEX dbo.ISEGEST_00 >>>'
+go
+
+select '===================== > fin de script', getdate()
+go

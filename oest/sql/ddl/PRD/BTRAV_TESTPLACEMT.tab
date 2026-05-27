@@ -1,0 +1,107 @@
+USE BTRAV
+go
+IF OBJECT_ID(user_name()+'.TESTPLACEMT') IS NOT NULL
+BEGIN
+    DROP TABLE TESTPLACEMT
+    IF OBJECT_ID(user_name()+'.TESTPLACEMT') IS NOT NULL
+        PRINT '<<< FAILED DROPPING TABLE TESTPLACEMT >>>'
+    ELSE
+        PRINT '<<< DROPPED TABLE TESTPLACEMT >>>'
+END
+go
+--23/10/2013 Florent  :spot:25427 - user géographique
+CREATE TABLE TESTPLACEMT
+(
+    RETCTR_NF    URETCTR_NF   NULL,
+    RETEND_NT    tinyint      DEFAULT 0         NOT NULL,
+    RETSEC_NF    USEC_NF      NULL,
+    RTY_NF       smallint     NULL,
+    PLC_NT       UPLC_NT      NULL,
+    CTR_NF       URETCTR_NF   NULL,
+    END_NT       tinyint      DEFAULT 0         NOT NULL,
+    SEC_NF       USEC_NF      NULL,
+    UWY_NF       smallint     NULL,
+    UW_NT        tinyint      DEFAULT 1         NOT NULL,
+    LOB_CF       ULOB_CF      NULL,
+    CUR_CF       UCUR_CF      NULL,
+    CESSH_R      USHA_R       NULL,
+    OVRCOM_R     USHA_R       NULL,
+    RETSIGSHA_R  USHA_R       NULL,
+    CLMFUN_R     USHA_R       NULL,
+    URRFUN_R     USHA_R       NULL,
+    CLMFUNINT_R  USHA_R       NULL,
+    URRFUNINT_R  USHA_R       NULL,
+    PLCVER_NT    int          DEFAULT 0         NOT NULL,
+    SSD_CF       USSD_CF      NOT NULL,
+    INT_NF       UCLI_NF      NULL,
+    UDWAGE_NF    UCLI_NF      NULL,
+    PLCCENT_NT   int          NULL,
+    RTO_NF       UCLI_NF      NOT NULL,
+    PLCSTS_CT    UPLCSTS_CT   NOT NULL,
+    PLCSTS_D     datetime     NOT NULL,
+    CTC_NT       UCTC_NT      NULL,
+    SSDRTO_B     bit          DEFAULT 0         NOT NULL,
+    VALLCK_B     bit          DEFAULT 1         NOT NULL,
+    CTRMAI_D     datetime     NULL,
+    TRTPROMAI_D  datetime     NULL,
+    COVNOTREC_D  datetime     NULL,
+    SIGREC_D     datetime     NULL,
+    SIGRMD_D     datetime     NULL,
+    PLCCMT_NT    UCMT_NT      NULL,
+    RETACTSHA_R  USHA_R       NULL,
+    RETACTUNT_N  decimal(8,4) NULL,
+    RETACTLIA_M  UAMT_M       NULL,
+    RETPOTUNT_N  decimal(8,4) NULL,
+    RETPOTLIA_M  UAMT_M       NULL,
+    RETPOTSHA_R  USHA_R       NULL,
+    LEARNK_N     int          NULL,
+    MINPRMLCK_B  bit          DEFAULT 1         NOT NULL,
+    LATSETPRM_NT int          DEFAULT 0         NOT NULL,
+    ACCDIS_B     bit          DEFAULT 0         NOT NULL,
+    PAY_NF       UCLI_NF      NULL,
+    KEY_CF       char(1)      DEFAULT ''        NOT NULL,
+    RTOREF_LS    UL16         NULL,
+    PLCINC_D     datetime     NULL,
+    CAN_DT       datetime     NULL,
+    PARCMU_B     bit          DEFAULT 0         NOT NULL,
+    PNO_D        datetime     NULL,
+    PNORMD_D     datetime     NULL,
+    PLCCON_D     datetime     NULL,
+    DEFPLCSEN_D  datetime     NULL,
+    GENRMD_D     datetime     NULL,
+    GENRMDCMT_NT UCMT_NT      NULL,
+    FUNWIT_B     bit          DEFAULT 0         NOT NULL,
+    CTRFUNCON_B  bit          DEFAULT 0         NOT NULL,
+    ACCPLC_B     bit          DEFAULT 1         NOT NULL,
+    RTOCTY_CF    UCTY_CF      DEFAULT ''        NOT NULL,
+    RENPLC_B     bit          DEFAULT 0         NOT NULL,
+    CTRPROCON_B  bit          DEFAULT 0         NOT NULL,
+    CTRCOMCON_B  bit          DEFAULT 0         NOT NULL,
+    FIXCOM_R     USHORAT_R    NULL,
+    SUBACCLOC_B  bit          DEFAULT 0         NOT NULL,
+    RETOVRCOM_B  bit          DEFAULT 0         NOT NULL,
+    PROPLA_B     bit          DEFAULT 0         NOT NULL,
+    CONPLC_B     bit          DEFAULT 0         NOT NULL,
+    HIS_B        bit          DEFAULT 0         NOT NULL,
+    RAICOM_B     bit          DEFAULT 0         NOT NULL,
+    ACKSEN_D     datetime     NULL,
+    PNOSCO_B     bit          DEFAULT 0         NOT NULL,
+    ACCCTC_NT    UCTC_NT      NULL,
+    CRE_D        UUPD_D       DEFAULT getdate() NOT NULL,
+    CREUSR_CF    UUPDUSR_CF   DEFAULT user      NOT NULL,
+    LSTUPD_D     UUPD_D       DEFAULT getdate() NOT NULL,
+    LSTUPDUSR_CF UUPDUSR_CF   DEFAULT user      NOT NULL
+)
+LOCK DATAROWS
+go
+IF OBJECT_ID(user_name()+'.TESTPLACEMT') IS NOT NULL
+    PRINT '<<< CREATED TABLE TESTPLACEMT >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE TESTPLACEMT >>>'
+go
+GRANT SELECT ON TESTPLACEMT TO GCONSULT
+go
+GRANT ALL ON TESTPLACEMT TO GOMEGA
+go
+GRANT ALL ON TESTPLACEMT TO GDBBATCH
+go

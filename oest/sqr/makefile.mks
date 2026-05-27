@@ -1,0 +1,27 @@
+INCDIR=$(DTBSQR2)
+
+HEADERS = $(INCDIR)/Util.sqh \
+	  $(INCDIR)/UtSer.sqh \
+	  $(INCDIR)/UtSqu.sqh \
+	  $(INCDIR)/UtEdi.sqh \
+	  $(INCDIR)/UtSetup.sqh \
+	  $(INCDIR)/UtForm.sqh
+
+all: ESTR0310.sqt ESTR0320.sqt ESTR0330.sqt ESTR0340.sqt ESTR0350.sqt 
+
+
+ESTR0310.sqt: ESTR0310.sqr $(HEADERS) ESTR0310.sqh 
+ESTR0320.sqt: ESTR0320.sqr $(HEADERS) ESTR0320.sqh 
+ESTR0330.sqt: ESTR0330.sqr $(HEADERS) ESTR0330.sqh
+ESTR0340.sqt: ESTR0340.sqr $(HEADERS) ESTR0340.sqh 
+ESTR0350.sqt: ESTR0350.sqr $(HEADERS) ESTR0350.sqh 
+
+
+
+.SUFFIXES : .sqt .sqr
+.sqr.sqt:
+	$(SQRDIR)/sqr -S -I./,$(INCDIR)/ -XP -RS $< sa/$(PSWD) -V$(SRV)
+	mv $@ $(DEXE)
+	touch $@
+clean:
+	rm *.sqt

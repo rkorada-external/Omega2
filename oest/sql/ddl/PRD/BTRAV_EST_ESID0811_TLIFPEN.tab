@@ -1,0 +1,36 @@
+USE BTRAV
+go
+
+if exists (select * from sysobjects where id = object_id('EST_ESID0811_TLIFPEN') and type = 'U') drop table EST_ESID0811_TLIFPEN
+go
+
+CREATE TABLE EST_ESID0811_TLIFPEN
+(
+    USR_CF       UUSR_CF   NOT NULL,
+    CTR_NF       UCTR_NF   NOT NULL,
+    SEC_NF       USEC_NF   NOT NULL,
+    CRE_D        datetime  NOT NULL,
+    BALSHEY_NF   smallint  NOT NULL,
+    BALSHTMTH_NF tinyint   NOT NULL,
+    PENSTS_CT    tinyint   NOT NULL,
+    UWGRP_CF     UGRP_CF   NOT NULL,
+    CREUSR_CF    UUSR_CF   NOT NULL,
+    LSTUPD_D     datetime  NOT NULL,
+    LSTUPDUSR_CF UUSR_CF   NOT NULL,
+	SSD_CF       USSD_CF   NOT NULL,
+	ESB_CF       UESB_CF   NOT NULL,
+)
+
+go
+
+grant all on    EST_ESID0811_TLIFPEN to GOMEGA
+grant all on    EST_ESID0811_TLIFPEN to GDBBATCH
+grant select on EST_ESID0811_TLIFPEN to GCONSULT
+
+go
+
+IF OBJECT_ID('BTRAV.dbo.EST_ESID0811_TLIFPEN') IS NOT NULL
+    PRINT '<<< CREATED TABLE BTRAV..EST_ESID0811_TLIFPEN >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE BTRAV..EST_ESID0811_TLIFPEN >>>'
+go

@@ -1,0 +1,12 @@
+# Chaine parameter file (ESID8880)
+# 4 parameters
+# - Treatment date
+# - Required date (manual)
+# - Subsiday code
+# - Simulation Y/N ( pour une demande de simulation:
+#                    renseigner FORCE_DTE, et SIMULATION = Y )
+#
+DATE_T 20130218
+FORCE_DTE 20130226
+SSD_CF 99
+SIMULATION Y

@@ -1,0 +1,126 @@
+USE BTRAVI
+GO
+
+/* Drop TABLE EST_ESID7100_ETATCAC_ACC_TXM */
+
+-- ============================================================================================================
+-- Creation        : [001]
+-- Auteur          : JFVDV
+-- Date            : 2008.10.03
+-- Version         : 
+-- Spot            : [SPOT16159]
+-- Description     : Ajout de la colonne établissement (ESB_CF) après la colonne filiale (SSD_CF)
+-- --------------- 
+-- Modification    : [002]
+-- Auteur          : D.GATIBELZA
+-- Date            : 2009.04.01
+-- Version         : 9.1
+-- Spot            : [ESTDOM17162]
+-- Description     : Etats CAC  inclure le témoin IFRS
+-- --------------- 
+-- Modification    : [003]
+-- Auteur          : Ph. VESSIERE
+-- Date            : 2009.06.29
+-- Version         : 9.1
+-- Spot            : [SPOT17610]
+-- Description     : ESTDOM - EVOLUTIONS SUR FICHIER CAC 2Q2009
+-- --------------- 
+-- Modification    : [004]
+-- Auteur          : Ph. VESSIERE
+-- Date            : 2010.09.28
+-- Version         : 9.1
+-- Spot            : [SPOT19157]
+-- Description     : Etats CAC - Creation BTRAV spécifique à traitement ESID7100 Acceptation Taux = TXM
+-- ============================================================================================================
+
+
+IF OBJECT_ID('dbo.EST_ESID7100_ETATCAC_ACC_TXM') IS NOT NULL
+BEGIN
+   DROP TABLE dbo.EST_ESID7100_ETATCAC_ACC_TXM
+   PRINT '<<< DROPPED TABLE dbo.EST_ESID7100_ETATCAC_ACC_TXM >>>'
+END
+GO
+
+CREATE TABLE dbo.EST_ESID7100_ETATCAC_ACC_TXM
+(
+    ctr_nf      UCTR_NF     NULL ,
+    sec_nf      USEC_NF     NULL ,
+    uwy_nf      UUWY_NF     NULL ,
+    ctrnat_ct   char        NULL ,
+    lobacc_cf   ULOB_CF     NULL ,
+    ssd_cf      USSD_CF     NOT NULL ,
+    esb_cf      UESB_CF     NOT NULL,        -- [SPOT16159] vde le 03/10/2008
+    TYPE        int         default 0,
+    seg_nf      USEG_NF     NULL,
+    uworg_cf    smallint    NULL,
+    ced_nf      UCLI_NF     NULL,
+    CHARGES     UAMT_M      default 0,
+    COURTAGE    UAMT_M      default 0,
+    FAR         UAMT_M      default 0,
+    IBNR2       UAMT_M      default 0 ,
+    PB          UAMT_M      default 0 ,
+    PNA         UAMT_M      default 0 ,
+    PRIMES      UAMT_M      default 0 ,
+    PROVSIN     UAMT_M      default 0 ,
+    PVEQ        UAMT_M      default 0 ,
+    RFAR        UAMT_M      default 0 ,
+    RIBNR2      UAMT_M      default 0 ,
+    RPNA        UAMT_M      default 0 ,
+    RPROVSIN    UAMT_M      default 0 ,
+    RPVEQ       UAMT_M      default 0 ,
+    RSNEM       UAMT_M      default 0 ,
+    SINP        UAMT_M      default 0 ,
+    SNEM        UAMT_M      default 0 ,
+    RFRAGES     UAMT_M      default 0 ,
+    PBSURRET    UAMT_M      default 0 ,
+    FGESCLO     UAMT_M      default 0 ,
+    FACADMTYP_LS UL16           NULL,
+    GRPGRP2_LS   UL16           NULL,
+    CLISHONAM_LD UCLISHONAM_LD  NOT NULL,
+    TRNTYP_CT   tinyint     NULL,        -- [002]
+    COLVAL_LM   UL32        NULL         -- [SPOT17160]
+)
+GO
+IF OBJECT_ID('dbo.EST_ESID7100_ETATCAC_ACC_TXM') IS NOT NULL
+   PRINT '<<< CREATED TABLE dbo.EST_ESID7100_ETATCAC_ACC_TXM >>>'
+ELSE
+   PRINT '<<< FAILED CREATING TABLE dbo.EST_ESID7100_ETATCAC_ACC_TXM >>>'
+GO
+
+CREATE NONCLUSTERED INDEX IESID71_00
+    ON dbo.EST_ESID7100_ETATCAC_ACC_TXM(CTR_NF, SEC_NF, UWY_NF)
+GO
+
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.EST_ESID7100_ETATCAC_ACC_TXM') AND name='IESID71_00')
+   PRINT '<<< CREATED INDEX dbo.EST_ESID7100_ETATCAC_ACC_TXM.IESID71_00 >>>'
+ELSE
+   PRINT '<<< FAILED CREATING INDEX dbo.EST_ESID7100_ETATCAC_ACC_TXM.IESID71_00 >>>'
+GO
+
+CREATE NONCLUSTERED INDEX IESID71_01
+    ON dbo.EST_ESID7100_ETATCAC_ACC_TXM(CED_NF)
+GO
+
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.EST_ESID7100_ETATCAC_ACC_TXM') AND name='IESID71_01')
+   PRINT '<<< CREATED INDEX dbo.EST_ESID7100_ETATCAC_ACC_TXM.IESID71_01 >>>'
+ELSE
+   PRINT '<<< FAILED CREATING INDEX dbo.EST_ESID7100_ETATCAC_ACC_TXM.IESID71_01 >>>'
+GO
+
+GRANT REFERENCES ON dbo.EST_ESID7100_ETATCAC_ACC_TXM TO GOMEGA
+GO
+
+GRANT SELECT ON dbo.EST_ESID7100_ETATCAC_ACC_TXM TO GCONSULT
+GO
+
+GRANT SELECT ON dbo.EST_ESID7100_ETATCAC_ACC_TXM TO GOMEGA
+GO
+
+GRANT INSERT ON dbo.EST_ESID7100_ETATCAC_ACC_TXM TO GOMEGA
+GO
+
+GRANT DELETE ON dbo.EST_ESID7100_ETATCAC_ACC_TXM TO GOMEGA
+GO
+
+GRANT UPDATE ON dbo.EST_ESID7100_ETATCAC_ACC_TXM TO GOMEGA
+GO

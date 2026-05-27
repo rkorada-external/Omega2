@@ -1,0 +1,18 @@
+/*SPIRA 80563*/
+USE BEST
+go
+
+if exists (SELECT 1 FROM sysobjects 
+			JOIN syscolumns ON sysobjects.id = syscolumns.id  and syscolumns.name = 'NORME_CF'
+			JOIN systypes ON systypes.type = syscolumns.type AND systypes.usertype = syscolumns.usertype AND systypes.name = 'CHAR'
+			WHERE sysobjects.name LIKE 'TEXPRAT' )
+BEGIN
+exec("ALTER TABLE TEXPRAT	MODIFY NORME_CF       varchar(5)     NOT NULL")
+PRINT '<<< COLUMN NORME_CF MODIFIED ON BEST..TEXPRAT >>>'
+END
+ELSE
+PRINT '<<< COLUMN NORME_CF NOT MODIFIED. Column not exists or datatype is alrady updated >>>'
+
+
+
+go 

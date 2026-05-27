@@ -1,0 +1,209 @@
+USE BTRT
+go
+
+SET NOCOUNT ON
+
+-- ###############################################################################
+-- Script           	: SPIRA_87901_UPD_GRPIFRSTRA_CT_NONLIFE.sql
+-- Domain	            : TREATY
+-- Author           	: KBagwe
+-- Date of creation		: 08/09/2020
+-- Description			: NON Life : Transition Update TSECIFRS for IFRS17 Granularity
+-- ################################################################################
+
+SELECT "SPIRA_87901_UPD_GRPIFRSTRA_CT_NONLIFE.sql", getdate()
+
+DECLARE @gCommit VARCHAR (01)
+DECLARE @gTodayD DATETIME
+SELECT @gCommit = 'O'
+SELECT @gTodayD = GETDATE ()
+DECLARE @loopControl INT
+DECLARE @MSG DATETIME
+DECLARE @batchcommit int
+
+select @batchcommit = 15000   --rows to commit
+
+CREATE TABLE #DATA_BTRT_TSECIFRS
+(
+CTR_NF CHAR(9),
+UWY_NF int,
+UW_NT int,
+END_NT int ,
+SEC_NF int
+)
+
+CREATE TABLE #DATA_BFAC_TSECIFRS
+(
+CTR_NF CHAR(9),
+UWY_NF int,
+UW_NT int,
+END_NT int ,
+SEC_NF int
+)
+
+CREATE TABLE #DATA_BRET_TSECIFRS
+(
+RETCTR_NF CHAR(9),
+RTY_NF int 
+)
+
+INSERT INTO #DATA_BTRT_TSECIFRS (CTR_NF, UWY_NF, UW_NT, END_NT ,SEC_NF )
+SELECT   a.CTR_NF, a.UWY_NF ,a.UW_NT,a.END_NT ,a.SEC_NF 
+FROM BTRT..TSECIFRS a 
+WHERE ISNULL(GRPIFRSTRA_CT,'') != '1' 
+AND EXISTS ( SELECT 1 FROM 
+    BTRT..TCONTR b , BREF..TESB c WHERE
+  a.CTR_NF = b.CTR_NF and a.UWY_NF = b.UWY_NF
+and a.UW_NT = b.UW_NT and a.END_NT = b.END_NT AND B.SSD_CF = C.SSD_CF
+AND B.ACCESB_CF = C.ESB_CF AND C.LIFE_cF = 2  )
+
+
+INSERT INTO #DATA_BFAC_TSECIFRS (CTR_NF, UWY_NF, UW_NT, END_NT ,SEC_NF )
+SELECT  a.CTR_NF, a.UWY_NF ,a.UW_NT,a.END_NT ,a.SEC_NF 
+FROM BFAC..TSECIFRS a 
+WHERE ISNULL(GRPIFRSTRA_CT,'') != '1' 
+AND EXISTS ( SELECT 1 FROM 
+    BFAC..TCONTR b , BREF..TESB c WHERE
+  a.CTR_NF = b.CTR_NF and a.UWY_NF = b.UWY_NF
+and a.UW_NT = b.UW_NT and a.END_NT = b.END_NT AND B.SSD_CF = C.SSD_CF
+AND B.ACCESB_CF = C.ESB_CF AND C.LIFE_cF = 2  )
+
+
+INSERT INTO #DATA_BRET_TSECIFRS (RETCTR_NF, RTY_NF )
+SELECT   a.RETCTR_NF, a.RTY_NF
+FROM BRET..TRETIFRS a 
+WHERE ISNULL(GRPIFRSTRA_CT,'') != '1' 
+AND EXISTS ( SELECT 1 FROM
+    BRET..TRETCTR b , BREF..TESB c WHERE
+  a.RETCTR_NF = b.RETCTR_NF and a.RTY_NF = b.RTY_NF AND B.SSD_CF = C.SSD_CF 
+AND B.ESB_CF = C.ESB_CF AND C.LIFE_cF = 2  )
+
+
+PRINT 'DATA FOR BTRT..TSECIFRS BEFORE UPDATE'
+SELECT count(1) FROM #DATA_BTRT_TSECIFRS
+ 
+
+PRINT 'DATA FOR BFAC..TSECIFRS BEFORE UPDATE'
+SELECT COUNT(*) FROM  #DATA_BFAC_TSECIFRS 
+
+
+PRINT 'DATA FOR BRET..TRETIFRS BEFORE UPDATE'
+--SELECT COUNT(*) FROM BRET..TRETIFRS  WHERE ISNULL(GRPIFRSTRA_CT,'') != '1' 
+SELECT COUNT(*) FROM #DATA_BRET_TSECIFRS
+
+
+set rowcount @batchcommit
+
+WHILE @LOOPCONTROL != 0
+BEGIN
+
+	BEGIN TRAN
+	
+	UPDATE BTRT..TSECIFRS
+	SET GRPIFRSTRA_CT ='1' 
+	FROM BTRT..TSECIFRS A, #DATA_BTRT_TSECIFRS B
+	WHERE  a.CTR_NF = b.CTR_NF and a.UWY_NF = b.UWY_NF
+	AND a.UW_NT = b.UW_NT and a.END_NT = b.END_NT and a.SEC_NF = b.SEC_NF
+	AND ISNULL(A.GRPIFRSTRA_CT,'') != '1'  
+
+		select @loopcontrol = @@rowCount, @msg = getdate()
+	
+	PRINT '%1! rows updated BTRT..TSECIFRS at %2!' , @loopcontrol, @msg
+	
+	COMMIT TRAN
+
+END
+
+set rowcount 0
+
+SELECT @LOOPCONTROL =-1
+
+set rowcount @batchcommit
+
+WHILE @LOOPCONTROL != 0
+BEGIN
+
+	BEGIN TRAN
+	
+	UPDATE BFAC..TSECIFRS 
+	SET GRPIFRSTRA_CT ='1'
+	FROM BFAC..TSECIFRS A, #DATA_BFAC_TSECIFRS B
+	WHERE  a.CTR_NF = b.CTR_NF and a.UWY_NF = b.UWY_NF
+	AND a.UW_NT = b.UW_NT and a.END_NT = b.END_NT and a.SEC_NF = b.SEC_NF
+	AND ISNULL(A.GRPIFRSTRA_CT,'') != '1'  
+
+		select @loopcontrol = @@rowCount, @msg = getdate()
+	
+	PRINT '%1! rows updated BFAC..TSECIFRS at %2!' , @loopcontrol, @msg
+	
+	COMMIT TRAN
+
+END
+
+set rowcount 0
+
+
+SELECT @LOOPCONTROL =-1
+
+set rowcount @batchcommit
+
+WHILE @LOOPCONTROL != 0
+BEGIN
+
+	BEGIN TRAN
+	
+	UPDATE BRET..TRETIFRS 
+	SET GRPIFRSTRA_CT ='1' 
+	FROM BRET..TRETIFRS A, #DATA_BRET_TSECIFRS B
+	WHERE A.RETCTR_NF = B.RETCTR_NF AND A.RTY_NF = B.RTY_NF AND ISNULL(A.GRPIFRSTRA_CT,'') != '1' 
+
+		select @loopcontrol = @@rowCount, @msg = getdate()
+	
+	PRINT '%1! rows updated BRET..TRETIFRS at %2!' , @loopcontrol, @msg
+	
+	COMMIT TRAN
+
+END
+
+set rowcount 0
+
+
+PRINT 'DATA FOR BTRT..TSECIFRS AFTER UPDATE'
+SELECT   COUNT(a.CTR_NF)
+FROM BTRT..TSECIFRS a 
+WHERE ISNULL(GRPIFRSTRA_CT,'') != '1' 
+AND EXISTS ( SELECT 1 FROM 
+    BTRT..TCONTR b , BREF..TESB c WHERE
+  a.CTR_NF = b.CTR_NF and a.UWY_NF = b.UWY_NF
+and a.UW_NT = b.UW_NT and a.END_NT = b.END_NT AND B.SSD_CF = C.SSD_CF
+AND B.ACCESB_CF = C.ESB_CF AND C.LIFE_cF = 2  )
+ 
+
+PRINT 'DATA FOR BFAC..TSECIFRS AFTER UPDATE'
+SELECT COUNT(a.CTR_NF) 
+FROM BFAC..TSECIFRS a 
+WHERE ISNULL(GRPIFRSTRA_CT,'') != '1' 
+AND EXISTS ( SELECT 1 FROM 
+    BFAC..TCONTR b , BREF..TESB c WHERE
+  a.CTR_NF = b.CTR_NF and a.UWY_NF = b.UWY_NF
+and a.UW_NT = b.UW_NT and a.END_NT = b.END_NT AND B.SSD_CF = C.SSD_CF
+AND B.ACCESB_CF = C.ESB_CF AND C.LIFE_cF = 2  ) 
+
+
+PRINT 'DATA FOR BRET..TSECIFRS AFTER UPDATE'
+SELECT   COUNT(a.RETCTR_NF)
+FROM BRET..TRETIFRS a 
+WHERE ISNULL(GRPIFRSTRA_CT,'') != '1' 
+AND EXISTS ( SELECT 1 FROM
+    BRET..TRETCTR b , BREF..TESB c WHERE
+  a.RETCTR_NF = b.RETCTR_NF and a.RTY_NF = b.RTY_NF AND B.SSD_CF = C.SSD_CF
+AND B.ESB_CF = C.ESB_CF AND C.LIFE_cF = 2  )
+
+
+SELECT "FINISH SPIRA_87901_UPD_GRPIFRSTRA_CT_NONLIFE.sql", getdate()
+
+set nocount off
+
+GO
+
+

@@ -1,0 +1,31 @@
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDSII"
+EXTRT="TNR_EXTRACT_TTECLEDSIIZOOM_I4_751"
+
+
+//------------------------------------------------------------------------------------//
+// Il est possible d'utiliser une varibale VAR dans la requete QRY (sql)              //
+// Si la variable "${VAR}" n'est pas declare ici ou dans le fichier de configuration  //
+// c'est la valeur dans le fichier {EST_PARAM} qui est utilise par defaut             //
+//------------------------------------------------------------------------------------//
+QRY="
+select distinct a.PRS_CF, a.ACMTRS_NT, b.ACMTRS_GL
+into #tcode
+from BREF..TTRSLNK a, BREF..TACMTRS b
+where a.ACMTRS_NT = b.ACMTRS_NT and a.PRS_CF = b.PRS_CF
+and a.PRS_CF=751
+
+SELECT DISTINCT SSD_CF,NORME_CF,CASE when CLOTYP_CT = 'INI' then 'INI' else 'POS' End as 'CLOTYP_CT',PATCAT_CT,PATTYP_CT,a.PRS_CF,ACMTRS3_NT,b.ACMTRS_GL,CTR_NF,END_NT,SEC_NF,UWY_NF,UW_NT,RETCTR_NF,RETEND_NT,RETSEC_NF,RETRTY_NF,RETUW_NT,ACCRET_CF,
+
+case when CUR_CF is null then 'EUR' else CUR_CF End as 'CUR_CF',
+sum(TOTAUX)as 'TOTAL',sum(ACMAMT_M) as 'TOTAL_INITIAL', count(*) as 'NB_ROWS'
+FROM BSAR..${TTECLEDSII} a, #tcode b
+WHERE SSD_CF in ( ${SSDCLO_LL} )
+and   a.ACMTRS3_NT = CAST(b.ACMTRS_NT as CHAR)
+and   a.PRS_CF = b.PRS_CF
+GROUP BY SSD_CF,NORME_CF,CLOTYP_CT,PATCAT_CT,PATTYP_CT,a.PRS_CF,ACMTRS3_NT,b.ACMTRS_GL,CTR_NF,END_NT,SEC_NF,UWY_NF,UW_NT,RETCTR_NF,RETEND_NT,RETSEC_NF,RETRTY_NF,RETUW_NT,ACCRET_CF,CUR_CF
+order by NORME_CF,CLOTYP_CT,PATCAT_CT,PATTYP_CT,PRS_CF,ACMTRS3_NT,ACMTRS_GL ASC
+
+drop table #tcode
+"

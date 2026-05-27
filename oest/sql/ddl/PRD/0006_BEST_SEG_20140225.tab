@@ -1,0 +1,41 @@
+/* TRA01 - Segmentation
+ *
+ * Remove segmentation results from BEST
+ */
+use BEST
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUNAGG')
+            and   type = 'U')
+   drop table TSEGRUNAGG
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUN')
+            and   type = 'U')
+   drop table TSEGRUN
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUNERR_S')
+            and   type = 'U')
+   drop table TSEGRUNERR_S
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUNRES_S')
+            and   type = 'U')
+   drop table TSEGRUNRES_S
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUNSCHED')
+            and   type = 'U')
+   drop table TSEGRUNSCHED
+go

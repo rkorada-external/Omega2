@@ -1,0 +1,137 @@
+USE BTRAV
+go
+IF OBJECT_ID(user_name()+'.TESTPERICASE') IS NOT NULL
+BEGIN
+    DROP TABLE TESTPERICASE
+    IF OBJECT_ID(user_name()+'.TESTPERICASE') IS NOT NULL
+        PRINT '<<< FAILED DROPPING TABLE TESTPERICASE >>>'
+    ELSE
+        PRINT '<<< DROPPED TABLE TESTPERICASE >>>'
+END
+go
+--23/10/2013 Florent  :spot:25427 - user géographique
+CREATE TABLE TESTPERICASE
+(
+    SSD_CF       tinyint       NULL,
+    SEGTYP_CT    char(1)       NULL,
+    CTR_NF       char(9)       NULL,
+    END_NT       tinyint       NULL,
+    SEC_NF       tinyint       NULL,
+    UWY_NF       smallint      NULL,
+    UW_NT        tinyint       NULL,
+    ACCESB_CF    tinyint       NULL,
+    ADMMODPRM_CT char(1)       NULL,
+    ANLCTY_CF    char(3)       NULL,
+    CAN_DT       datetime      NULL,
+    CED_NF       int           NULL,
+    CLICTY_CF    char(3)       NULL,
+    CLINAT_CF    char(3)       NULL,
+    CLMACT_M     decimal(18,3) NULL,
+    COMTYP_CT    tinyint       NULL,
+    CTBGENFEE_R  decimal(9,8)  NULL,
+    CTBTYP_CT    tinyint       NULL,
+    CTRINC_D     datetime      NULL,
+    CTRRET_B     bit           DEFAULT 0   NOT NULL,
+    CUTSHA_R     decimal(9,8)  NULL,
+    DIV_NT       tinyint       NULL,
+    EGPCUR_CF    char(3)       NULL,
+    ESTCRB_CT    char(1)       DEFAULT ' ' NOT NULL,
+    ESTCTR_NF    char(9)       NULL,
+    ESTEND_B     bit           DEFAULT 0   NOT NULL,
+    ESTSEC_NF    char(1)       NULL,
+    EXP_D        datetime      NULL,
+    FIXCOM_R     decimal(9,8)  NULL,
+    FRSUWY_NF    smallint      NULL,
+    GANPAYORD_NT char(2)       NULL,
+    GAR_CF       char(3)       NULL,
+    GENPRMPAY_NF int           NULL,
+    GENPRMSEN_NF int           NULL,
+    INSPOL_R     decimal(9,8)  NULL,
+    LAYCAP_M     decimal(18,3) NULL,
+    LIFTRTTYP_CF char(2)       NULL,
+    LOB_CF       char(2)       NULL,
+    LOSCOREXI_B  bit           DEFAULT 0   NOT NULL,
+    LOSCORHIG_R  decimal(9,8)  NULL,
+    LOSCORLOW_R  decimal(9,8)  NULL,
+    LOSCORRAT_R  decimal(9,8)  NULL,
+    LOSCTB_R     decimal(9,8)  NULL,
+    LOSCTBEXI_B  bit           DEFAULT 0   NOT NULL,
+    MAXCOM_R     decimal(9,8)  NULL,
+    MAXRATCLP_R  decimal(9,8)  NULL,
+    MINCOM_R     decimal(9,8)  NULL,
+    MINRATCLP_R  decimal(9,8)  NULL,
+    NAT_CF       char(1)       NULL,
+    ORDNBR_NT    tinyint       NULL,
+    PCPCUR_CF    char(3)       NULL,
+    PCPRSKTRY_CF char(3)       NULL,
+    POLDURMTH_NF tinyint       NULL,
+    PRD_NF       int           NULL,
+    PRFCOM_R     decimal(9,8)  NULL,
+    PRFCOMEXI_B  bit           DEFAULT 0   NOT NULL,
+    PRMEFFLOA_M  decimal(18,3) NULL,
+    PRMEFFLOA_R  decimal(9,8)  NULL,
+    PRMFIXEFF_R  decimal(9,8)  NULL,
+    PRMFLCRAT_B  bit           DEFAULT 0   NOT NULL,
+    PRMMAXEFF_R  decimal(9,8)  NULL,
+    PRMMINEFF_R  decimal(9,8)  NULL,
+    PRMNETCOM_B  bit           DEFAULT 0   NOT NULL,
+    PRMPRTSCL_B  bit           DEFAULT 0   NOT NULL,
+    REIEXI_B     bit           DEFAULT 0   NOT NULL,
+    REIFRE_B     bit           DEFAULT 0   NOT NULL,
+    REINBR_N     tinyint       NULL,
+    REIUNL_B     bit           DEFAULT 0   NOT NULL,
+    RESTRFDUR_N  tinyint       NULL,
+    RESTRFTYP_CF tinyint       NULL,
+    SBJCPTDEF_B  bit           DEFAULT 0   NOT NULL,
+    SBJPRM_M     decimal(18,3) NULL,
+    SCLCOMEXI_B  bit           DEFAULT 0   NOT NULL,
+    SCLCTBEXI_B  bit           DEFAULT 0   NOT NULL,
+    SCOEGP_M     decimal(18,3) NULL,
+    SCOINC_D     datetime      NULL,
+    SECACCSTS_CT tinyint       NULL,
+    SECINC_D     datetime      NULL,
+    SECSTS_CT    tinyint       NULL,
+    SEG_NF       char(10)      NULL,
+    SOB_CF       char(2)       NULL,
+    SUBNAT_CF    char(2)       NULL,
+    SUPLOATYP_CT tinyint       NULL,
+    TOP_CF       char(3)       NULL,
+    CTRNAT_CT    char(1)       NULL,
+    UWGRP_CF     smallint      NULL,
+    ACCFRQ_CT    int           NULL,
+    WRKCAT_CT    tinyint       NULL,
+    ORGINC_D     datetime      NULL,
+    LIARIDSHA_B  bit           DEFAULT 0   NOT NULL,
+    FLAPRM_B     bit           DEFAULT 0   NOT NULL,
+    RIDSHA_R     decimal(9,8)  NULL,
+    CTBCALLVL_CF tinyint       NULL,
+    CTBCOM_B     bit           DEFAULT 0   NOT NULL,
+    PRMPRT_M     decimal(18,3) NULL,
+    PRMPRTCUR_CF char(3)       NULL,
+    ACCADMTYP_CT tinyint       NULL,
+    SBJPRMCUR_CF char(3)       NULL,
+    CTRSTS_CT    tinyint       NULL,
+    OVRCOM_R     decimal(9,8)  NULL,
+    OVRCOMTYP_CT tinyint       NULL,
+    TAXCNDEXI_B  bit           DEFAULT 0   NOT NULL,
+    LSTENDMTH_NF tinyint       NULL,
+    RETCTRCAT_CF char(2)       NULL,
+    CLECUTPER_B  bit           DEFAULT 0   NOT NULL,
+    CLECUTPER_NB int           NULL,
+    ORICUR_B     bit           DEFAULT 0   NOT NULL,
+    RETACCADM_B  bit           DEFAULT 0   NOT NULL,
+    SSDRTO_B     bit           DEFAULT 0   NOT NULL
+)
+LOCK DATAROWS
+go
+IF OBJECT_ID(user_name()+'.TESTPERICASE') IS NOT NULL
+    PRINT '<<< CREATED TABLE TESTPERICASE >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE TESTPERICASE >>>'
+go
+GRANT SELECT ON TESTPERICASE TO GCONSULT
+go
+GRANT ALL ON TESTPERICASE TO GOMEGA
+go
+GRANT ALL ON TESTPERICASE TO GDBBATCH
+go

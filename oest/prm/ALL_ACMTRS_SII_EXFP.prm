@@ -1,0 +1,38 @@
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDA"
+EXTRT="All ACMTRS"
+
+//------------------------------------------------------------------------------------//
+// Il est possible d'utiliser une varibale VAR dans la requete QRY (sql)              //
+// Si la variable "${VAR}" n'est pas declare ici ou dans le fichier de configuration  //
+// c'est la valeur dans le fichier {EST_PARAM} qui est utilise par defaut             //
+//------------------------------------------------------------------------------------//
+QRY="
+/* all acmtrs */
+
+select norme_cf, acmtrs_nt, patcat_ct, pattyp_ct, sum(acmamt_m) as 'ACMAMT', ssd_cf, cur_cf into #result 
+from bsar..ttecledsii_b
+where balshey_nf =${BLCSHTYEA_NF}
+and  norme_cf in ('I17G', 'I17P','I17L')
+group by norme_cf, ssd_cf, cur_cf, acmtrs_nt, patcat_ct, pattyp_ct
+order by norme_cf, acmtrs_nt, patcat_ct, pattyp_ct
+
+--select * from #result
+
+/*convertion all amounts in euro*/
+select a.norme_cf, a.acmtrs_nt, a.patcat_ct, a.pattyp_ct, acmamt_eur=acmamt*exc_r into #result_convert_eur 
+from #result a , bref..tcurquot b
+where b.ssd_cf = a.ssd_cf and b.cur_cf = a.cur_cf
+and b.exc_d = '${INVCONSO_D}'
+
+/* acmtrs label*/
+select c.norme_cf,  a.acmtrs_nt, a.acmtrs_gl , patcat_ct, pattyp_ct, ISNULL(convert(decimal(20,3), sum(acmamt_eur)),NULL) as acmamt_eur from #result_convert_eur c, bref..TACMTRS a 
+where a.acmtrs_nt= c.acmtrs_nt
+and prs_cf =750
+group by  c.norme_cf, a.acmtrs_nt, a.acmtrs_gl ,patcat_ct, pattyp_ct
+order by   c.norme_cf, a.acmtrs_nt, a.acmtrs_gl ,patcat_ct, pattyp_ct
+
+drop table #result 
+drop table #result_convert_eur
+"

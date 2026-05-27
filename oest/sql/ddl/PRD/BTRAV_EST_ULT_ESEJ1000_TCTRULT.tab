@@ -1,0 +1,94 @@
+USE BTRAV
+GO
+
+IF OBJECT_ID('EST_ULT_ESEJ1000_TCTRULT') IS NOT NULL
+BEGIN
+    DROP TABLE EST_ULT_ESEJ1000_TCTRULT
+    IF OBJECT_ID('EST_ULT_ESEJ1000_TCTRULT') IS NOT NULL
+        PRINT '<<< FAILED DROPPING TABLE EST_ULT_ESEJ1000_TCTRULT >>>'
+    ELSE
+        PRINT '<<< DROPPED TABLE EST_ULT_ESEJ1000_TCTRULT >>>'
+END
+GO
+
+IF OBJECT_ID('TESTCTRULT') IS NOT NULL
+BEGIN
+    DROP TABLE TESTCTRULT
+    IF OBJECT_ID('TESTCTRULT') IS NOT NULL
+        PRINT '<<< FAILED DROPPING TABLE TESTCTRULT >>>'
+    ELSE
+        PRINT '<<< DROPPED TABLE TESTCTRULT >>>'
+END
+GO
+
+/*
+-----------------------------------------------------------------
+ Table           : BTRAV..EST_ULT_ESEJ1000_TCTRULT
+Base principale  : BCTA
+Version          : 9.1
+Auteur           : D.GATIBELZA
+Date de creation : 04/12/2009
+-----------------
+MODIFICATION     :
+Auteur           :
+Date             :
+Version          :
+Description      :
+----------------------------------------------------------------- */
+
+CREATE TABLE EST_ULT_ESEJ1000_TCTRULT
+(
+    CTR_NF                  UCTR_NF     NOT NULL,
+    UWY_NF                  UUWY_NF     NOT NULL,
+    UW_NT                   UUW_NT      NOT NULL,
+    END_NT                  UEND_NT     NOT NULL,
+    SEC_NF                  USEC_NF     NOT NULL,
+    CRE_D                   datetime    NOT NULL,
+    SSD_CF                  USSD_CF         NULL,
+    DIV_NT                  UDIV_NT         NULL,
+    CUR_CF                  UCUR_CF         NULL,
+    CALAMTPRM_M             UAMT_M          NULL,
+    ENTAMTPRM_M             UAMT_M          NULL,
+    RETAMTPRM_M             UAMT_M          NULL,
+    ADMMODPRM_CT            char(1)         NULL,
+    RESPRM_M                UAMT_M          NULL,
+    CALAMTCLM_M             UAMT_M          NULL,
+    ENTAMTCLM_M             UAMT_M          NULL,
+    RETAMTCLM_M             UAMT_M          NULL,
+    ADMMODCLM_CT            char(1)         NULL,
+    ORICOD_LS               UL16            NULL,
+    UPDUSR_CF               char(10)        NULL,
+    ULTUPDTYP_CF            char(1)         NULL,
+    RT0PARRAT_M             USHORAT_R       NULL,
+    RT0NBRTRI               INT             NULL,
+    AGECONTRAT              char(8)         NULL,
+    ACCADMTYP_CT            char(1)         NULL,
+    Prime_Emise_CC_M        UAMT_M          NULL,
+    SP_SAP_CC_M             UAMT_M          NULL,
+    Prime_Acquise_CC_M      UAMT_M          NULL,
+    EstEnd                  INT             NULL,
+    CPLACCY                 INT             NULL,
+    SCOLSTMTH_NF            INT             NULL
+ )
+GO
+
+GRANT REFERENCES ON EST_ULT_ESEJ1000_TCTRULT TO GOMEGA
+GO
+GRANT SELECT ON EST_ULT_ESEJ1000_TCTRULT TO GCONSULT
+GO
+GRANT SELECT ON EST_ULT_ESEJ1000_TCTRULT TO GOMEGA
+GO
+GRANT INSERT ON EST_ULT_ESEJ1000_TCTRULT TO GOMEGA
+GO
+GRANT DELETE ON EST_ULT_ESEJ1000_TCTRULT TO GOMEGA
+GO
+GRANT UPDATE ON EST_ULT_ESEJ1000_TCTRULT TO GOMEGA
+GO
+
+IF OBJECT_ID('EST_ULT_ESEJ1000_TCTRULT') IS NOT NULL
+    PRINT '<<< CREATED TABLE EST_ULT_ESEJ1000_TCTRULT >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE EST_ULT_ESEJ1000_TCTRULT >>>'
+GO
+
+

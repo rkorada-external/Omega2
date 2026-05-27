@@ -1,0 +1,139 @@
+use BTRT
+go
+
+if object_id('PuSECIFRS_03') is not null
+	begin
+		drop procedure PuSECIFRS_03
+		if object_id('PuSECIFRS_03') is not null
+			print '<<< FAILED DROPPING procedure PuSECIFRS_03 >>>'
+		else
+			print '<<< DROPPED procedure PuSECIFRS_03 >>>'
+	end
+go
+
+create procedure PuSECIFRS_03
+  (
+	@norme_cf  char(4),
+	@p_erreur varchar(64)=null output
+  )
+with execute as caller as
+
+/***************************************************
+Domaine : (ES) Estimation
+Base principale : BTRT
+Version: 1
+Auteur: Charles Socie
+Date de creation: 25/06/2020
+Description du programme:
+    Update lines in the table BTRT..TSECIFRS using data from the tmp table BTRAV..ESFD8000_TSECIFRS
+Parametres:
+ 	@p_erreur varchar(64)=null output
+_________________
+MODIFICATIONS
+[001] 03/03/2022 ART Spira 102318 IFRS 17 - Life - Inception status at Pending and first closing date
+
+*****************************************************/
+
+begin
+
+declare @erreur int
+
+BEGIN TRANSACTION
+/* ------------------------------------------------------------------- */
+
+--[002]
+IF(@norme_cf = 'I17G')
+BEGIN
+	UPDATE BTRT..TSECIFRS
+		SET B.GRPINIPRO_CF = A.GRPINIPRO_CF,
+			B.GRPRATEINDEX_CT = A.GRPRATEINDEX_CT,
+			B.LSTUPD_D = A.LSTUPD_D,
+			B.LSTUPDUSR_CF = A.LSTUPDUSR_CF,
+			B.GRPINISTS_CT = A.GRPINISTS_CT, --[001]
+			B.GRPFIRCLO_D = A.GRPFIRCLO_D --[001]
+			FROM BTRAV..ESFD8000_TSECIFRS A, BTRT..TSECIFRS B 
+			WHERE A.CTR_NF = B.CTR_NF
+			AND A.UWY_NF = B.UWY_NF
+			AND A.UW_NT = B.UW_NT
+			AND A.END_NT = B.END_NT
+			AND A.SEC_NF = B.SEC_NF
+			AND A.CTRTYP_CT = 'TRT'
+			AND ((A.GRPINIPRO_CF <> B.GRPINIPRO_CF OR (B.GRPINIPRO_CF IS NULL AND A.GRPINIPRO_CF IS NOT NULL))
+			OR (A.GRPRATEINDEX_CT <> B.GRPRATEINDEX_CT OR (B.GRPRATEINDEX_CT IS NULL AND A.GRPRATEINDEX_CT IS NOT NULL))
+			OR (A.GRPINISTS_CT <> B.GRPINISTS_CT OR (B.GRPINISTS_CT IS NULL AND A.GRPINISTS_CT IS NOT NULL)) --[001]
+			OR (B.GRPFIRCLO_D IS NULL AND A.GRPFIRCLO_D IS NOT NULL)) --[001]
+END
+
+IF(@norme_cf = 'I17P')
+BEGIN
+	UPDATE BTRT..TSECIFRS
+		SET B.PARINIPRO_CF = A.PARINIPRO_CF,
+			B.PARRATEINDEX_CT = A.PARRATEINDEX_CT,
+			B.LSTUPD_D = A.LSTUPD_D,
+			B.LSTUPDUSR_CF = A.LSTUPDUSR_CF,
+			B.PARINISTS_CT = A.PARINISTS_CT, --[001]
+			B.PARFIRCLO_D = A.PARFIRCLO_D --[001]
+			FROM BTRAV..ESFD8000_TSECIFRS A, BTRT..TSECIFRS B 
+			WHERE A.CTR_NF = B.CTR_NF
+			AND A.UWY_NF = B.UWY_NF
+			AND A.UW_NT = B.UW_NT
+			AND A.END_NT = B.END_NT
+			AND A.SEC_NF = B.SEC_NF
+			AND A.CTRTYP_CT = 'TRT'
+			AND ((A.PARINIPRO_CF <> B.PARINIPRO_CF OR (B.PARINIPRO_CF IS NULL AND A.PARINIPRO_CF IS NOT NULL))
+			OR (A.PARRATEINDEX_CT <> B.PARRATEINDEX_CT OR (B.PARRATEINDEX_CT IS NULL AND A.PARRATEINDEX_CT IS NOT NULL))
+			OR (A.PARINISTS_CT <> B.PARINISTS_CT OR (B.PARINISTS_CT IS NULL AND A.PARINISTS_CT IS NOT NULL)) --[001]
+			OR (B.PARFIRCLO_D IS NULL AND A.PARFIRCLO_D IS NOT NULL)) --[001]
+END
+
+IF(@norme_cf = 'I17L')
+BEGIN
+	UPDATE BTRT..TSECIFRS
+		SET B.LOCINIPRO_CF = A.LOCINIPRO_CF,
+			B.LOCRATEINDEX_CT = A.LOCRATEINDEX_CT,
+			B.LSTUPD_D = A.LSTUPD_D,
+			B.LSTUPDUSR_CF = A.LSTUPDUSR_CF,
+			B.LOCINISTS_CT = A.LOCINISTS_CT, --[001]
+			B.LOCFIRCLO_D = A.LOCFIRCLO_D --[001]
+			FROM BTRAV..ESFD8000_TSECIFRS A, BTRT..TSECIFRS B 
+			WHERE A.CTR_NF = B.CTR_NF
+			AND A.UWY_NF = B.UWY_NF
+			AND A.UW_NT = B.UW_NT
+			AND A.END_NT = B.END_NT
+			AND A.SEC_NF = B.SEC_NF
+			AND A.CTRTYP_CT = 'TRT'
+			AND ((A.LOCINIPRO_CF <> B.LOCINIPRO_CF OR (B.LOCINIPRO_CF IS NULL AND A.LOCINIPRO_CF IS NOT NULL))
+			OR (A.LOCRATEINDEX_CT <> B.LOCRATEINDEX_CT OR (B.LOCRATEINDEX_CT IS NULL AND A.LOCRATEINDEX_CT IS NOT NULL))
+			OR (A.LOCINISTS_CT <> B.LOCINISTS_CT OR (B.LOCINISTS_CT IS NULL AND A.LOCINISTS_CT IS NOT NULL)) --[001]
+			OR (B.LOCFIRCLO_D IS NULL AND A.LOCFIRCLO_D IS NOT NULL)) --[001]
+END
+
+/* ------------------------------------------------------------------- */
+
+select @erreur = @@error
+if @erreur != 0
+	begin
+		goto err
+	end
+
+COMMIT TRANSACTION
+return 0
+
+err:
+	ROLLBACK TRANSACTION
+	return @erreur
+
+end
+go
+
+if object_id('PuSECIFRS_03') is not null
+	print '<<< CREATED PROC PuSECIFRS_03 >>>'
+else
+	print '<<< FAILED CREATING PROC PuSECIFRS_03 >>>'
+go
+
+grant execute on PuSECIFRS_03 TO GOMEGA
+go
+
+grant execute on PuSECIFRS_03 TO GDBBATCH
+go

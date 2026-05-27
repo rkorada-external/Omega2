@@ -1,0 +1,7 @@
+
+# Chaine parameter file
+
+MAILTO_PROD "SBEHAGUE-EXTERNAL@scor.com,TDEUTSCH-EXTERNAL@scor.com,MBRIK-EXTERNAL@scor.com,KNGORAN@scor.com,ypersee-external@scor.com,spigot@scor.com,slongeau@scor.com,mzanguim-external@scor.com"
+MAILTO_TEST "SBEHAGUE-EXTERNAL@scor.com,TDEUTSCH-EXTERNAL@scor.com,MBRIK-EXTERNAL@scor.com,KNGORAN@scor.com,ypersee-external@scor.com,spigot@scor.com,slongeau@scor.com"
+MAILTO_DEV "SBEHAGUE-EXTERNAL@scor.com,ypersee-external@scor.com"
+PURGE_DAYS 7

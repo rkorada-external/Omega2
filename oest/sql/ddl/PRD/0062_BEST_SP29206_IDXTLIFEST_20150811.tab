@@ -1,0 +1,32 @@
+USE BEST
+go
+
+-----------------------------------------------------------------
+--[009] 10/08/2015 R. Cassis :spot:29206 Recréation de l'index avec CRE_D et filiale à la fin pour optimisation.
+-----------------------------------------------------------------
+
+select getdate()
+go
+SETUSER 'dbo'
+go
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TLIFEST') AND name='ILIFEST_00')
+BEGIN
+    DROP INDEX TLIFEST.ILIFEST_00
+    IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TLIFEST') AND name='ILIFEST_00')
+        PRINT '<<< FAILED DROPPING INDEX dbo.TLIFEST.ILIFEST_00 >>>'
+    ELSE
+        PRINT '<<< DROPPED INDEX dbo.TLIFEST.ILIFEST_00 >>>'
+END
+go
+SETUSER
+go
+CREATE UNIQUE CLUSTERED INDEX ILIFEST_00
+    ON dbo.TLIFEST(CTR_NF,END_NT,SEC_NF,UWY_NF,UW_NT,BALSHEY_NF,BALSHTMTH_NF,ACY_NF,PRS_CF,ACMTRS_NT,GAAP_NT,DETTRNCOD_CF,CRE_D,SSD_CF)
+go
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TLIFEST') AND name='ILIFEST_00')
+    PRINT '<<< CREATED INDEX dbo.TLIFEST.ILIFEST_00 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING INDEX dbo.TLIFEST.ILIFEST_00 >>>'
+go
+select getdate()
+go

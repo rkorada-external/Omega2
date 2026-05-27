@@ -1,0 +1,309 @@
+/*==============================================================================
+historique des modifications :
+[001] 13/07/2012 R. Cassis   :spot:23802  Ajout champ PRS_CF pour Solvency
+==============================================================================*/
+double Kd_CACCPRM_M;
+double Kd_CACCEPP_M;
+double Kd_CACCRPP_M;
+double Kd_CACCPNA_M;
+double Kd_CACCRESPRM_M;
+double Kd_CACCRPCCP_M;
+double Kd_CACCLOA_M;
+double Kd_CACCBRK_M;
+double Kd_CACCFAR_M;
+double Kd_CACCFAR2_M;
+double Kd_CACCSP_M;
+double Kd_CACCEPS_M;
+double Kd_CACCRPS_M;
+double Kd_CACCSAP_M;
+double Kd_CACCPBPAP_M;
+double Kd_CACCLOSS_M;
+double Kd_CACCSNEM_M;
+double Kd_CACCRPCCS_M;
+double Kd_CACCRESN_M;
+double Kd_CACCRES_M;
+double Kd_CACCACR_M;
+double Kd_IACCPRM_M;
+double Kd_IACCEPP_M;
+double Kd_IACCRPP_M;
+double Kd_IACCPNA_M;
+double Kd_IACCRESPRM_M;
+double Kd_IACCRPCCP_M;
+double Kd_IACCLOA_M;
+double Kd_IACCBRK_M;
+double Kd_IACCFAR_M;
+double Kd_IACCFAR2_M;
+double Kd_IACCSP_M;
+double Kd_IACCEPS_M;
+double Kd_IACCRPS_M;
+double Kd_IACCSAP_M;
+double Kd_IACCPBPAP_M;
+double Kd_IACCLOSS_M;
+double Kd_IACCSNEM_M;
+double Kd_IACCRPCCS_M;
+double Kd_IACCRESN_M;
+double Kd_IACCRES_M;
+double Kd_IACCACR_M;
+double Kd_ESTPRM_M;
+double Kd_ESTEPP_M;
+double Kd_ESTRPP_M;
+double Kd_ESTPNA_M;
+double Kd_ESTRESPRM_M;
+double Kd_ESTRPCCP_M;
+double Kd_ESTLOA_M;
+double Kd_ESTBRK_M;
+double Kd_ESTFAR_M;
+double Kd_ESTFAR2_M;
+double Kd_ESTSP_M;
+double Kd_ESTEPS_M;
+double Kd_ESTRPS_M;
+double Kd_ESTSAP_M;
+double Kd_ESTPBPAP_M;
+double Kd_ESTLOSS_M;
+double Kd_ESTSNEM_M;
+double Kd_ESTRPCCS_M;
+double Kd_ESTBLKPL_M;
+double Kd_ESTBLKOSL_M;
+double Kd_ESTIBNR2_M;
+double Kd_ESTRESN_M;
+double Kd_ESTRES_M;
+double Kd_ESTACR_M;
+double Kd_SPEPRM_M;
+double Kd_SPEEPP_M;
+double Kd_SPERPP_M;
+double Kd_SPEPNA_M;
+double Kd_SPERESPRM_M;
+double Kd_SPERPCCP_M;
+double Kd_SPELOA_M;
+double Kd_SPEBRK_M;
+double Kd_SPEFAR_M;
+double Kd_SPEFAR2_M;
+double Kd_SPESP_M;
+double Kd_SPEEPS_M;
+double Kd_SPERPS_M;
+double Kd_SPESAP_M;
+double Kd_SPEPBPAP_M;
+double Kd_SPELOSS_M;
+double Kd_SPESNEM_M;
+double Kd_SPERPCCS_M;
+double Kd_SPEBLKPL_M;
+double Kd_SPEBLKOSL_M;
+double Kd_SPEIBNR2_M;
+double Kd_SPERESN_M;
+double Kd_SPERES_M;
+double Kd_SPEACR_M;
+
+ /* definition de la position des champs du fichier FCTRSTAT */
+
+#define	CTRSTAT_CTR_NF		0
+#define	CTRSTAT_END_NT      	1
+#define	CTRSTAT_SEC_NF       	2
+#define	CTRSTAT_UWY_NF       	3
+#define	CTRSTAT_UW_NT        	4
+#define	CTRSTAT_SSD_CF       	5
+#define	CTRSTAT_ESB_CF   	6
+#define	CTRSTAT_SECINC_D     	7
+#define	CTRSTAT_EXP_D        	8
+#define	CTRSTAT_DIFMTH_NF    	9
+#define	CTRSTAT_CTRNAT_CT    	10
+#define	CTRSTAT_CTRRET_B     	11
+#define	CTRSTAT_SECSTS_CT    	12
+#define	CTRSTAT_LOB_CF       	13
+#define	CTRSTAT_TOP_CF       	14
+#define	CTRSTAT_SOB_CF       	15
+#define	CTRSTAT_PRDCOD_CT    	16
+#define	CTRSTAT_NAT_CF       	17
+#define	CTRSTAT_GAR_CF       	18
+#define	CTRSTAT_DIV_NT       	19
+#define	CTRSTAT_PCPRSKTRY_CF 	20
+#define	CTRSTAT_USRCRTCOD_CT 	21
+#define	CTRSTAT_USRCRTVAL_LM 	22
+#define	CTRSTAT_SECQUA_CF    	23
+#define	CTRSTAT_SECQUA2_CF   	24
+#define	CTRSTAT_SECQUA3_CF   	25
+#define	CTRSTAT_SECQUA4_CF   	26
+#define	CTRSTAT_SECQUA5_CF   	27
+#define	CTRSTAT_WRKCAT_CT    	28
+#define	CTRSTAT_UWGRP_CF     	29
+#define	CTRSTAT_ADMGRP_CF    	30
+#define	CTRSTAT_UWORG_CF     	31
+#define	CTRSTAT_ANLCTY_NF    	32
+#define	CTRSTAT_CED_NF       	33
+#define	CTRSTAT_ORGCED_NF    	34
+#define	CTRSTAT_PRD_NF       	35
+#define	CTRSTAT_REITYP_CF    	36
+#define	CTRSTAT_ACCADMTYP_CF 	37
+#define	CTRSTAT_SECACCSTS_CT 	38
+#define	CTRSTAT_ACCFRQ_CT    	39
+#define	CTRSTAT_CMPACCPER_NF 	40
+#define	CTRSTAT_LSTCEDPER_NF 	41
+#define	CTRSTAT_PRMPRTSCL_B  	42
+#define	CTRSTAT_ERNPRMADM_B  43
+#define	CTRSTAT_INSPOL_R     44
+#define	CTRSTAT_POLDURMTH_NF 45
+#define	CTRSTAT_COMTYP_CT    46
+#define	CTRSTAT_COM_R        47
+#define	CTRSTAT_MINCOM_R     48
+#define	CTRSTAT_OVRCOM_R     49
+#define	CTRSTAT_TAX_R        50
+#define	CTRSTAT_BRK_R        51
+#define	CTRSTAT_REIEXI_B     52
+#define	CTRSTAT_REIFRE_B     53
+#define	CTRSTAT_PRFCOMEXI_B  54
+#define	CTRSTAT_LOSCTBEXI_B  55
+#define	CTRSTAT_LOSCOREXI_B  56
+#define	CTRSTAT_CBIRETCED_R  57
+#define	CTRSTAT_PBIRETCED_R  58
+#define	CTRSTAT_CBERETCED_R  59
+#define	CTRSTAT_PBERETCED_R  60
+#define	CTRSTAT_EGPCUR_CF    61
+#define	CTRSTAT_SBJPRM_M     62
+#define	CTRSTAT_SBJPRMCPT_M  63
+#define	CTRSTAT_SBJCPTDEF_B  64
+#define	CTRSTAT_SCOSHA_R     65
+#define	CTRSTAT_PMLRAT_R     66
+#define	CTRSTAT_SCOEGP_M     67
+#define	CTRSTAT_QUOT_CT      68
+#define	CTRSTAT_PRMFINEFF_R  69
+#define	CTRSTAT_PRMMAXEFF_R  70
+#define	CTRSTAT_PRMFINACT_R  71
+#define	CTRSTAT_PRMMAXACT_R  72
+#define	CTRSTAT_CLMPRMACT_R  73
+#define	CTRSTAT_PRMPRT_M     74
+#define	CTRSTAT_EGPRPCC_M    75
+#define	CTRSTAT_CALAMTPRM_M  76
+#define	CTRSTAT_ENTAMTPRM_M  77
+#define	CTRSTAT_RETAMTPRM_M  78
+#define	CTRSTAT_ADMMODPRM_CT 79
+#define	CTRSTAT_CALAMTCLM_M  80
+#define	CTRSTAT_ENTAMTCLM_M  81
+#define	CTRSTAT_RETAMTCLM_M  82
+#define	CTRSTAT_ADMMODCLM_CT 83
+#define	CTRSTAT_RESPRM_M     84
+#define	CTRSTAT_ULTPMLRAT_R  85
+#define	CTRSTAT_ULTCRE_D     86
+#define	CTRSTAT_ULTORICOD_LS 87
+#define	CTRSTAT_ULTUPDUSR_CF 88
+#define	CTRSTAT_FLAPRM_M     89
+#define	CTRSTAT_PRVPRM_M     90
+#define	CTRSTAT_LAYCAP_M     91
+#define	CTRSTAT_ESTVRS_NF    92
+#define	CTRSTAT_ESTSEG_NF    93
+#define	CTRSTAT_ESTCUR_CF    94
+#define	CTRSTAT_ESTAMORAT_CT 95
+#define	CTRSTAT_ESTPRMAMT_M  96
+#define	CTRSTAT_ESTCLMAMT_M  97
+#define	CTRSTAT_ESTLOSRAT_R  98
+#define	CTRSTAT_ACTVRS_NF    99
+#define	CTRSTAT_ACTSEG_NF    100
+#define	CTRSTAT_ACTCUR_CF    101
+#define	CTRSTAT_ACTAMORAT_CT	102
+#define	CTRSTAT_ACTPRMAMT_M  103
+#define	CTRSTAT_ACTCLMAMT_M  104
+#define	CTRSTAT_ACTLOSRAT_R  105
+
+#define	CTRSTAT_CACCPRM_M    106
+#define	CTRSTAT_CACCEPP_M    107
+#define	CTRSTAT_CACCRPP_M    108
+#define	CTRSTAT_CACCPNA_M    109
+#define	CTRSTAT_CACCRESPRM_M 110
+#define	CTRSTAT_CACCRPCCP_M  111
+#define	CTRSTAT_CACCLOA_M    112
+#define	CTRSTAT_CACCBRK_M    113
+#define	CTRSTAT_CACCFAR_M    114
+#define	CTRSTAT_CACCFAR2_M   115
+#define	CTRSTAT_CACCSP_M     116
+#define	CTRSTAT_CACCEPS_M    117
+#define	CTRSTAT_CACCRPS_M    118
+#define	CTRSTAT_CACCSAP_M    119
+#define	CTRSTAT_CACCPBPAP_M  120
+#define	CTRSTAT_CACCLOSS_M   121
+#define	CTRSTAT_CACCSNEM_M   122
+#define	CTRSTAT_CACCRPCCS_M  123
+#define	CTRSTAT_CACCRESN_M   124
+#define	CTRSTAT_CACCRES_M    125
+#define	CTRSTAT_CACCACR_M    126
+#define	CTRSTAT_IACCPRM_M   127
+#define	CTRSTAT_IACCEPP_M    128
+#define	CTRSTAT_IACCRPP_M    129
+#define	CTRSTAT_IACCPNA_M    130
+#define	CTRSTAT_IACCRESPRM_M 131
+#define	CTRSTAT_IACCRPCCP_M  132
+#define	CTRSTAT_IACCLOA_M    133
+#define	CTRSTAT_IACCBRK_M    134
+#define	CTRSTAT_IACCFAR_M    135
+#define	CTRSTAT_IACCFAR2_M   136
+#define	CTRSTAT_IACCSP_M     137
+#define	CTRSTAT_IACCEPS_M    138
+#define	CTRSTAT_IACCRPS_M    139
+#define	CTRSTAT_IACCSAP_M    140
+#define	CTRSTAT_IACCPBPAP_M  141
+#define	CTRSTAT_IACCLOSS_M   142
+#define	CTRSTAT_IACCSNEM_M   143
+#define	CTRSTAT_IACCRPCCS_M  144
+#define	CTRSTAT_IACCRESN_M   145
+#define	CTRSTAT_IACCRES_M    146
+#define	CTRSTAT_IACCACR_M    147
+#define	CTRSTAT_ESTPRM_M     148
+#define	CTRSTAT_ESTEPP_M     149
+#define	CTRSTAT_ESTRPP_M     150
+#define	CTRSTAT_ESTPNA_M     151
+#define	CTRSTAT_ESTRESPRM_M  152
+#define	CTRSTAT_ESTRPCCP_M   153
+#define	CTRSTAT_ESTLOA_M     154
+#define	CTRSTAT_ESTBRK_M     155
+#define	CTRSTAT_ESTFAR_M     156
+#define	CTRSTAT_ESTFAR2_M    157
+#define	CTRSTAT_ESTSP_M      158
+#define	CTRSTAT_ESTEPS_M     159
+#define	CTRSTAT_ESTRPS_M     160
+#define	CTRSTAT_ESTSAP_M     161
+#define	CTRSTAT_ESTPBPAP_M   162
+#define	CTRSTAT_ESTLOSS_M    163
+#define	CTRSTAT_ESTSNEM_M    164
+#define	CTRSTAT_ESTRPCCS_M   165
+#define	CTRSTAT_ESTBLKPL_M   166
+#define	CTRSTAT_ESTBLKOSL_M  167
+#define	CTRSTAT_ESTIBNR2_M   168
+#define	CTRSTAT_ESTRESN_M    169
+#define	CTRSTAT_ESTRES_M     170
+#define	CTRSTAT_ESTACR_M     171
+#define	CTRSTAT_SPEPRM_M     172
+#define	CTRSTAT_SPEEPP_M     173
+#define	CTRSTAT_SPERPP_M     174
+#define	CTRSTAT_SPEPNA_M     175
+#define	CTRSTAT_SPERESPRM_M  176
+#define	CTRSTAT_SPERPCCP_M   177
+#define	CTRSTAT_SPELOA_M     178
+#define	CTRSTAT_SPEBRK_M     179
+#define	CTRSTAT_SPEFAR_M     180
+#define	CTRSTAT_SPEFAR2_M    181
+#define	CTRSTAT_SPESP_M      182
+#define	CTRSTAT_SPEEPS_M     183
+#define	CTRSTAT_SPERPS_M     184
+#define	CTRSTAT_SPESAP_M     185
+#define	CTRSTAT_SPEPBPAP_M   186
+#define	CTRSTAT_SPELOSS_M    187
+#define	CTRSTAT_SPESNEM_M    188
+#define	CTRSTAT_SPERPCCS_M   189
+#define	CTRSTAT_SPEBLKPL_M   190
+#define	CTRSTAT_SPEBLKOSL_M  191
+#define	CTRSTAT_SPEIBNR2_M   192
+#define	CTRSTAT_SPERESN_M    193
+#define	CTRSTAT_SPERES_M     194
+#define	CTRSTAT_SPEACR_M     195
+
+#define CTRSTAT_CEDHORDNBR_NT    196
+#define CTRSTAT_CEDSORDNBR_NT    197
+#define CTRSTAT_ORGCEDHORDNBR_NT 198
+#define CTRSTAT_ORGCEDSORDNBR_NT 199
+#define CTRSTAT_BRKHORDNBR_NT    200
+#define CTRSTAT_BRKSORDNBR_NT    201
+#define CTRSTAT_FACADMTYP_B      202
+#define CTRSTAT_CLIIND_NF        203
+#define CTRSTAT_HORDNBR_NT       204
+#define CTRSTAT_PRS_CF           205
+
+ /* nombre de colonnes du fichier FCTRSTAT */
+
+#define NB_COL_CTRSTAT	206

@@ -1,0 +1,1073 @@
+/* TRA01 - Segmentation */
+
+use BEST
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEG2CTRCAT')
+            and   type = 'U')
+   drop table TSEG2CTRCAT
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEG2CTRSTS')
+            and   type = 'U')
+   drop table TSEG2CTRSTS
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEG2ESB')
+            and   type = 'U')
+   drop table TSEG2ESB
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEG2SECACCSTS')
+            and   type = 'U')
+   drop table TSEG2SECACCSTS
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEG2SECSTS')
+            and   type = 'U')
+   drop table TSEG2SECSTS
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGCRI2GRAN')
+            and   type = 'U')
+   drop table TSEGCRI2GRAN
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGCRI2SCOPE')
+            and   type = 'U')
+   drop table TSEGCRI2SCOPE
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGCRICAT')
+            and   type = 'U')
+   drop table TSEGCRICAT
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGCRICATL')
+            and   type = 'U')
+   drop table TSEGCRICATL
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGCRISUBCAT')
+            and   type = 'U')
+   drop table TSEGCRISUBCAT
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGCRISUBCATL')
+            and   type = 'U')
+   drop table TSEGCRISUBCATL
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGCRITERIA')
+            and   type = 'U')
+   drop table TSEGCRITERIA
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGMENTATION')
+            and   type = 'U')
+   drop table TSEGMENTATION
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGMENTEXCEPT')
+            and   type = 'U')
+   drop table TSEGMENTEXCEPT
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGMENTLVL')
+            and   type = 'U')
+   drop table TSEGMENTLVL
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGMENTRULE')
+            and   type = 'U')
+   drop table TSEGMENTRULE
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGMENTRULE2CRI')
+            and   type = 'U')
+   drop table TSEGMENTRULE2CRI
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGMENTRULE2TYPE')
+            and   type = 'U')
+   drop table TSEGMENTRULE2TYPE
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGMT')
+            and   type = 'U')
+   drop table TSEGMT
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUN')
+            and   type = 'U')
+   drop table TSEGRUN
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUNERR_S')
+            and   type = 'U')
+   drop table TSEGRUNERR_S
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUNRES_S')
+            and   type = 'U')
+   drop table TSEGRUNRES_S
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUNSCHED')
+            and   type = 'U')
+   drop table TSEGRUNSCHED
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGTYPE')
+            and   type = 'U')
+   drop table TSEGTYPE
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGUWASMSEC_S')
+            and   type = 'U')
+   drop table TSEGUWASMSEC_S
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGUWCOLUMN')
+            and   type = 'U')
+   drop table TSEGUWCOLUMN
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGUWRETPLC_S')
+            and   type = 'U')
+   drop table TSEGUWRETPLC_S
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGUWTABLE')
+            and   type = 'U')
+   drop table TSEGUWTABLE
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TUWEXPORT')
+            and   type = 'U')
+   drop table TUWEXPORT
+go
+
+
+/*==============================================================*/
+/* Table: TSEG2CTRCAT                                           */
+/*==============================================================*/
+create table TSEG2CTRCAT (
+   SGT_NT               USGT_NT                        not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   CTRCAT_CT            UBANVAL_CT                     not null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEG2CTRCAT_00                                        */
+/*==============================================================*/
+create unique clustered index ISEG2CTRCAT_00 on TSEG2CTRCAT (
+SGT_NT ASC,
+SGTVER_NT ASC,
+CTRCAT_CT ASC
+)
+go
+
+grant all on  TSEG2CTRCAT to GOMEGA
+grant all on  TSEG2CTRCAT to GDBBATCH
+grant select on  TSEG2CTRCAT to GCONSULT
+go
+
+
+/*==============================================================*/
+/* Table: TSEG2CTRSTS                                           */
+/*==============================================================*/
+create table TSEG2CTRSTS (
+   SGT_NT               USGT_NT                        not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   CTRSTS_CF            UBANVAL_CT                     not null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEG2CTRSTS_00                                        */
+/*==============================================================*/
+create unique clustered index ISEG2CTRSTS_00 on TSEG2CTRSTS (
+SGT_NT ASC,
+SGTVER_NT ASC,
+CTRSTS_CF ASC
+)
+go
+
+grant all on  TSEG2CTRSTS to GOMEGA
+grant all on  TSEG2CTRSTS to GDBBATCH
+grant select on  TSEG2CTRSTS to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEG2ESB                                              */
+/*==============================================================*/
+create table TSEG2ESB (
+   SGT_NT               USGT_NT                        not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   SSD_CF               USSD_CF                        not null,
+   ESB_CF               UESB_CF                        not null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEG2ESB_00                                           */
+/*==============================================================*/
+create unique clustered index ISEG2ESB_00 on TSEG2ESB (
+SGT_NT ASC,
+SGTVER_NT ASC,
+SSD_CF ASC,
+ESB_CF ASC
+)
+go
+
+grant all on  TSEG2ESB to GOMEGA
+grant all on  TSEG2ESB to GDBBATCH
+grant select on  TSEG2ESB to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEG2SECACCSTS                                        */
+/*==============================================================*/
+create table TSEG2SECACCSTS (
+   SGT_NT               USGT_NT                        not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   SECACCSTS_CF         UBANVAL_CT                     not null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEG2SECACCSTS_00                                     */
+/*==============================================================*/
+create unique clustered index ISEG2SECACCSTS_00 on TSEG2SECACCSTS (
+SGT_NT ASC,
+SGTVER_NT ASC,
+SECACCSTS_CF ASC
+)
+go
+
+grant all on  TSEG2SECACCSTS to GOMEGA
+grant all on  TSEG2SECACCSTS to GDBBATCH
+grant select on  TSEG2SECACCSTS to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEG2SECSTS                                           */
+/*==============================================================*/
+create table TSEG2SECSTS (
+   SGT_NT               USGT_NT                        not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   SECSTS_CF            UBANVAL_CT                     not null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEG2SECSTS_00                                        */
+/*==============================================================*/
+create unique clustered index ISEG2SECSTS_00 on TSEG2SECSTS (
+SGT_NT ASC,
+SGTVER_NT ASC,
+SECSTS_CF ASC
+)
+go
+
+grant all on  TSEG2SECSTS to GOMEGA
+grant all on  TSEG2SECSTS to GDBBATCH
+grant select on  TSEG2SECSTS to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGCRI2GRAN                                          */
+/*==============================================================*/
+create table TSEGCRI2GRAN (
+   SUBCAT_NT            int                            not null,
+   GRAN_CF              UBANVAL_CT                     not null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGCRI2GRAN_00                                       */
+/*==============================================================*/
+create unique clustered index ISEGCRI2GRAN_00 on TSEGCRI2GRAN (
+SUBCAT_NT ASC,
+GRAN_CF ASC
+)
+go
+
+grant all on  TSEGCRI2GRAN to GOMEGA
+grant all on  TSEGCRI2GRAN to GDBBATCH
+grant select on  TSEGCRI2GRAN to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGCRI2SCOPE                                         */
+/*==============================================================*/
+create table TSEGCRI2SCOPE (
+   SGTCRICAT_NT         int                            not null,
+   SCOPE_CT             UBANVAL_CT                     not null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGCRI2SCOPE_00                                      */
+/*==============================================================*/
+create unique clustered index ISEGCRI2SCOPE_00 on TSEGCRI2SCOPE (
+SGTCRICAT_NT ASC,
+SCOPE_CT ASC
+)
+go
+
+grant all on  TSEGCRI2SCOPE to GOMEGA
+grant all on  TSEGCRI2SCOPE to GDBBATCH
+grant select on  TSEGCRI2SCOPE to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGCRICAT                                            */
+/*==============================================================*/
+create table TSEGCRICAT (
+   SGTCRICAT_NT         int                            not null,
+   SGTCRICAT_LL         UL64                           null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGCRICAT_00                                         */
+/*==============================================================*/
+create unique clustered index ISEGCRICAT_00 on TSEGCRICAT (
+SGTCRICAT_NT ASC
+)
+go
+
+grant all on  TSEGCRICAT to GOMEGA
+grant all on  TSEGCRICAT to GDBBATCH
+grant select on  TSEGCRICAT to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGCRICATL                                           */
+/*==============================================================*/
+create table TSEGCRICATL (
+   SGTCRICAT_NT         int                            not null,
+   LAG_CF               ULAG_CF                        not null,
+   SGTCRICAT_LS         UL16                           null,
+   SGTCRICAT_LL         UL64                           null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGCRICATL_00                                        */
+/*==============================================================*/
+create unique clustered index ISEGCRICATL_00 on TSEGCRICATL (
+SGTCRICAT_NT ASC,
+LAG_CF ASC
+)
+go
+
+grant all on  TSEGCRICATL to GOMEGA
+grant all on  TSEGCRICATL to GDBBATCH
+grant select on  TSEGCRICATL to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGCRISUBCAT                                         */
+/*==============================================================*/
+create table TSEGCRISUBCAT (
+   SGTCRISUBCAT_NT      int                            not null,
+   SGTCRICAT_NT         int                            not null,
+   SGTCRISUBCAT_LL      UL64                           null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGCRISUBCAT_00                                      */
+/*==============================================================*/
+create unique clustered index ISEGCRISUBCAT_00 on TSEGCRISUBCAT (
+SGTCRISUBCAT_NT ASC
+)
+go
+
+grant all on  TSEGCRISUBCAT to GOMEGA
+grant all on  TSEGCRISUBCAT to GDBBATCH
+grant select on  TSEGCRISUBCAT to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGCRISUBCATL                                        */
+/*==============================================================*/
+create table TSEGCRISUBCATL (
+   SGTCRISUBCAT_NT      int                            not null,
+   LAG_CF               ULAG_CF                        not null,
+   SGTCRISUBCAT_LS      UL16                           null,
+   SGTCRISUBCAT_LL      UL64                           null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGCRISUBCATL_00                                     */
+/*==============================================================*/
+create unique clustered index ISEGCRISUBCATL_00 on TSEGCRISUBCATL (
+SGTCRISUBCAT_NT ASC,
+LAG_CF ASC
+)
+go
+
+grant all on  TSEGCRISUBCATL to GOMEGA
+grant all on  TSEGCRISUBCATL to GDBBATCH
+grant select on  TSEGCRISUBCATL to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGCRITERIA                                          */
+/*==============================================================*/
+create table TSEGCRITERIA (
+   SGTCRI_CF            UL32                           not null,
+   SGTCRISUBCAT_NT      int                            not null,
+   SGTUWCOL_CF          UL16                           not null,
+   SGTCRI_LS            UL32                           not null,
+   SGTCRITYP_CT         UBANVAL_CT                     not null,
+   SGTCRICTL_CT         UBANVAL_CT                     null,
+   SGTCRIPAR_LS         UL16                           null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGCRITERIA_00                                       */
+/*==============================================================*/
+create unique clustered index ISEGCRITERIA_00 on TSEGCRITERIA (
+SGTCRI_CF ASC
+)
+go
+
+grant all on  TSEGCRITERIA to GOMEGA
+grant all on  TSEGCRITERIA to GDBBATCH
+grant select on  TSEGCRITERIA to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGMENTATION                                         */
+/*==============================================================*/
+create table TSEGMENTATION (
+   SGT_NT               USGT_NT                        not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   SGTTYP_NT            USGTTYP_NT                     not null,
+   SGT_LM               UL32                           not null,
+   SGTVER_LL            UL64                           null,
+   PRDSIT_CF            char(4)                        null,
+   SSD_CF               USSD_CF                        null,
+   SGTSTS_CF            UBANVAL_CT                     not null,
+   SGTGRAN_CT           UBANVAL_CT                     not null,
+   BALAI_B              UBOOLEAN_B                     null,
+   PRIORITY_B           UBOOLEAN_B                     null,
+   LASTOPTION_B         UBOOLEAN_B                     null,
+   MAXLVL_NB            int                            not null,
+   RSPGRP_CF            UGRP_CF                        not null,
+   RSPUSR_CF            UUSR_CF                        not null,
+   ESBSCOPE_CT          UBANVAL_CT                     null,
+   CTRTYP_CT            UBANVAL_CT                     null,
+   ALLCTRSTS_B          UBOOLEAN_B                     null,
+   ALLCTRCAT_B          UBOOLEAN_B                     null,
+   ALLSECSTS_B          UBOOLEAN_B                     null,
+   ALLSECACCSTS_B       UBOOLEAN_B                     null,
+   FULFREQ_CT           UBANVAL_CT                     null,
+   DLTFREQ_CT           UBANVAL_CT                     null,
+   SNPFREQ_CT           UBANVAL_CT                     null,
+   ACTIV_D              datetime                       null,
+   ARCHIV_D             datetime                       null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGMENTATION_00                                      */
+/*==============================================================*/
+create unique clustered index ISEGMENTATION_00 on TSEGMENTATION (
+SGT_NT ASC,
+SGTVER_NT ASC
+)
+go
+
+grant all on  TSEGMENTATION to GOMEGA
+grant all on  TSEGMENTATION to GDBBATCH
+grant select on  TSEGMENTATION to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGMENTEXCEPT                                        */
+/*==============================================================*/
+create table TSEGMENTEXCEPT (
+   SGTEXC_NT            int                            not null,
+   SGT_NT               USGT_NT                        not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   SGMT_NF              USGMT_NF                       not null,
+   SEGCTRTYP_CT         UBANVAL_CT                     null,
+   CTR_NF               UCTR_NF                        not null,
+   UWY_NF               UUWY_NF                        null,
+   UW_NT                UUW_NT                         null,
+   SEC_NF               USEC_NF                        null,
+   RTO_NF               UCLI_NF                        null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGMENTEXCEPT_00                                     */
+/*==============================================================*/
+create unique clustered index ISEGMENTEXCEPT_00 on TSEGMENTEXCEPT (
+SGTEXC_NT ASC,
+SGT_NT ASC,
+SGTVER_NT ASC
+)
+go
+
+grant all on  TSEGMENTEXCEPT to GOMEGA
+grant all on  TSEGMENTEXCEPT to GDBBATCH
+grant select on  TSEGMENTEXCEPT to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGMENTLVL                                           */
+/*==============================================================*/
+create table TSEGMENTLVL (
+   SGTLVL_CT            int                            not null,
+   SGT_NT               USGT_NT                        not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   LVL_LS               UL16                           not null,
+   LVL_LM               UL32                           null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGMENTLVL_00                                        */
+/*==============================================================*/
+create unique clustered index ISEGMENTLVL_00 on TSEGMENTLVL (
+SGTLVL_CT ASC,
+SGT_NT ASC,
+SGTVER_NT ASC
+)
+go
+
+grant all on  TSEGMENTLVL to GOMEGA
+grant all on  TSEGMENTLVL to GDBBATCH
+grant select on  TSEGMENTLVL to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGMENTRULE                                          */
+/*==============================================================*/
+create table TSEGMENTRULE (
+   SGTRUL_NT            int                            not null,
+   SGMT_NF              USGMT_NF                       not null,
+   SGT_NT               USGT_NT                        not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   RULE_LS              UL16                           not null,
+   RULPRIO_CT           int                            null,
+   FUNCDEF_T            text                           null,
+   TECHDEF_T            text                           null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGMENTRULE_00                                       */
+/*==============================================================*/
+create unique clustered index ISEGMENTRULE_00 on TSEGMENTRULE (
+SGTRUL_NT ASC,
+SGMT_NF ASC,
+SGT_NT ASC,
+SGTVER_NT ASC
+)
+go
+
+grant all on  TSEGMENTRULE to GOMEGA
+grant all on  TSEGMENTRULE to GDBBATCH
+grant select on  TSEGMENTRULE to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGMENTRULE2CRI                                      */
+/*==============================================================*/
+create table TSEGMENTRULE2CRI (
+   SGTRULE_NT           int                            not null,
+   SGMT_NF              int                            not null,
+   SGT_NT               USGT_NT                        not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   SGTCRI_CF            UL16                           not null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGMENTRULE2CRI_00                                   */
+/*==============================================================*/
+create unique clustered index ISEGMENTRULE2CRI_00 on TSEGMENTRULE2CRI (
+SGTRULE_NT ASC,
+SGMT_NF ASC,
+SGT_NT ASC,
+SGTVER_NT ASC,
+SGTCRI_CF ASC
+)
+go
+
+grant all on  TSEGMENTRULE2CRI to GOMEGA
+grant all on  TSEGMENTRULE2CRI to GDBBATCH
+grant select on  TSEGMENTRULE2CRI to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGMENTRULE2TYPE                                     */
+/*==============================================================*/
+create table TSEGMENTRULE2TYPE (
+   SGTRUL_NT            int                            not null,
+   SGMT_NF              USGMT_NF                       not null,
+   SGT_NT               USGT_NT                        not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   SGTTYP_NT            USGTTYP_NT                     not null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGMENTRULE2TYPE_00                                  */
+/*==============================================================*/
+create unique clustered index ISEGMENTRULE2TYPE_00 on TSEGMENTRULE2TYPE (
+SGTRUL_NT ASC,
+SGMT_NF ASC,
+SGT_NT ASC,
+SGTVER_NT ASC,
+SGTTYP_NT ASC
+)
+go
+
+grant all on  TSEGMENTRULE2TYPE to GOMEGA
+grant all on  TSEGMENTRULE2TYPE to GDBBATCH
+grant select on  TSEGMENTRULE2TYPE to GCONSULT
+go
+
+
+/*==============================================================*/
+/* Table: TSEGMT                                                */
+/*==============================================================*/
+create table TSEGMT (
+   SGMT_NF              USGMT_NF                       not null,
+   SGT_NT               USGT_NT                        not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   SGMT_LS              UL16                           not null,
+   SGMT_LL              UL64                           null,
+   SGTLVL_NT            int                            not null,
+   PARSGMT_CF           USGMT_NF                       null,
+   BALAIMGT_CT          UBANVAL_CT                     null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGMT_00                                             */
+/*==============================================================*/
+create unique clustered index ISEGMT_00 on TSEGMT (
+SGMT_NF ASC,
+SGT_NT ASC,
+SGTVER_NT ASC
+)
+go
+
+grant all on  TSEGMT to GOMEGA
+grant all on  TSEGMT to GDBBATCH
+grant select on  TSEGMT to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGRUN                                               */
+/*==============================================================*/
+create table TSEGRUN (
+   SGTRUN_NT            USGTRUN_NT                     not null,
+   SGT_NT               USGT_NT                        not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   SGTRUNDAT_D          date                           not null,
+   PRDSIT_CF            char(4)                        null,
+   SGTSCOPE_CT          UBANVAL_CT                     null,
+   SGTRUNSTS_CT         UBANVAL_CT                     null,
+   SGTEVAL_B            UBOOLEAN_B                     null,
+   SGTEVALMOD_CT        UBANVAL_CT                     null,
+   SGTSIMU_B            UBOOLEAN_B                     null,
+   SGTSNAP_B            UBOOLEAN_B                     null,
+   SCHEDULED_B          UBOOLEAN_B                     null,
+   SGTRUNERR_CT         char(12)                       null,
+   SGTRUNERR_LL         UL255                          null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGRUN_00                                            */
+/*==============================================================*/
+create unique clustered index ISEGRUN_00 on TSEGRUN (
+SGTRUN_NT ASC,
+SGT_NT ASC
+)
+go
+
+grant all on  TSEGRUN to GOMEGA
+grant all on  TSEGRUN to GDBBATCH
+grant select on  TSEGRUN to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGRUNERR_S                                          */
+/*==============================================================*/
+create table TSEGRUNERR_S (
+   SGT_NT               USGT_NT                        not null,
+   SGTRUN_NT            USGTRUN_NT                     not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   SEGCTRTYP_CT         UBANVAL_CT                     null,
+   CTR_NF               UCTR_NF                        not null,
+   UWY_NF               UUWY_NF                        not null,
+   UW_NT                UUW_NT                         not null,
+   SEC_NF               USEC_NF                        not null,
+   END_NT               UEND_NT                        not null,
+   RTO_NF               UCLI_NF                        not null,
+   PLC_NT               UPLC_NT                        null,
+   SSD_CF				USSD_CF						   not null,
+   SGTERR_CT            char(12)                       not null,
+   SGTERR_LL            UL255                          null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGRUNERR_S_00                                       */
+/*==============================================================*/
+create unique clustered index ISEGRUNERR_S_00 on TSEGRUNERR_S (
+SGT_NT ASC,
+SGTVER_NT ASC,
+CTR_NF ASC,
+UWY_NF ASC,
+UW_NT ASC,
+SEC_NF ASC,
+END_NT ASC,
+RTO_NF ASC
+)
+go
+
+grant all on  TSEGRUNERR_S to GOMEGA
+grant all on  TSEGRUNERR_S to GDBBATCH
+grant select on  TSEGRUNERR_S to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGRUNRES_S                                          */
+/*==============================================================*/
+create table TSEGRUNRES_S (
+   SGT_NT               USGT_NT                        not null,
+   SGTRUN_NT            USGTRUN_NT                     not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   SGMT_NF              USGMT_NF                       not null,
+   SGTLVL_NT            int                            not null,
+   SEGCTRTYP_CT         UBANVAL_CT                     null,
+   CTR_NF               UCTR_NF                        not null,
+   UWY_NF               UUWY_NF                        not null,
+   UW_NT                UUW_NT                         not null,
+   SEC_NF               USEC_NF                        not null,
+   RTO_NF               UCLI_NF                        not null,
+   SSD_CF				USSD_CF						   not null,
+   SGTRES_LL            UL255                          null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGRUNRES_S_00                                       */
+/*==============================================================*/
+create unique clustered index ISEGRUNRES_S_00 on TSEGRUNRES_S (
+SGT_NT ASC,
+SGTRUN_NT ASC,
+SGTLVL_NT ASC,
+CTR_NF ASC,
+UWY_NF ASC,
+UW_NT ASC,
+SEC_NF ASC,
+RTO_NF ASC
+)
+go
+
+grant all on  TSEGRUNRES_S to GOMEGA
+grant all on  TSEGRUNRES_S to GDBBATCH
+grant select on  TSEGRUNRES_S to GCONSULT
+go
+
+
+/*==============================================================*/
+/* Table: TSEGRUNSCHED                                          */
+/*==============================================================*/
+create table TSEGRUNSCHED (
+   SGT_NT               USGT_NT                        not null,
+   SGTRUNDAT_D          date                           not null,
+   SGTEVAL_B            UBOOLEAN_B                     null,
+   SGTEVALMOD_CT        UBANVAL_CT                     null,
+   SGTSNAP_B            UBOOLEAN_B                     null,
+   SGTRUNSTS_CT         UBANVAL_CT                     null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGRUNSCHED_00                                       */
+/*==============================================================*/
+create unique clustered index ISEGRUNSCHED_00 on TSEGRUNSCHED (
+SGT_NT ASC,
+SGTRUNDAT_D ASC
+)
+go
+
+grant all on  TSEGRUNSCHED to GOMEGA
+grant all on  TSEGRUNSCHED to GDBBATCH
+grant select on  TSEGRUNSCHED to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGTYPE                                              */
+/*==============================================================*/
+create table TSEGTYPE (
+   SGTTYP_NT            USGTTYP_NT                     not null,
+   SGTTYP_LM            UL32                           not null,
+   SGTMGTLVL_CT         UBANVAL_CT                     not null,
+   SGTSCOPE_CT          UBANVAL_CT                     not null,
+   SGTTYPSTS_CT         UBANVAL_CT                     not null,
+   UWABSTR_B            UBOOLEAN_B                     not null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGTYPE_00                                           */
+/*==============================================================*/
+create unique clustered index ISEGTYPE_00 on TSEGTYPE (
+SGTTYP_NT ASC
+)
+go
+
+grant all on  TSEGTYPE to GOMEGA
+grant all on  TSEGTYPE to GDBBATCH
+grant select on  TSEGTYPE to GCONSULT
+go
+
+
+/*==============================================================*/
+/* Table: TSEGUWCOLUMN                                          */
+/*==============================================================*/
+create table TSEGUWCOLUMN (
+   SGTUWTAB_CF          UL16                           not null,
+   SGTUWCOL_CF          UL16                           not null,
+   SGTUWCOL_LS          UL32                           null,
+   SGTUWTYP_CT          char(32)                       not null,
+   SGTUWORDER_NB        int                            null,
+   SGTUWLEN_NB          tinyint                        null,
+   SGTUWSCA_NB          tinyint                        null,
+   SGTUWPRE_NB          tinyint                        null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGUWCOLUMN_00                                       */
+/*==============================================================*/
+create unique clustered index ISEGUWCOLUMN_00 on TSEGUWCOLUMN (
+SGTUWTAB_CF ASC,
+SGTUWCOL_CF ASC
+)
+go
+
+grant all on  TSEGUWCOLUMN to GOMEGA
+grant all on  TSEGUWCOLUMN to GDBBATCH
+grant select on  TSEGUWCOLUMN to GCONSULT
+go
+
+/*==============================================================*/
+/* Table: TSEGUWTABLE                                           */
+/*==============================================================*/
+create table TSEGUWTABLE (
+   SGTUWTAB_CF          UL16                           not null,
+   SGTRQST_T            text                           null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ISEGUWTABLE_00                                        */
+/*==============================================================*/
+create unique clustered index ISEGUWTABLE_00 on TSEGUWTABLE (
+SGTUWTAB_CF ASC
+)
+go
+
+grant all on  TSEGUWTABLE to GOMEGA
+grant all on  TSEGUWTABLE to GDBBATCH
+grant select on  TSEGUWTABLE to GCONSULT
+go
+
+
+/*==============================================================*/
+/* Table: TUWEXPORT                                           */
+/*==============================================================*/
+create table TUWEXPORT (
+   SGTTYP_NT            USGTTYP_NT                     not null,
+   SGTLVL_NT            int                            not null,
+   SGTSCOPE_CT          UBANVAL_CT                     not null,
+   SGTTGT_LS            UL32                           not null,
+   SGTTGT_LL            UL32                           not null
+)
+go
+
+/*==============================================================*/
+/* Index: IUWEXPORT_00                                        */
+/*==============================================================*/
+create unique clustered index ITUWEXPORT_00 on TUWEXPORT (
+SGTTYP_NT ASC,
+SGTLVL_NT ASC,
+SGTSCOPE_CT ASC
+)
+go
+
+grant all on  TUWEXPORT to GOMEGA
+grant all on  TUWEXPORT to GDBBATCH
+grant select on  TUWEXPORT to GCONSULT
+go

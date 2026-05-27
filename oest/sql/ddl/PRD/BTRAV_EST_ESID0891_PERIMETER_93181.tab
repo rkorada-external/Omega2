@@ -1,0 +1,36 @@
+USE BTRAV
+go
+
+-----------------------------------------------------------
+-- Chack if UWYPLAN_NF column exists in EST_ESID0891_PERIMETER
+--> if yes, then delete it  
+-----------------------------------------------------------
+if exists (select 1 from syscolumns
+            where id = object_id("EST_ESID0891_PERIMETER")
+            and name = "UWYPLAN_NF")
+begin
+  exec ("alter table EST_ESID0891_PERIMETER drop 
+        UWYPLAN_NF")
+end
+
+-- Create a new column UWYPLAN_NF with UUWY_NF as type
+-----------------------------------------------------------
+ALTER TABLE EST_ESID0891_PERIMETER ADD UWYPLAN_NF UUWY_NF null
+
+-----------------------------------------------------------
+-- Chack if VRSPLAN_NF column exists in EST_ESID0891_PERIMETER
+--> if yes, then delete it 
+-----------------------------------------------------------
+if exists (select 1 from syscolumns
+            where id = object_id("EST_ESID0891_PERIMETER")
+            and name = "VRSPLAN_NF")
+begin
+  exec ("alter table EST_ESID0891_PERIMETER  
+        drop VRSPLAN_NF")
+end
+
+-- Create a new column VRSPLAN_NF with smallint as type
+-----------------------------------------------------------
+ALTER TABLE EST_ESID0891_PERIMETER ADD VRSPLAN_NF smallint null
+go
+

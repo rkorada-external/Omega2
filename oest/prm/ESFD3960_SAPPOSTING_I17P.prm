@@ -1,0 +1,3 @@
+# Parameters List  25/04/2023  JYP/TD :spira:109440 new flag to check when SAP_POSTING
+# status of return file from SAP : Y=POSTING_file updated by ESFD3460 ,  N=POSTING_file updated by ESFD3960 
+POSTING_UPDATE_CANCELED N

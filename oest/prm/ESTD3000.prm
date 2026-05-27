@@ -1,0 +1,14 @@
+# Parameters List     SPOT EST16765
+
+#  27/11/2009  R. Cassis    :spot:18415 -> Genere mouvements avec montants a zero dans best..tlifest pour contrats Vie : parm VIE_B
+#  02/11/2015  Roger Cassis :spot:29223 -> Mise à jour des parametres
+
+# BALSHEY_NF       Balance sheet year pour création mouvements lifest à 0
+# BALSHTMTH_NF     Balance sheet_month pour création mouvements lifest à 0
+# TRANSFESB        flag transfert etablissement (1=Oui / 0=Non par defaut)
+# VIE_B            0/1 -> 0= Transfert contrats non vie, 1= Transfert contrats Vie
+
+BALSHEY_NF 2016
+BALSHTMTH_NF 1
+TRANSFESB 0
+VIE_B 0

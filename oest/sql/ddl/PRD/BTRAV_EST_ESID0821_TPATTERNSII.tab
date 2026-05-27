@@ -1,0 +1,127 @@
+use BTRAV
+go
+IF OBJECT_ID('dbo.EST_ESID0821_TPATTERNSII') IS NOT NULL
+begin
+  drop TABLE dbo.EST_ESID0821_TPATTERNSII
+  if object_id('dbo.EST_ESID0821_TPATTERNSII') is not null
+    print '<<< FAILED DROPPING TABLE dbo.EST_ESID0821_TPATTERNSII >>>'
+  else
+    print '<<< DROPPED TABLE dbo.EST_ESID0821_TPATTERNSII >>>'
+end
+-- Florent 05/06/2012 :spot:23390 SOLVENCY II
+-- Florent 05/06/2012 :spot:224041 les taux passent en decimal(11,8)
+-- Florent 09/05/2016 :spot:30543 on passe à 65 années
+-- KBagwe  02/11/2020 : Spira: 89097- REQ 53.3 - Impact on discount pattern load
+
+go
+create table EST_ESID0821_TPATTERNSII
+(
+  SSD_CF     USSD_CF    null
+ ,PATCAT_CT  char(5)    not null
+ ,PATTYP_CT  char(5)    not null
+ ,SEG_NF     USEG_NF    null
+ ,LOB_CF     char(32)    null
+ ,CUR_CF     UCUR_CF    null
+ ,NORME_CF   char(5)    null
+ ,CRE_D      UUPD_D     not null
+ ,CREUSR_CF  UUPDUSR_CF not null
+ ,LIGNE_N    int        not null
+ ,TOTAUX     decimal(11,8) NULL
+ ,AN1        decimal(11,8) NULL
+ ,AN2        decimal(11,8) NULL
+ ,AN3        decimal(11,8) NULL
+ ,AN4        decimal(11,8) NULL
+ ,AN5        decimal(11,8) NULL
+ ,AN6        decimal(11,8) NULL
+ ,AN7        decimal(11,8) NULL
+ ,AN8        decimal(11,8) NULL
+ ,AN9        decimal(11,8) NULL
+ ,AN10       decimal(11,8) NULL
+ ,AN11       decimal(11,8) NULL
+ ,AN12       decimal(11,8) NULL
+ ,AN13       decimal(11,8) NULL
+ ,AN14       decimal(11,8) NULL
+ ,AN15       decimal(11,8) NULL
+ ,AN16       decimal(11,8) NULL
+ ,AN17       decimal(11,8) NULL
+ ,AN18       decimal(11,8) NULL
+ ,AN19       decimal(11,8) NULL
+ ,AN20       decimal(11,8) NULL
+ ,AN21       decimal(11,8) NULL
+ ,AN22       decimal(11,8) NULL
+ ,AN23       decimal(11,8) NULL
+ ,AN24       decimal(11,8) NULL
+ ,AN25       decimal(11,8) NULL
+ ,AN26       decimal(11,8) NULL
+ ,AN27       decimal(11,8) NULL
+ ,AN28       decimal(11,8) NULL
+ ,AN29       decimal(11,8) NULL
+ ,AN30       decimal(11,8) NULL
+ ,AN31       decimal(11,8) NULL
+ ,AN32       decimal(11,8) NULL
+ ,AN33       decimal(11,8) NULL
+ ,AN34       decimal(11,8) NULL
+ ,AN35       decimal(11,8) NULL
+ ,AN36       decimal(11,8) NULL
+ ,AN37       decimal(11,8) NULL
+ ,AN38       decimal(11,8) NULL
+ ,AN39       decimal(11,8) NULL
+ ,AN40       decimal(11,8) NULL
+ ,AN41       decimal(11,8) NULL
+ ,AN42       decimal(11,8) NULL
+ ,AN43       decimal(11,8) NULL
+ ,AN44       decimal(11,8) NULL
+ ,AN45       decimal(11,8) NULL
+ ,AN46       decimal(11,8) NULL
+ ,AN47       decimal(11,8) NULL
+ ,AN48       decimal(11,8) NULL
+ ,AN49       decimal(11,8) NULL
+ ,AN50       decimal(11,8) NULL
+ ,AN51       decimal(11,8) NULL
+ ,AN52       decimal(11,8) NULL
+ ,AN53       decimal(11,8) NULL
+ ,AN54       decimal(11,8) NULL
+ ,AN55       decimal(11,8) NULL
+ ,AN56       decimal(11,8) NULL
+ ,AN57       decimal(11,8) NULL
+ ,AN58       decimal(11,8) NULL
+ ,AN59       decimal(11,8) NULL
+ ,AN60       decimal(11,8) NULL
+ ,AN61       decimal(11,8) NULL
+ ,AN62       decimal(11,8) NULL
+ ,AN63       decimal(11,8) NULL
+ ,AN64       decimal(11,8) NULL
+ ,AN65       decimal(11,8) NULL
+ ,ESB_CF     UESB_CF	NULL
+)
+go
+IF OBJECT_ID('dbo.EST_ESID0821_TPATTERNSII') IS NOT NULL
+  print '<<< CREATED TABLE dbo.EST_ESID0821_TPATTERNSII >>>'
+else
+  print '<<< FAILED CREATING TABLE dbo.EST_ESID0821_TPATTERNSII >>>'
+go
+create unique clustered index EST_ESID0821_TPATTERNSII_01 on EST_ESID0821_TPATTERNSII
+(CRE_D,CREUSR_CF,LIGNE_N,SSD_CF,ESB_CF)
+go
+GRANT DELETE ON EST_ESID0821_TPATTERNSII TO GOMEGA
+go
+GRANT INSERT ON EST_ESID0821_TPATTERNSII TO GOMEGA
+go
+GRANT SELECT ON EST_ESID0821_TPATTERNSII TO GOMEGA
+go
+GRANT UPDATE ON EST_ESID0821_TPATTERNSII TO GOMEGA
+go
+GRANT REFERENCES ON EST_ESID0821_TPATTERNSII TO GOMEGA
+go
+GRANT DELETE ON EST_ESID0821_TPATTERNSII TO GDBBATCH
+go
+GRANT INSERT ON EST_ESID0821_TPATTERNSII TO GDBBATCH
+go
+GRANT SELECT ON EST_ESID0821_TPATTERNSII TO GDBBATCH
+go
+GRANT UPDATE ON EST_ESID0821_TPATTERNSII TO GDBBATCH
+go
+GRANT REFERENCES ON EST_ESID0821_TPATTERNSII TO GDBBATCH
+go
+GRANT SELECT ON EST_ESID0821_TPATTERNSII TO GCONSULT
+go

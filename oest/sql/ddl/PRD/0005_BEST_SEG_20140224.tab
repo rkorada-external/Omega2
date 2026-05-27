@@ -1,0 +1,14 @@
+/* TRA01 - Segmentation */
+
+use BEST
+go
+
+/*==============================================================*/
+/* Table: TSEGRUNAGG not needed any more on BEST                */
+/*==============================================================*/
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUNAGG')
+            and   type = 'U')
+   drop table TSEGRUNAGG
+go

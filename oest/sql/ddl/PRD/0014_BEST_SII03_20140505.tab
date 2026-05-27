@@ -1,0 +1,102 @@
+USE BEST
+GO
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSIILOAD')
+            and   type = 'U')
+   drop table TSIILOAD
+GO
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSIIERR')
+            and   type = 'U')
+   drop table TSIIERR
+GO
+
+/*==============================================================*/
+/* Table: TSIILOAD                                              */
+/*==============================================================*/
+create table TSIILOAD 
+(
+   UPID_NT              int                             not null,
+   UPFILNAM_LL          UL64                            null,
+   UPSTS_CT             UBANVAL_CT                      null,
+   UPTYP_CT             UBANVAL_CT                      null,
+   ORIFILNAM_LL         UL64                            null,
+   CRE_D                UUPD_D                          not null,
+   CREUSR_CF            UUPDUSR_CF                      not null,
+   LSTUPD_D             UUPD_D                          not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                      not null,
+   TIMESTAMP         	timestamp                       null
+)
+GO
+
+/*==============================================================*/
+/* Index: ISIILOAD_00                                        */
+/*==============================================================*/
+create unique clustered index ISIILOAD_00 on TSIILOAD (
+UPID_NT ASC
+)
+GO
+
+grant all on TSIILOAD to GOMEGA
+grant all on TSIILOAD to GDBBATCH
+grant select on TSIILOAD to GCONSULT
+GO
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSIIERR')
+            and   type = 'U')
+   drop table TSIIERR
+GO
+
+/*==============================================================*/
+/* Table: TSIIERR                                               */
+/*==============================================================*/
+create table TSIIERR 
+(
+   UPID_NT              int                             not null,
+   ILIASNBR_NT          int                             not null,
+   MESS_N               int                             null,
+   ERRTYP_CT            UBANVAL_CT                      null,
+   MESSTHM_C            UMESSTHM_C                      null,
+   ERRROW_NF            int                             null,
+   ERRCOL_LM            UL32                            null,
+   CTR_NF               UCTR_NF                         null,
+   SEC_NF               USEC_NF                         null,
+   CRE_D                UUPD_D                          not null,
+   CREUSR_CF            UUPDUSR_CF                      not null,
+   LSTUPD_D             UUPD_D                          not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                      not null,
+   TIMESTAMP            timestamp                       null
+)
+GO
+
+/*==============================================================*/
+/* Index: ITSIIERR_00                                        */
+/*==============================================================*/
+create unique clustered index ITSIIERR_00 on TSIIERR (
+UPID_NT ASC,
+ILIASNBR_NT ASC
+)
+GO
+
+grant all on TSIIERR to GOMEGA
+grant all on TSIIERR to GDBBATCH
+grant select on TSIIERR to GCONSULT
+GO
+
+IF OBJECT_ID('dbo.TSIILOAD') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.TSIILOAD >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.TSIILOAD >>>'
+GO
+
+IF OBJECT_ID('dbo.TSIIERR') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.TSIIERR >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.TSIIERR >>>'
+GO

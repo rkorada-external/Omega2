@@ -1,0 +1,7 @@
+# Chain Parameter File
+# ROUNDING_FILTER_FLG : length 1: Y or N : flag to activate rounding/exclusion function for all norms
+# ROUNDING_APPLY_MAX_AMT : if abs(amount) >= abs(ROUNDING_APPLY_MAX_AMT) , rounding/exclusion function is NOT applied . When ROUNDING_APPLY_MAX_AMT="NOLIMIT" rounding/exclusion is applied on all records
+# ROUNDING_EXCLUDE_LIMIT_AMT : if abs(final amount) < ROUNDING_EXCLUDE_LIMIT_AMT , the record is excluded of SAP&RA files according to TC (1/3 for accept, 2/4 for retro) 
+ROUNDING_FILTER_FLG N
+ROUNDING_APPLY_MAX_AMT NOLIMIT
+ROUNDING_EXCLUDE_LIMIT_AMT 1

@@ -1,0 +1,60 @@
+USE BTRAV
+go
+
+/*
+[001] 16/01/2014 R. cassis :spot:25427 Centralization bases
+*/
+
+IF OBJECT_ID('EST_ESID2030_CNA_1') IS NOT NULL
+BEGIN
+    DROP TABLE EST_ESID2030_CNA_1
+    IF OBJECT_ID('EST_ESID2030_CNA_1') IS NOT NULL
+        PRINT '<<< FAILED DROPPING TABLE EST_ESID2030_CNA_1 >>>'
+    ELSE
+        PRINT '<<< DROPPED TABLE EST_ESID2030_CNA_1 >>>'
+END
+go
+CREATE TABLE EST_ESID2030_CNA_1
+(
+    SSD_CF       USSD_CF       NOT NULL,
+    CTR_NF       UCTR_NF       NOT NULL,
+    END_NT       UEND_NT       NOT NULL,
+    SEC_NF       USEC_NF       NOT NULL,
+    UWY_NF       UUWY_NF       NOT NULL,
+    UW_NT        int           NOT NULL,
+    ACY_NF       smallint      NOT NULL,
+    CRE_D        datetime      NULL,
+    PRS_CF       smallint      NOT NULL,
+    ACMTRS_NT    smallint      NOT NULL,
+    CUR_CF       UCUR_CF       NOT NULL,
+    ESTMNT_M     UAMT_M        NOT NULL,
+    LOB_CF       ULOB_CF       NOT NULL,
+    ACCSTS_CT    UACCSTS_CT    NULL,
+    ACCADMTYP_CT UACCADMTYP_CT NOT NULL,
+    ESTCRB_CT    char(1)       NOT NULL,
+    CED_NF       UCLI_NF       NULL,
+    BRK_NF       UCLI_NF       NULL,
+    PAY_NF       UCLI_NF       NULL,
+    GANPAYORD_NT UPAYORD_NT    NULL,
+    ADJCOD_CT    tinyint       NOT NULL,
+    RETCOD_CT    tinyint       NOT NULL,
+    DETTRS_CF    UDETTRS_CF    NULL,
+    ADJSIG_B     bit           NOT NULL,
+    ESB_CF       UESB_CF       NOT NULL,
+    LIFTRTTYP_CF char(2)       NULL,
+    SPIMOD_CT    tinyint       NOT NULL,
+    NAT_CF       UCTRNAT_CF    NULL
+)
+LOCK DATAROWS
+go
+IF OBJECT_ID('EST_ESID2030_CNA_1') IS NOT NULL
+    PRINT '<<< CREATED TABLE EST_ESID2030_CNA_1 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE EST_ESID2030_CNA_1 >>>'
+go
+GRANT ALL ON EST_ESID2030_CNA_1 TO GOMEGA
+go
+GRANT ALL ON EST_ESID2030_CNA_1 TO GDBBATCH
+go
+GRANT SELECT ON EST_ESID2030_CNA_1 TO GCONSULT
+go

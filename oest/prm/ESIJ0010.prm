@@ -1,0 +1,5 @@
+# Parameters List  01/01/2012  R. Cassis   :spot:23329 Add Process option to run or not OneGl process
+
+# PROCESSONEGL_CF  Processs or not OneGl process (1=process/0=no process)
+
+PROCESSONEGL_CT 0

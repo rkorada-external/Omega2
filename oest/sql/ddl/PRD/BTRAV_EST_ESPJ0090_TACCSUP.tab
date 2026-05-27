@@ -1,0 +1,96 @@
+use BTRAV
+go
+
+--[001] 20/02/2015 R. cassis :spot:28328 - Add 2 columns EVT_NF and REVT_NF to TACCSUP
+
+/*
+ * Drop TABLE EST_ESPJ0090_TACCSUP
+ */
+IF OBJECT_ID('EST_ESPJ0090_TACCSUP') IS NOT NULL
+BEGIN
+    DROP TABLE EST_ESPJ0090_TACCSUP
+    PRINT '<<< DROPPED TABLE EST_ESPJ0090_TACCSUP >>>'
+END
+go
+
+CREATE TABLE EST_ESPJ0090_TACCSUP
+(
+    TRN_NT          numeric(10,0) NOT NULL,
+    ACCTYP_NF       tinyint       NULL,
+    SSD_CF          USSD_CF       NULL,
+    ESB_CF          UESB_CF       NULL,
+    ENTPERY_NF      UUWY_NF       NULL,
+    ENTPERMTH_NF    tinyint       NULL,
+    BALSHEY_NF      UUWY_NF       NULL,
+    BALSHRMTH_NF    tinyint       NULL,
+    BALSHRDAY_NF    tinyint       NULL,
+    VALPERY_NF      UUWY_NF       NULL,
+    VALPERMTH_NF    tinyint       NULL,
+    TRNCOD_CF       UDETTRS_CF    NULL,
+    DBLTRNCOD_CF    UDETTRS_CF    NULL,
+    RETAUTGEN_B     bit           NOT NULL,
+    CTR_NF          UCTR_NF       NULL,
+    END_NT          UEND_NT       NULL,
+    SEC_NF          USEC_NF       NULL,
+    UWY_NF          UUWY_NF       NULL,
+    UW_NT           UUW_NT        NULL,
+    OCCYEA_NF       UUWY_NF       NULL,
+    ACY_NF          UUWY_NF       NULL,
+    SCOSTRMTH_NF    tinyint       NULL,
+    SCOENDMTH_NF    tinyint       NULL,
+    CLM_NF          UCLM_NF       NULL,
+    CUR_CF          UCUR_CF       NULL,
+    AMT_M           UAMT_M        NULL,
+    CED_NF          UCLI_NF       NULL,
+    BRK_NF          UCLI_NF       NULL,
+    GEMPRMPAY_NF    UCLI_NF       NULL,
+    GANPAYORD_NT    UPAYORD_NT    NULL,
+    RETCTR_NF       URETCTR_NF    NULL,
+    RETEND_NT       UEND_NT       NULL,
+    RETSEC_NF       URETSEC_NF    NULL,
+    RTY_NF          UUWY_NF       NULL,
+    RETUW_NT        UUW_NT        NULL,
+    PLC_NT          UPLC_NT       NULL,
+    RETOCCYEA_NF    UUWY_NF       NULL,
+    RETACY_NF       UUWY_NF       NULL,
+    RETSCOSTRMTH_NF tinyint       NULL,
+    RETSCOENDMTH_NF tinyint       NULL,
+    RCL_NF          UCLM_NF       NULL,
+    RETCUR_CF       UCUR_CF       NULL,
+    RETAMT_M        UAMT_M        NULL,
+    RTO_NF          UCLI_NF       NULL,
+    INT_NF          UCLI_NF       NULL,
+    RETPAY_NF       UCLI_NF       NULL,
+    RETKEY_CF       char(1)       NULL,
+    ACCTRN_NT       numeric(10,0) NULL,
+    COMMAC_LL       UL64          NULL,
+    CRE_D           UUPD_D        NULL,
+    CREUSR_CF       UUPDUSR_CF    NULL,
+    LSTUPD_D        UUPD_D        NULL,
+    LSTUPDUSR_CF    UUPDUSR_CF    NULL,
+    SPEENTTYP_CF    tinyint       NULL,
+    SPEENTNAT_CT    tinyint       NULL,
+    EVT_NF          varchar(10)   NULL,    --[001]
+    REVT_NF         varchar(10)   NULL     --(001]
+)
+LOCK ALLPAGES
+go
+IF OBJECT_ID('EST_ESPJ0090_TACCSUP') IS NOT NULL
+    PRINT '<<< CREATED TABLE EST_ESPJ0090_TACCSUP >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE EST_ESPJ0090_TACCSUP >>>'
+go
+GRANT REFERENCES ON EST_ESPJ0090_TACCSUP TO GOMEGA
+go
+GRANT SELECT ON EST_ESPJ0090_TACCSUP TO GCONSULT
+go
+GRANT SELECT ON EST_ESPJ0090_TACCSUP TO GOMEGA
+go
+GRANT INSERT ON EST_ESPJ0090_TACCSUP TO GOMEGA
+go
+GRANT DELETE ON EST_ESPJ0090_TACCSUP TO GOMEGA
+go
+GRANT UPDATE ON EST_ESPJ0090_TACCSUP TO GOMEGA
+go
+GRANT ALL ON EST_ESPJ0090_TACCSUP TO GDBBATCH
+go

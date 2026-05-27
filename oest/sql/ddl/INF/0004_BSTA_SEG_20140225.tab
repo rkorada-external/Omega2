@@ -1,0 +1,41 @@
+/* TRA01 - Segmentation
+ *
+ * Remove segmentation results from BSTA
+ */
+use BSTA
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGBATCHPLAN')
+            and   type = 'U')
+   drop table TSEGBATCHPLAN
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUNERR')
+            and   type = 'U')
+   drop table TSEGRUNERR
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUNERR_H')
+            and   type = 'U')
+   drop table TSEGRUNERR_H
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUNRES')
+            and   type = 'U')
+   drop table TSEGRUNRES
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUNRES_H')
+            and   type = 'U')
+   drop table TSEGRUNRES_H
+go

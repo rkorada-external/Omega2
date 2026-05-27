@@ -1,0 +1,10 @@
+use BTRAV
+go
+
+if not exists (select 1 from syscolumns where id = object_id("ESEJ2090_TRESULT") and name = "GRPFSTCLO_D")
+exec("alter table ESEJ2090_TRESULT add GRPFSTCLO_D datetime NULL")
+if not exists (select 1 from syscolumns where id = object_id("ESEJ2090_TRESULT") and name = "PARFSTCLO_D")
+exec("alter table ESEJ2090_TRESULT add PARFSTCLO_D datetime NULL")
+if not exists (select 1 from syscolumns where id = object_id("ESEJ2090_TRESULT") and name = "LCLFSTCLO_D")
+exec("alter table ESEJ2090_TRESULT add LCLFSTCLO_D datetime NULL")
+go

@@ -1,0 +1,308 @@
+USE BEST
+go
+IF OBJECT_ID('dbo.PsACCSUP_01_O2') IS NOT NULL
+	BEGIN
+		DROP PROCEDURE dbo.PsACCSUP_01_O2
+		IF OBJECT_ID('dbo.PsACCSUP_01_O2') IS NOT NULL
+			PRINT '<<< FAILED DROPPING PROCEDURE dbo.PsACCSUP_01_O2 >>>'
+		ELSE
+			PRINT '<<< DROPPED PROCEDURE dbo.PsACCSUP_01_O2 >>>'
+	END
+go
+create procedure dbo.PsACCSUP_01_O2		/* creation de la procedure */
+(
+    @p_trn_nt       numeric,
+	@p_lag_cf       char(1),
+	@p_creation	   	bit
+)
+as
+/***************************************************
+Programme: PsACCSUP_01_O2
+Fichier script associé : ESSACC05.PRC
+Domaine : (ES) Estimation
+Base principale : BEST
+Version: 1
+Auteur: L.DEBEVER (ME01) avec Infotool version 2.0 
+Date de creation: 
+Description du programme: Sélection d'enregistrement dans TACCSUP
+Parametres: 
+    @p_trn_nt       numeric,
+	@p_creation		bit,
+	@p_ssd_cf       USSD_CF,
+	@p_esb_cf       UESB_CF,
+ 	@p_dir_cf       UDIR_CF,
+ 	@p_dmn_cf       tinyint
+________________
+MODIFICATION 1
+Auteur:     M.DJELLOULI - MOD001
+Date:        27/04/2005
+Description: SPOT 5084 - Ajout Zone SPEENTTYP_CF
+_________________
+MODIFICATION 2
+Auteur:     M.DJELLOULI - MOD002
+Date:        24/06/2005
+Description: SPOT 5085 - Ajout Zone SPEENTNAT_CT
+_________________
+MODIFICATION 3
+Auteur:     	T CUER
+Date:       	15/02/2012
+Description:
+O2_SSL_Impact
+O2_CONTRACT
+O2_COLUMN_LABEL
+
+_________________
+MODIFICATION 4
+Auteur:     	Amit D
+Date:       	10/02/2015
+Description: EST 43 a EVO CARD - Added Assume Event Number(evt_nf) and Retro Event Number(revt_nf)
+
+*****************************************************/
+declare @erreur int,
+		@trn_nt              numeric,	/* zones TACCSUP  */
+		@acctrn_nt           numeric,
+		@acctyp_nf           tinyint,
+		@acy_nf              smallint,
+		@amt_m               UAMT_M,
+		@balshey_nf          smallint,
+		@balshrday_nf        tinyint,
+		@balshrmth_nf        tinyint,
+		@brk_nf              UCLI_NF,
+		@ced_nf              UCLI_NF,
+		@clm_nf              UCLM_NF,
+		@commac_ll           UL64,
+		@cre_d               UUPD_D,
+		@creusr_cf           UUPDUSR_CF,
+		@ctr_nf              UCTR_NF,
+		@cur_cf              UCUR_CF,
+		@dbltrncod_cf        UDETTRS_CF,
+		@end_nt              UEND_NT,
+		@entpermth_nf        tinyint,
+		@entpery_nf          smallint,
+		@esb_cf              UESB_CF,
+		@ganpayord_nt        UPAYORD_NT,
+		@gemprmpay_nf        UCLI_NF,
+		@int_nf              UCLI_NF,
+		@lstupd_d            UUPD_D,
+		@lstupdusr_cf        UUPDUSR_CF,
+		@occyea_nf           smallint,
+		@plc_nt              UPLC_NT,
+		@rcl_nf              UCLM_NF,
+		@retacy_nf           smallint,
+		@retamt_m            UAMT_M,
+		@retautgen_b         bit,
+		@retctr_nf           URETCTR_NF,
+		@retcur_cf           UCUR_CF,
+		@retend_nt           tinyint,
+		@retkey_cf           char(1),
+		@retoccyea_nf        smallint,
+		@retpay_nf           UCLI_NF,
+		@retrty_nf           UUWY_NF,
+		@retscoendmth_nf     tinyint,
+		@retscostrmth_nf     tinyint,
+		@retsec_nf           URETSEC_NF,
+		@retuw_nt            tinyint,
+		@rto_nf              UCLI_NF,
+		@scoendmth_nf        tinyint,
+		@scostrmth_nf        tinyint,
+		@sec_nf              USEC_NF,
+		@ssd_cf              USSD_CF,
+		@trncod_cf           UDETTRS_CF,
+		@uw_nt               UUW_NT,
+		@uwy_nf              UUWY_NF,
+		@valpermth_nf        tinyint,
+		@valpery_nf          smallint,	/* fin zones TACCSUP  */
+		@blcshtyean_nf smallint,	/* BLCSHTYEA_NF  normal */
+		@blcshtmthn_nf tinyint,		/* BLCSHTMTH_NF  normal */
+		@blcshtyea_nf smallint,		/* BLCSHTYEA_NF  exceptionnel */
+		@blcshtmth_nf tinyint,		/* BLCSHTYEA_NF   exceptionnel */
+		@specend_d   datetime,
+		@account_d    datetime,
+		@closing_b    bit,
+		@date  datetime,
+		@subtrs_gs UL16,  /* zones TSUBTRSL  */
+		@SPEENTTYP_CF tinyint,		-- MOD01
+		@SPEENTNAT_CT tinyint,		-- MOD02
+		@evt_nf           char(64),
+		@revt_nf          char(64) 
+
+
+IF @p_creation = 1	/* En création : */
+	BEGIN
+		select @date = getdate()  /* Recherche de la période de comptabilisation (service) par rapport à la date du jour */
+        select @trn_nt = -1
+		Execute @erreur = BREF..PsCALEND_02	@date,'C',@blcshtyea_nf output,@blcshtmth_nf output,@specend_d output,@account_d output,@closing_b output
+		if @erreur != 0 
+			begin
+				raiserror 20005 "APPLICATIF;TACCSUP/TCALEND" /* erreur de lecture */
+				return @erreur
+			end
+	END
+
+ELSE				/* En mise à jour :  */
+	BEGIN
+		Select 	@trn_nt = trn_nt,
+				@acctrn_nt = acctrn_nt,
+				@acctyp_nf = acctyp_nf,
+				@acy_nf = acy_nf,
+				@amt_m = amt_m,
+				@balshey_nf = balshey_nf,
+				@balshrday_nf = balshrday_nf,
+				@balshrmth_nf = balshrmth_nf,
+				@brk_nf = brk_nf,
+				@ced_nf = ced_nf,
+				@clm_nf = clm_nf,
+				@commac_ll = commac_ll,
+				@cre_d = cre_d,
+				@creusr_cf = creusr_cf,
+				@ctr_nf = ctr_nf,
+				@cur_cf = cur_cf,
+				@dbltrncod_cf = dbltrncod_cf,
+				@end_nt = end_nt,
+				@entpermth_nf = entpermth_nf,
+				@entpery_nf = entpery_nf,
+				@esb_cf = esb_cf,
+				@ganpayord_nt = ganpayord_nt,
+				@gemprmpay_nf = gemprmpay_nf,
+				@int_nf = int_nf,
+				@lstupd_d = lstupd_d,
+				@lstupdusr_cf = lstupdusr_cf,
+				@occyea_nf = occyea_nf,
+				@plc_nt = plc_nt,
+				@rcl_nf = rcl_nf,
+				@retacy_nf = retacy_nf,
+				@retamt_m = retamt_m,
+				@retautgen_b = retautgen_b,
+				@retctr_nf = retctr_nf,
+				@retcur_cf = retcur_cf,
+				@retend_nt = retend_nt,
+				@retkey_cf = retkey_cf,
+				@retoccyea_nf = retoccyea_nf,
+				@retpay_nf = retpay_nf,
+				@retrty_nf = retrty_nf,
+				@retscoendmth_nf = retscoendmth_nf,
+				@retscostrmth_nf = retscostrmth_nf,
+				@retsec_nf = retsec_nf,
+				@retuw_nt = retuw_nt,
+				@rto_nf = rto_nf,
+				@scoendmth_nf = scoendmth_nf,
+				@scostrmth_nf = scostrmth_nf,
+				@sec_nf = sec_nf,
+				@ssd_cf = ssd_cf,
+				@trncod_cf = trncod_cf,
+				@uw_nt = uw_nt,
+				@uwy_nf = uwy_nf,
+				@valpermth_nf = valpermth_nf,
+				@valpery_nf = valpery_nf,
+				@SPEENTTYP_CF = SPEENTTYP_CF,
+				@SPEENTNAT_CT = SPEENTNAT_CT,
+				@evt_nf = EVT_NF,
+				@revt_nf = REVT_NF
+				
+				
+	from	TACCSUP
+	where 	trn_nt = @p_trn_nt
+
+	select @erreur = @@error
+	if @erreur != 0
+	   begin
+		  raiserror 20005 "APPLICATIF;TACCSUP" /* erreur de lecture */
+		  return @erreur
+	   end
+
+	/* Harmonisation des noms 'période de saisie' avec mode création  */
+	select @blcshtmth_nf = @ENTPERMTH_NF
+	select @blcshtyea_nf = @ENTPERY_NF
+
+
+	/* Libellé poste comptable  */
+	select	@subtrs_gs = t2.subtrs_gs
+	from 	BREF..TDETTRS t1, BREF..TSUBTRSL t2 
+	where	t1.dettrs_cf	= @trncod_cf 
+		and	t1.pcptrs_cf	= t2.pcptrs_cf  
+		and t1.trs_cf		= t2.trs_cf 
+		and t1.subtrs_cf	= t2.subtrs_cf 
+		and t1.opn_b		= 1 
+		and t2.lag_cf		= @p_lag_cf
+
+	select @erreur = @@error
+	   if @erreur != 0
+	   begin
+		  raiserror 20005 "APPLICATIF;TSUBTRSL" /* erreur de lecture */
+		  return @erreur
+	   end
+	END
+
+ Select @TRN_NT			TRN_NT,					/* Select final :  */
+        @ACCTRN_NT 		ACCTRN_NT,
+        @ACCTYP_NF 		ACCTYP_NF,
+        @ACY_NF 		ACY_NF,
+        @AMT_M 			AMT_M,
+        @BALSHEY_NF 	BALSHEY_NF,
+        @BALSHRDAY_NF 	BALSHRDAY_NF,
+        @BALSHRMTH_NF 	BALSHRMTH_NF,
+        @BRK_NF 		BRK_NF,
+        @CED_NF 		CED_NF,
+        @CLM_NF 		CLM_NF,
+        @COMMAC_LL 		COMMAC_LL,
+        @CRE_D 			CRE_D,
+        @CREUSR_CF 		CREUSR_CF,
+        --substring(@CTR_NF,3,7) CTR_NF,			--MODIFICATION 3		O2_CONTRACT
+		@CTR_NF 		CTR_NF,						--MODIFICATION 3		O2_CONTRACT
+        @CUR_CF 		CUR_CF,
+        @DBLTRNCOD_CF 	DBLTRNCOD_CF,
+        @END_NT 		END_NT,
+        @blcshtmth_nf 	BLCSHTMTH_NF,
+        @blcshtyea_nf 	BLCSHTYEA_NF,
+        @ESB_CF 		ESB_CF,
+        @GANPAYORD_NT 	GANPAYORD_NT,
+        @GEMPRMPAY_NF 	GEMPRMPAY_NF,
+        @INT_NF 		INT_NF,
+        @LSTUPD_D 		LSTUPD_D,
+        @LSTUPDUSR_CF 	LSTUPDUSR_CF,
+        @OCCYEA_NF 		OCCYEA_NF,
+        @PLC_NT 		PLC_NT,
+        @RCL_NF 		RCL_NF,
+        @RETACY_NF 		RETACY_NF,
+        @RETAMT_M 		RETAMT_M,
+        @RETAUTGEN_B 	RETAUTGEN_B,
+		--substring(@RETCTR_NF,3,7) RETCTR_NF,		--MODIFICATION 3		O2_CONTRACT
+        @RETCTR_NF		RETCTR_NF,					--MODIFICATION 3		O2_CONTRACT
+        @RETCUR_CF 		RETCUR_CF,
+        @RETEND_NT 		RETEND_NT,
+        @RETKEY_CF 		RETKEY_CF,
+        @RETOCCYEA_NF 	RETOCCYEA_NF,
+        @RETPAY_NF 		RETPAY_NF,
+        @RETRTY_NF 		RETRTY_NF,
+        @RETSCOENDMTH_NF RETSCOENDMTH_NF,
+        @RETSCOSTRMTH_NF RETSCOSTRMTH_NF,
+        @RETSEC_NF 		RETSEC_NF,
+        @RETUW_NT 		RETUW_NT,
+        @RTO_NF 		RTO_NF,
+        @SCOENDMTH_NF 	SCOENDMTH_NF,
+        @SCOSTRMTH_NF 	SCOSTRMTH_NF,
+        @SEC_NF 		SEC_NF,
+        @SSD_CF 		SSD_CF,
+        @TRNCOD_CF 		TRNCOD_CF,
+        @UW_NT 			UW_NT,
+        @UWY_NF 		UWY_NF,
+        @VALPERMTH_NF 	VALPERMTH_NF,
+        @VALPERY_NF 	VALPERY_NF,
+		@subtrs_gs 		TRNCOD_LB,
+		@p_creation 	CREATION,
+		@SPEENTTYP_CF 	SPEENTTYP_CF,
+		@SPEENTNAT_CT 	SPEENTNAT_CT,
+		@evt_nf 	EVT_NF,
+		@revt_nf        REVT_NF
+		
+return 0
+go
+EXEC sp_procxmode 'dbo.PsACCSUP_01_O2', 'unchained'
+go
+IF OBJECT_ID('dbo.PsACCSUP_01_O2') IS NOT NULL
+    PRINT '<<< CREATED PROCEDURE dbo.PsACCSUP_01_O2 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING PROCEDURE dbo.PsACCSUP_01_O2 >>>'
+go
+GRANT EXECUTE ON dbo.PsACCSUP_01_O2 TO GOMEGA
+go

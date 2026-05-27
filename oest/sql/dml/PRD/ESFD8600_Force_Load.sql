@@ -1,0 +1,25 @@
+use BEST
+go
+
+
+if not exists ( select 1 from BEST..TI17FNC where idf_ct ='EBS_OMG_DW_STD'  ) insert into BEST..TI17FNC values ('EBS_OMG_DW_STD','specific TNR','ESFD8600',0)
+go
+
+delete from BEST..TI17PERMFIL where IDF_CT = 'EBS_OMG_DW_STD'
+go
+
+insert into BEST..TI17PERMFIL
+select 'EBS_OMG_DW_STD', a.PERMFIL_CT, a.PATHPATTRN_LL, a.IO, a.PERM_LL from BEST..TI17PERMFIL a where IDF_CT = 'I17G_OMG_DW_STD'
+go
+
+if not exists ( select 1 from BEST..TI17REQFNC where idf_ct ='EBS_OMG_DW_STD'  ) insert into BEST..TI17REQFNC select b.REQCOD_CT, 'EBS_OMG_DW_STD', b.REQST_CHAIN_LL from BEST..TI17REQFNC b where IDF_CT = 'EBS_ESFD2220' and (REQCOD_CT like '%POS%' or REQCOD_CT like '%INV%')
+Go
+
+Update BEST..TI17PERMFIL set PATHPATTRN_LL='`if [ "${param_Context_id}" = "INVE" ];then echo ${DFILP}/${ENV_PREFIX}_ESID3800_FTECLEDA_I4I_INV_${PARM_ICLODAT_D}.dat;else echo ${DFILP}/${ENV_PREFIX}_ESPD3800_FTECLEDA_I4I_POS_${PARM_ICLODAT_D}.dat;fi;`' where PERMFIL_CT='EST_FTECLEDA' and IDF_CT='EBS_OMG_DW_STD'
+go
+
+update BEST..TI17PERMFIL set PATHPATTRN_LL='${DFILP}/${ENV_PREFIX}_ESPD3800_FTECLEDA_EBS_${TYPEINV}_${PARM_ICLODAT_D}.dat' where IDF_CT='EBS_OMG_DW_STD' and PERMFIL_CT='EST_FTECLEDASII'
+go
+
+update BEST..TI17PERMFIL set PATHPATTRN_LL='${DFILP}/${ENV_PREFIX}_ESPD3800_FTECLEDR_EBS_${TYPEINV}_${PARM_ICLODAT_D}.dat' where IDF_CT='EBS_OMG_DW_STD' and PERMFIL_CT='EST_FTECLEDRSII'
+go

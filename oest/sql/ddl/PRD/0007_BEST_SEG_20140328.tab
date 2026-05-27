@@ -1,0 +1,7 @@
+/* TRA01 - Segmentation */
+
+use BEST
+go
+
+alter table TSEGMENTRULE2CRI modify SGTCRI_CF UL32 not null
+go

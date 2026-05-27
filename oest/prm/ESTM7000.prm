@@ -1,0 +1,11 @@
+# Parameters List
+
+# BLCSHT_D         Balance sheet date
+# BALSHEY_NF       Balance sheet year
+# ESTIM_B          0/1 -> si 1, on traite les postes Estimations
+# FORCEBILAN       Flag Forcé Bilan à à 31/12/N-1 (1=Oui par Défaut / 0= Bilan N préservé)
+
+BLCSHT_D 20060331
+BALSHEY_NF 2006
+ESTIM_B 1
+FORCEBILAN 0

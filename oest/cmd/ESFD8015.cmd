@@ -1,0 +1,35 @@
+#!/bin/ksh
+#=============================================================================
+# nom de l'application          : IFRS17 Booking
+# nom du script SHELL           : ESF8015.cmd
+# revision                      : 
+# date de creation              : 10/04/2020
+# auteur                        : Arnaud RUFFAULT
+# references des specifications :
+#-----------------------------------------------------------------------------
+# description
+#  Spira 75828 IFRS 17- Booking TUWRSII update
+#-----------------------------------------------------------------------------
+#===============================================================================
+
+# Call generic functions
+. ${DUTI}/fctgen.cmd
+
+# Job Initialisation
+JOBINIT
+
+ECHO_LOG "#========================================================================="
+ECHO_LOG "#===> ................... INPUTS .........................................."
+ECHO_LOG "#===> CLOSING DATE.......................................: ${PARM_ICLODAT_D}"
+ECHO_LOG "#===> USER...............................................: ${USER_ESFD8010}"
+ECHO_LOG "#========================================================================="
+
+NSTEP=${NJOB}_05
+#------------------------------------------------------------------------------
+LIBEL="Update table BEST..TUWRSII"
+ISQL_BASE="BEST"
+ISQL_O=${DFILT}/${NSTEP}_${IB}_ISQL.log
+ISQL_QRY="exec PuUWRSII_01 '${PARM_ICLODAT_D}', '${USER_ESFD8010}'"
+ISQL
+
+JOBEND

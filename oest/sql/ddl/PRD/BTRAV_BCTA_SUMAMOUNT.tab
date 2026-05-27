@@ -1,0 +1,61 @@
+USE BTRAV
+go
+
+/****************************************************
+Table            : BTRAV..BCTA_SUMAMOUNT
+Base principale  : BTRAV
+Version          : 10.1
+Auteur           : LRAK (ASCOTT)
+Date de creation : 26/07/2012
+                 :spot:23860    LRAK 
+Fiche spot       : 23860
+Description      : - table de travail de BCTA..PiTSUIVINTACC_05.prc
+
+-----------------
+MODIFICATION     : [001]
+Auteur           : 
+Date             : 
+Version          : 
+Description      : 
+*********************************************************/
+
+IF OBJECT_ID('dbo.BCTA_SUMAMOUNT') IS NOT NULL
+BEGIN
+    DROP TABLE dbo.BCTA_SUMAMOUNT
+    IF OBJECT_ID('dbo.BCTA_SUMAMOUNT') IS NOT NULL
+        PRINT '<<< FAILED DROPPING TABLE dbo.BCTA_SUMAMOUNT >>>'
+    ELSE
+        PRINT '<<< DROPPED TABLE dbo.BCTA_SUMAMOUNT >>>'
+END
+go
+
+CREATE TABLE dbo.BCTA_SUMAMOUNT
+(
+    POSAMT_M      UAMT_M        DEFAULT 0 NOT NULL,
+    NEGAMT_M      UAMT_M        DEFAULT 0 NOT NULL,
+    BLCSHT_D      datetime      NULL,
+    MESSTHM_C     UMESSTHM_C    NULL,
+    SSD_CF        USSD_CF       NULL,
+    ESB_CF        UESB_CF       NULL,
+    NUMFIC_NT     UUWENTNBR_NT  NULL
+)
+LOCK ALLPAGES
+go
+GRANT UPDATE ON dbo.BCTA_SUMAMOUNT TO GOMEGA
+go
+GRANT SELECT ON dbo.BCTA_SUMAMOUNT TO GOMEGA
+go
+GRANT REFERENCES ON dbo.BCTA_SUMAMOUNT TO GOMEGA
+go
+GRANT INSERT ON dbo.BCTA_SUMAMOUNT TO GOMEGA
+go
+GRANT DELETE ON dbo.BCTA_SUMAMOUNT TO GOMEGA
+go
+GRANT SELECT ON dbo.BCTA_SUMAMOUNT TO GCONSULT
+go
+
+IF OBJECT_ID('dbo.BCTA_SUMAMOUNT') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.BCTA_SUMAMOUNT >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.BCTA_SUMAMOUNT >>>'
+go

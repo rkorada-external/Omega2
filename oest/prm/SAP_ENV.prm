@@ -1,0 +1,6 @@
+# Parameters List  03/02/2022  T. DEUTSCH   :spira:100097 Add prm option to take SAP file
+# Take or not file from SAP (0=NO/1=YES)
+
+ENV_SAP_PROD 1
+ENV_SAP_TST 0
+

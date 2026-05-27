@@ -1,0 +1,273 @@
+USE BEST
+go
+/*==============================================================*/
+/* DBMS name:      Sybase AS Enterprise 15.7                    */
+/* Created on:     18/04/2019 15:02:16                          */
+/*==============================================================*/
+
+
+if exists (select 1 
+            from  sysobjects c 
+            join  sysconstraints s on (s.constrid = c.id and s.tableid = object_id('TI17PERMFIL'))
+            where name = 'FK_FNCT_PERM' and type = 'RI')
+   alter table TI17PERMFIL
+      drop constraint FK_FNCT_PERM
+go
+
+if exists (select 1 
+            from  sysobjects c 
+            join  sysconstraints s on (s.constrid = c.id and s.tableid = object_id('TI17REQCHN'))
+            where name = 'FK_CHAIN_REQST_CHAIN' and type = 'RI')
+   alter table TI17REQCHN
+      drop constraint FK_CHAIN_REQST_CHAIN
+go
+
+if exists (select 1 
+            from  sysobjects c 
+            join  sysconstraints s on (s.constrid = c.id and s.tableid = object_id('TI17REQCHN'))
+            where name = 'FK_FNCT_REQST_CHAIN' and type = 'RI')
+   alter table TI17REQCHN
+      drop constraint FK_FNCT_REQST_CHAIN
+go
+
+if exists (select 1 
+            from  sysobjects c 
+            join  sysconstraints s on (s.constrid = c.id and s.tableid = object_id('TI17REQCHN'))
+            where name = 'FK_REQST_REQST_CHAI' and type = 'RI')
+   alter table TI17REQCHN
+      drop constraint FK_REQST_REQST_CHAI
+go
+
+if exists (select 1 
+            from  sysobjects c 
+            join  sysconstraints s on (s.constrid = c.id and s.tableid = object_id('dbo.TI17REQJOB'))
+            where name = 'FK_REQST_REQJOB_IFRS17' and type = 'RI')
+   alter table dbo.TI17REQJOB
+      drop constraint FK_REQST_REQJOB_IFRS17
+go
+
+if exists (select 1 
+            from  sysobjects c 
+            join  sysconstraints s on (s.constrid = c.id and s.tableid = object_id('dbo.TI17REQJOBPLAN'))
+            where name = 'FK_REQST_REQJOBPLAN_IFRS17' and type = 'RI')
+   alter table dbo.TI17REQJOBPLAN
+      drop constraint FK_REQST_REQJOBPLAN_IFRS17
+go
+
+if exists(select 1 from sysindexes i where i.name = 'PK_TI17CHN' and 
+           (i.status2&2) = 2 and i.id = object_id('TI17CHN'))
+   alter table TI17CHN
+      drop constraint PK_TI17CHN
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TI17CHN')
+            and   type = 'U')
+   drop table TI17CHN
+go
+
+if exists(select 1 from sysindexes i where i.name = 'PK_TI17FNC' and 
+           (i.status2&2) = 2 and i.id = object_id('TI17FNC'))
+   alter table TI17FNC
+      drop constraint PK_TI17FNC
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TI17FNC')
+            and   type = 'U')
+   drop table TI17FNC
+go
+
+if exists(select 1 from sysindexes i where i.name = 'PK_TI17PERMFIL' and 
+           (i.status2&2) = 2 and i.id = object_id('TI17PERMFIL'))
+   alter table TI17PERMFIL
+      drop constraint PK_TI17PERMFIL
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TI17PERMFIL')
+            and   type = 'U')
+   drop table TI17PERMFIL
+go
+
+if exists(select 1 from sysindexes i where i.name = 'PK_TI17REQ' and 
+           (i.status2&2) = 2 and i.id = object_id('TI17REQ'))
+   alter table TI17REQ
+      drop constraint PK_TI17REQ
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TI17REQ')
+            and   type = 'U')
+   drop table TI17REQ
+go
+
+if exists(select 1 from sysindexes i where i.name = 'PK_TI17REQCHN' and 
+           (i.status2&2) = 2 and i.id = object_id('TI17REQCHN'))
+   alter table TI17REQCHN
+      drop constraint PK_TI17REQCHN
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TI17REQCHN')
+            and   type = 'U')
+   drop table TI17REQCHN
+go
+
+if exists(select 1 from sysindexes i where i.name = 'PK_TI17REQJOB' and 
+           (i.status2&2) = 2 and i.id = object_id('dbo.TI17REQJOB'))
+   alter table dbo.TI17REQJOB
+      drop constraint PK_TI17REQJOB
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('dbo.TI17REQJOB')
+            and   type = 'U')
+   drop table dbo.TI17REQJOB
+go
+
+if exists(select 1 from sysindexes i where i.name = 'PK_TI17REQJOBPLAN' and 
+           (i.status2&2) = 2 and i.id = object_id('dbo.TI17REQJOBPLAN'))
+   alter table dbo.TI17REQJOBPLAN
+      drop constraint PK_TI17REQJOBPLAN
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('dbo.TI17REQJOBPLAN')
+            and   type = 'U')
+   drop table dbo.TI17REQJOBPLAN
+go
+
+/*==============================================================*/
+/* Table: TI17CHN                                               */
+/*==============================================================*/
+create table TI17CHN (
+   CHAIN_CT             varchar(30)                    not null,
+   CHAIN_LL             varchar(64)                    null
+)
+go
+
+alter table TI17CHN
+   add constraint PK_TI17CHN primary key nonclustered (CHAIN_CT)
+go
+
+/*==============================================================*/
+/* Table: TI17FNC                                               */
+/*==============================================================*/
+create table TI17FNC (
+   IDF_CT               varchar(30)                    not null,
+   IDF_LL               varchar(64)                    null
+)
+go
+
+alter table TI17FNC
+   add constraint PK_TI17FNC primary key nonclustered (IDF_CT)
+go
+
+/*==============================================================*/
+/* Table: TI17PERMFIL                                           */
+/*==============================================================*/
+create table TI17PERMFIL (
+   IDF_CT               varchar(30)                    not null,
+   PERMFIL_CT           varchar(50)                    not null,
+   PATHPATTRN_LL        varchar(128)                   null,
+   IO                   char(1)                        null,
+   PERM_LL              varchar(64)                    null
+)
+go
+
+alter table TI17PERMFIL
+   add constraint PK_TI17PERMFIL primary key nonclustered (IDF_CT, PERMFIL_CT)
+go
+
+/*==============================================================*/
+/* Table: TI17REQ                                               */
+/*==============================================================*/
+create table TI17REQ (
+   REQCOD_CT            varchar(32)                    not null,
+   REQCOD_LL            varchar(64)                    null
+)
+go
+
+alter table TI17REQ
+   add constraint PK_TI17REQ primary key nonclustered (REQCOD_CT)
+go
+
+/*==============================================================*/
+/* Table: TI17REQCHN                                            */
+/*==============================================================*/
+create table TI17REQCHN (
+   REQCOD_CT            varchar(32)                    not null,
+   CHAIN_CT             varchar(30)                    not null,
+   IDF_CT               varchar(30)                    not null,
+   REQST_CHAIN_LL       char(10)                       null
+)
+go
+
+alter table TI17REQCHN
+   add constraint PK_TI17REQCHN primary key nonclustered (REQCOD_CT, CHAIN_CT, IDF_CT)
+go
+
+/*==============================================================*/
+/* Table: TI17REQJOB                                            */
+/*==============================================================*/
+create table dbo.TI17REQJOB (
+   SSD_CF               USSD_CF                        not null,
+   BALSHEYEA_NF         smallint                       not null,
+   BALSHTMTH_NF         tinyint                        not null,
+   CLODAT_D             datetime                       not null,
+   REQCOD_CT            varchar(32)                    not null,
+   CRE_D                UUPD_D                         not null,
+   DBCLO_D              UUPD_D                         not null,
+   LAUNCH_D             UUPD_D                         null,
+   CLOTYP_CT            char(5)                        null,
+   NORME_CF             char(5)                        null,
+   CLOPER_LS            UL64                           null,
+   VRS_NF               numeric(10,0)                  null,
+   UPDUSR_CF            UUSR_CF                        not null,
+   START_D              UUPD_D                         null,
+   END_D                UUPD_D                         null,
+   SITE_CF              char(4)                        not null,
+   ID_NF                int                            not null
+)
+go
+
+alter table dbo.TI17REQJOB
+   add constraint PK_TI17REQJOB primary key (REQCOD_CT, CRE_D, SITE_CF)
+go
+
+/*==============================================================*/
+/* Table: TI17REQJOBPLAN                                        */
+/*==============================================================*/
+create table dbo.TI17REQJOBPLAN (
+   SSD_CF               USSD_CF                        not null,
+   BALSHEYEA_NF         smallint                       not null,
+   BALSHTMTH_NF         tinyint                        not null,
+   CLODAT_D             datetime                       not null,
+   REQCOD_CT            varchar(32)                    not null,
+   CRE_D                UUPD_D                         not null,
+   DBCLO_D              UUPD_D                         null,
+   LAUNCH_D             UUPD_D                         null,
+   CLOTYP_CT            char(5)                        null,
+   NORME_CF             char(5)                        null,
+   CLOPER_LS            UL64                           null,
+   VRS_NF               numeric(10,0)                  null,
+   UPDUSR_CF            UUSR_CF                        null,
+   START_D              UUPD_D                         null,
+   END_D                UUPD_D                         null,
+   SITE_CF              char(4)                        not null,
+   ID_NF                int                            identity
+)
+go
+
+alter table dbo.TI17REQJOBPLAN
+   add constraint PK_TI17REQJOBPLAN primary key (REQCOD_CT, CRE_D, SITE_CF)
+go
+

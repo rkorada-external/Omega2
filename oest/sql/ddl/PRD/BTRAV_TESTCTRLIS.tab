@@ -1,0 +1,79 @@
+USE BTRAV
+go
+IF OBJECT_ID(user_name()+'.TESTCTRLIS') IS NOT NULL
+BEGIN
+    DROP TABLE TESTCTRLIS
+    IF OBJECT_ID(user_name()+'.TESTCTRLIS') IS NOT NULL
+        PRINT '<<< FAILED DROPPING TABLE TESTCTRLIS >>>'
+    ELSE
+        PRINT '<<< DROPPED TABLE TESTCTRLIS >>>'
+END
+go
+--23/10/2013 Florent  :spot:25427 - user géographique
+CREATE TABLE TESTCTRLIS
+(
+    CTR_NF       UCTR_NF       NOT NULL,
+    UWY_NF       UUWY_NF       NOT NULL,
+    UW_NT        UUW_NT        NOT NULL,
+    END_NT       UEND_NT       NOT NULL,
+    SEC_NF       USEC_NF       NOT NULL,
+    DIV_NT       UDIV_NT       NULL,
+    UWRSPUSR_CF  UUSR_CF       NULL,
+    ADMUSR_CF    UUPDUSR_CF    NULL,
+    SECLAB_LM    UL32          NULL,
+    SSD_CF       USSD_CF       NULL,
+    SECACCSTS_CT UACCSTS_CT    NULL,
+    ESTEND_B     bit           DEFAULT 0   NOT NULL,
+    EVTCOD_NF    tinyint       NULL,
+    CTRNAT_CT    char(1)       NULL,
+    ESTUPDTYP_CT char(1)       DEFAULT "U" NOT NULL,
+    LOB_CF       ULOB_CF       NULL,
+    SOB_CF       USOB_CF       NULL,
+    PCPRSKTRY_CF UCTY_CF       NULL,
+    ACCADMTYP_CT UACCADMTYP_CT NULL,
+    SCOORGEGP_M  UAMT_M        NULL,
+    SCOGLOEGP_M  UAMT_M        NULL,
+    EGPCUR_CF    UCUR_CF       NULL,
+    PMLRAT_R     USHORAT_R     NULL,
+    CUTSHA_R     USHA_R        NULL,
+    RIDSHA_R     USHA_R        NULL,
+    LIARIDSHA_B  bit           DEFAULT 0   NOT NULL,
+    SCOEGPCAL_B  bit           DEFAULT 0   NOT NULL,
+    EGPLESSCO_M  UAMT_M        NULL,
+    PRMFLCRAT_B  bit           DEFAULT 0   NOT NULL,
+    PRMFIXEFF_R  USHORAT_R     NULL,
+    PRMMINEFF_R  USHORAT_R     NULL,
+    PRMMAXEFF_R  USHORAT_R     NULL,
+    SUPLOATYP_CT tinyint       NULL,
+    PRMEFFLOA_M  UAMT_M        NULL,
+    PRMEFFLOA_R  USHORAT_R     NULL,
+    SBJPRMCUR_CF UCUR_CF       NULL,
+    ESTSBJPRM_M  UAMT_M        DEFAULT 0   NOT NULL,
+    DEFSBJPRM_M  UAMT_M        NULL,
+    SBJPRMCPT_M  UAMT_M        NULL,
+    REIEXI_B     bit           DEFAULT 0   NOT NULL,
+    REIUNL_B     bit           DEFAULT 0   NOT NULL,
+    REIFRE_B     bit           DEFAULT 0   NOT NULL,
+    REINBR_N     tinyint       NULL,
+    LAYCAP_M     UAMT_M        NULL,
+    LIACUR_CF    UCUR_CF       NULL,
+    FLAPRM_B     bit           DEFAULT 0   NOT NULL,
+    SBJCPTDEF_B  bit           DEFAULT 0   NOT NULL,
+    PMDEGPCUR_M  UAMT_M        NULL,
+    CPLACCY_NF   smallint      NULL,
+    SCOLSTMTH_NF tinyint       NULL,
+    EXP_D        datetime      NULL
+)
+LOCK DATAROWS
+go
+IF OBJECT_ID(user_name()+'.TESTCTRLIS') IS NOT NULL
+    PRINT '<<< CREATED TABLE TESTCTRLIS >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE TESTCTRLIS >>>'
+go
+GRANT SELECT ON TESTCTRLIS TO GCONSULT
+go
+GRANT ALL ON TESTCTRLIS TO GOMEGA
+go
+GRANT ALL ON TESTCTRLIS TO GDBBATCH
+go

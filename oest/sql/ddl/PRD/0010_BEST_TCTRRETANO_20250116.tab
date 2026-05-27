@@ -1,0 +1,46 @@
+USE BEST
+go
+
+if exists (select 1 from sysobjects where id = object_id('TCTRRETANO') and type = 'U') drop table TCTRRETANO
+go
+
+CREATE TABLE TCTRRETANO
+(
+    FILENO_NT  UUWENTNBR_NT NOT NULL,
+    SSD_CF     USSD_CF       NULL,
+	ESB_CF     UESB_CF       NULL,
+    CTR_NF     UCTR_NF       NULL,
+    END_NT     UEND_NT       NULL,
+    SEC_NF     USEC_NF       NULL,
+	UWY_NF     UUWY_NF       NULL,
+	UW_NT      UUW_NT        NULL,
+    RETCTR_NF  UCTR_NF       NULL,
+    RETEND_NT  UEND_NT       NULL,
+    RETSEC_NF  USEC_NF       NULL,
+	RTY_NF     UUWY_NF       NULL,
+	RETUW_NT   UUW_NT        NULL,
+	AMT_M      UAMT_M        NULL,
+	CUR_CF     UCUR_CF       NULL,
+    NUMLINE_NT int           DEFAULT 0 NOT NULL,
+    CRE_D        UUPD_D     DEFAULT getdate() NOT NULL,
+    CREUSR_CF    UUPDUSR_CF DEFAULT user      NOT NULL,
+    LSTUPD_D     UUPD_D     DEFAULT getdate() NOT NULL,
+    LSTUPDUSR_CF UUPDUSR_CF DEFAULT user      NOT NULL,
+	ANO_CT     int   DEFAULT 0 NOT NULL,
+	ERRTYP_CT  UL16   NULL,
+	UPLFILNAM_LL varchar(128) NULL
+)
+
+go
+
+grant all on    TCTRRETANO to GOMEGA
+grant all on    TCTRRETANO to GDBBATCH
+grant select on TCTRRETANO to GCONSULT
+go
+
+
+IF OBJECT_ID('dbo.BEST..TCTRRETANO') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.[BEST..TCTRRETANO] >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.[BEST..TCTRRETANO] >>>'
+go

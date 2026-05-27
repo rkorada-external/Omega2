@@ -1,0 +1,8 @@
+# Parameters List
+
+# IN_OUT           0/1 -> 0= le traitement cumule les mvts entrees portefeuille (ESTD3022) avec les GT  (site de reception des transferts)
+#                      -> 1= le traitement cumule les mvts retraits portefeuille(ESTD3021) avec les GT  (site de depart des transferts)
+
+IN_OUT 1
+
+

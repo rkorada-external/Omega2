@@ -1,0 +1,44 @@
+/***************************************************
+Program:		SEGRESULTSINDEX
+File script :	BSEG_RETROPROP_SEGRESULTSINDEX.tab
+Main database :	BSEG
+Version:		1
+Author:			NGA
+Creation date:	19/11/2025
+Description:
+	. Create index for Retro Prop segmentation results table
+	. Create index for Retro Prop segmentation error results table
+Parameters:
+	- #sgtrunNt: Segmentation run ID
+	
+Conditions:
+
+Comments:
+
+****************************************************/
+
+use BSEG
+go
+   
+create unique index ISEGRUNRES_#sgtrunNt_00 on TSEGRUNRES_#sgtrunNt (
+	SGMT_NF ASC,
+	CTR_NF ASC,
+	UWY_NF ASC,
+	UW_NT ASC,
+	SEC_NF ASC,
+	RTO_NF ASC,
+	SGTLVL_NT ASC,
+	SGTRUL_NT ASC
+	
+)
+go
+
+create unique index ISEGRUNERR_#sgtrunNt_00 on TSEGRUNERR_#sgtrunNt (
+	CTR_NF ASC,
+	UWY_NF ASC,
+	UW_NT ASC,
+	SEC_NF ASC,
+	END_NT ASC,
+	RTO_NF ASC
+)
+go

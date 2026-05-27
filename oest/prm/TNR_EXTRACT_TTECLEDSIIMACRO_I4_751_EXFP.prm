@@ -1,0 +1,22 @@
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDSII"
+EXTRT="TNR_EXTRACT_TTECLEDSIIMACRO_I4_751"
+
+
+//------------------------------------------------------------------------------------//
+// Il est possible d'utiliser une varibale VAR dans la requete QRY (sql)              //
+// Si la variable "${VAR}" n'est pas declare ici ou dans le fichier de configuration  //
+// c'est la valeur dans le fichier {EST_PARAM} qui est utilise par defaut             //
+//------------------------------------------------------------------------------------//
+QRY="
+SELECT    distinct NORME_CF,CASE when CLOTYP_CT = 'INI' then 'INI' else 'POS' End as 'CLOTYP_CT',PATCAT_CT,PATTYP_CT,a.PRS_CF,a.ACMTRS3_NT,b.ACMTRS_GL,ACCRET_CF, count(*) as 'NB_ROWS'
+FROM      BSAR..${TTECLEDSII} a, (select distinct a.PRS_CF, a.ACMTRS_NT, b.ACMTRS_GL from BREF..TTRSLNK a, BREF..TACMTRS b
+                                where a.ACMTRS_NT = b.ACMTRS_NT and a.PRS_CF = b.PRS_CF
+                                and a.PRS_CF=751) b
+WHERE a.PRS_CF = b.PRS_CF
+AND a.ACMTRS3_NT = CAST(b.ACMTRS_NT as CHAR)
+AND SSD_CF IN ( ${SSDCLO_LL} )
+GROUP BY  NORME_CF, CLOTYP_CT, PATCAT_CT, PATTYP_CT, a.PRS_CF, a.ACMTRS3_NT, b.ACMTRS_GL, ACCRET_CF
+ORDER BY  NORME_CF, CLOTYP_CT, PATCAT_CT, PATTYP_CT, a.PRS_CF, a.ACMTRS3_NT, b.ACMTRS_GL, ACCRET_CF  ASC
+"

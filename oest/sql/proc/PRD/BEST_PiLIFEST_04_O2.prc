@@ -1,0 +1,293 @@
+USE BEST
+go
+IF OBJECT_ID('PiLIFEST_04_O2') IS NOT NULL
+BEGIN
+  DROP PROCEDURE PiLIFEST_04_O2
+  IF OBJECT_ID('PiLIFEST_04_O2') IS NOT NULL
+    PRINT '<<< FAILED DROPPING PROCEDURE PiLIFEST_04_O2 >>>'
+  ELSE
+    PRINT '<<< DROPPED PROCEDURE PiLIFEST_04_O2 >>>'
+END
+go
+
+CREATE PROCEDURE PiLIFEST_04_O2 (
+@p_ssd_cf USSD_CF,
+@p_esb_cf UESB_CF,
+@p_usr_cf UUSR_CF
+)
+WITH EXECUTE AS CALLER AS
+
+/****************************************************
+Domain            : Estimate
+Base              : BEST
+Version           : 1
+Author            : T. DEUTSCH
+Creation date     : 26/04/2019
+Description       : Calculate GAAP DIFF
+_________________
+*****************************************************/
+
+/*
+IF object_id('#PERIMETER') IS NOT NULL DROP TABLE #PERIMETER
+IF object_id('#TABLE_GAAP') IS NOT NULL DROP TABLE #TABLE_GAAP
+IF object_id('#LASTPOSITION') IS NOT NULL DROP TABLE #LASTPOSITION
+*/
+
+CREATE TABLE #PERIMETER
+(
+  CTR_NF        UCTR_NF    NOT NULL,
+  END_NT        UEND_NT    NOT NULL,
+  SEC_NF        USEC_NF    NOT NULL,
+  UWY_NF        UUWY_NF    NOT NULL,
+  UW_NT         UUW_NT     NOT NULL,
+  CRE_D         UUPD_D     NOT NULL,
+  BALSHEY_NF    smallint   NOT NULL,
+  BALSHTMTH_NF  tinyint    NOT NULL,
+  ACY_NF        smallint   NOT NULL,
+  GAAP_NT       tinyint    NOT NULL,
+  DETTRNCOD_CF  char(5)    DEFAULT '' NOT NULL,
+  ACM_NF        tinyint    DEFAULT 13 NOT NULL,
+  PRS_CF        smallint   NOT NULL,
+  ACMTRS_NT     smallint   NOT NULL,
+  SSD_CF        USSD_CF    NOT NULL,
+  CUR_CF        UCUR_CF    NOT NULL,
+  ESTMNT_M      UAMT_M     NOT NULL,
+  INDSUP_B      bit        DEFAULT 0  NOT NULL,
+  ORICOD_LS     UL16       NULL,
+  CREUSR_CF     UUPDUSR_CF NOT NULL,
+  LSTUPD_D      UUPD_D     NOT NULL,
+  LSTUPDUSR_CF  UUPDUSR_CF NOT NULL,
+  ORICTR_NF     UCTR_NF    NULL,
+  ORISEC_NF     USEC_NF    NULL,
+  ORIUWY_NF     UUWY_NF    NULL,
+  DIFF_M        UAMT_M     NULL,
+  PROPAGATION_B bit        DEFAULT 0  NOT NULL,
+  CALCULATED_B  bit        DEFAULT 0  NOT NULL,
+  BATCH_B       bit        DEFAULT 0  NOT NULL
+)
+
+CREATE TABLE #LASTPOSITION
+(
+  CTR_NF        UCTR_NF    NOT NULL,
+  END_NT        UEND_NT    NOT NULL,
+  SEC_NF        USEC_NF    NOT NULL,
+  UWY_NF        UUWY_NF    NOT NULL,
+  UW_NT         UUW_NT     NOT NULL,
+  CRE_D         UUPD_D     NOT NULL,
+  BALSHEY_NF    smallint   NOT NULL,
+  BALSHTMTH_NF  tinyint    NOT NULL,
+  ACY_NF        smallint   NOT NULL,
+  GAAP_NT       tinyint    NOT NULL,
+  DETTRNCOD_CF  char(5)    DEFAULT '' NOT NULL,
+  ACM_NF        tinyint    DEFAULT 13 NOT NULL,
+  PRS_CF        smallint   NOT NULL,
+  ACMTRS_NT     smallint   NOT NULL,
+  SSD_CF        USSD_CF    NOT NULL,
+  CUR_CF        UCUR_CF    NOT NULL,
+  ESTMNT_M      UAMT_M     NOT NULL,
+  INDSUP_B      bit        DEFAULT 0  NOT NULL,
+  ORICOD_LS     UL16       NULL,
+  CREUSR_CF     UUPDUSR_CF NOT NULL,
+  LSTUPD_D      UUPD_D     NOT NULL,
+  LSTUPDUSR_CF  UUPDUSR_CF NOT NULL,
+  ORICTR_NF     UCTR_NF    NULL,
+  ORISEC_NF     USEC_NF    NULL,
+  ORIUWY_NF     UUWY_NF    NULL,
+  DIFF_M        UAMT_M     NULL,
+  PROPAGATION_B bit        DEFAULT 0  NOT NULL,
+  CALCULATED_B  bit        DEFAULT 0  NOT NULL,
+  BATCH_B       bit        DEFAULT 0  NOT NULL
+)
+
+CREATE TABLE #TABLE_GAAP
+(
+  CTR_NF        UCTR_NF    NOT NULL,
+  END_NT        UEND_NT    NOT NULL,
+  SEC_NF        USEC_NF    NOT NULL,
+  UWY_NF        UUWY_NF    NOT NULL,
+  UW_NT         UUW_NT     NOT NULL,
+  ACY_NF        smallint   NOT NULL,
+  GAAP_NT       tinyint    NOT NULL,
+  DETTRNCOD_CF  char(5)    DEFAULT '' NOT NULL,
+  ACM_NF        tinyint    DEFAULT 13 NOT NULL,
+  GAAP_1_M       UAMT_M    NOT NULL,
+  GAAP_2_M       UAMT_M    NOT NULL,
+  GAAP_3_M       UAMT_M    NOT NULL,
+  GAAP_4_M       UAMT_M    NOT NULL,
+  GAAP_5_M       UAMT_M    NOT NULL,
+  DIFF_M        UAMT_M     NULL,
+  DIFF_ORI_M        UAMT_M     NULL
+)
+
+
+/* On insert dans la table perimetre toutes les lignes trimestrielles */
+INSERT INTO #PERIMETER
+  SELECT * FROM BTRAV..EST_ESID0811_TLIFESTQ 
+  WHERE ACM_NF <> 13 
+UNION
+  SELECT d.* 
+  FROM 
+    BEST..TLIFESTD d, BTRAV..EST_ESID0811_TLIFESTQ q
+  WHERE 
+    d.CTR_NF=q.CTR_NF AND 
+    d.END_NT=q.END_NT AND 
+    d.SEC_NF=q.SEC_NF AND 
+    d.UWY_NF=q.UWY_NF AND 
+    d.UW_NT=q.UW_NT AND 
+    d.ACY_NF=q.ACY_NF AND 
+    d.ACM_NF=q.ACM_NF AND 
+    d.DETTRNCOD_CF=q.DETTRNCOD_CF
+
+
+INSERT INTO #LASTPOSITION
+  SELECT * FROM #PERIMETER 
+  GROUP BY CTR_NF,END_NT,SEC_NF,UWY_NF,UW_NT,ACY_NF,ACM_NF,GAAP_NT,DETTRNCOD_CF
+  HAVING CRE_D = MAX(CRE_D)
+
+--select * from #LASTPOSITION
+
+/* GAAP_DIFF Calculation  according to : http://dcvprdxwikiu/xwiki/wiki/omega/view/DEV/RU-EST-LIF-805088 */
+
+-- Define calculation table : On defini une table de calcul pour faciliter l'analyse et le requetage
+INSERT INTO #TABLE_GAAP
+select distinct CTR_NF, END_NT, SEC_NF, UWY_NF, UW_NT, ACY_NF,GAAP_NT, DETTRNCOD_CF, ACM_NF, 0,0,0,0,0,0,DIFF_M from #LASTPOSITION --where CTR_NF='04P000107' and DETTRNCOD_CF='10000' and ACM_NF=3
+
+-- On alimente chaque colonne de chaque gaap
+-- Update GAAPs Columns Amount GAAP 1
+UPDATE #TABLE_GAAP set t.GAAP_1_M = p.ESTMNT_M FROM #TABLE_GAAP t, #LASTPOSITION p 
+WHERE t.CTR_NF=p.CTR_NF
+AND t.END_NT=p.END_NT
+AND t.SEC_NF=p.SEC_NF
+AND t.UWY_NF=p.UWY_NF
+AND t.UW_NT=p.UW_NT
+AND T.ACY_NF=p.ACY_NF
+AND p.GAAP_NT=1
+AND t.DETTRNCOD_CF=p.DETTRNCOD_CF
+AND t.ACM_NF=p.ACM_NF
+-- Update GAAPs Columns Amount GAAP 2
+UPDATE #TABLE_GAAP set t.GAAP_2_M = p.ESTMNT_M FROM #TABLE_GAAP t, #LASTPOSITION p 
+WHERE t.CTR_NF=p.CTR_NF
+AND t.END_NT=p.END_NT
+AND t.SEC_NF=p.SEC_NF
+AND t.UWY_NF=p.UWY_NF
+AND t.UW_NT=p.UW_NT
+AND T.ACY_NF=p.ACY_NF
+AND p.GAAP_NT=2
+AND t.DETTRNCOD_CF=p.DETTRNCOD_CF
+AND t.ACM_NF=p.ACM_NF
+-- Update GAAPs Columns Amount GAAP 3
+UPDATE #TABLE_GAAP set t.GAAP_3_M = p.ESTMNT_M FROM #TABLE_GAAP t, #LASTPOSITION p 
+WHERE t.CTR_NF=p.CTR_NF
+AND t.END_NT=p.END_NT
+AND t.SEC_NF=p.SEC_NF
+AND t.UWY_NF=p.UWY_NF
+AND t.UW_NT=p.UW_NT
+AND T.ACY_NF=p.ACY_NF
+AND p.GAAP_NT=3
+AND t.DETTRNCOD_CF=p.DETTRNCOD_CF
+AND t.ACM_NF=p.ACM_NF
+-- Update GAAPs Columns Amount GAAP 4
+UPDATE #TABLE_GAAP set t.GAAP_4_M = p.ESTMNT_M FROM #TABLE_GAAP t, #LASTPOSITION p 
+WHERE t.CTR_NF=p.CTR_NF
+AND t.END_NT=p.END_NT
+AND t.SEC_NF=p.SEC_NF
+AND t.UWY_NF=p.UWY_NF
+AND t.UW_NT=p.UW_NT
+AND T.ACY_NF=p.ACY_NF
+AND p.GAAP_NT=4
+AND t.DETTRNCOD_CF=p.DETTRNCOD_CF
+AND t.ACM_NF=p.ACM_NF
+-- Update GAAPs Columns Amount GAAP 5
+UPDATE #TABLE_GAAP set t.GAAP_5_M = p.ESTMNT_M FROM #TABLE_GAAP t, #LASTPOSITION p 
+WHERE t.CTR_NF=p.CTR_NF
+AND t.END_NT=p.END_NT
+AND t.SEC_NF=p.SEC_NF
+AND t.UWY_NF=p.UWY_NF
+AND t.UW_NT=p.UW_NT
+AND T.ACY_NF=p.ACY_NF
+AND p.GAAP_NT=5
+AND t.DETTRNCOD_CF=p.DETTRNCOD_CF
+AND t.ACM_NF=p.ACM_NF
+
+-- Run calculation of DIFF_M
+
+UPDATE #TABLE_GAAP SET DIFF_M=0                 WHERE GAAP_NT=1
+UPDATE #TABLE_GAAP SET DIFF_M=GAAP_2_M-GAAP_1_M WHERE GAAP_NT=2
+UPDATE #TABLE_GAAP SET DIFF_M=GAAP_3_M-GAAP_2_M WHERE GAAP_NT=3
+UPDATE #TABLE_GAAP SET DIFF_M=GAAP_4_M-GAAP_3_M WHERE GAAP_NT=4
+UPDATE #TABLE_GAAP SET DIFF_M=GAAP_5_M-GAAP_4_M WHERE GAAP_NT=5
+
+-- Uncomment the following select to see calculation results before updating TLIFEST Q
+-- select * from #TABLE_GAAP 
+
+/* Updated DIFF_M on the uploaded perimeter */
+
+update BTRAV..EST_ESID0811_TLIFESTQ set p.DIFF_M=t.DIFF_M FROM #TABLE_GAAP t, BTRAV..EST_ESID0811_TLIFESTQ p 
+WHERE t.CTR_NF=p.CTR_NF
+AND t.END_NT=p.END_NT
+AND t.SEC_NF=p.SEC_NF
+AND t.UWY_NF=p.UWY_NF
+AND t.UW_NT=p.UW_NT
+AND T.ACY_NF=p.ACY_NF
+AND t.GAAP_NT=p.GAAP_NT
+AND t.DETTRNCOD_CF=p.DETTRNCOD_CF
+AND t.ACM_NF=p.ACM_NF
+
+--select * from BTRAV..EST_ESID0811_TLIFESTQ --where CTR_NF='04P000107' and DETTRNCOD_CF='10000' and ACM_NF=3
+
+/* On supprime de TABLE GAAP les positions deja à jour dans EST_ESID0811_TLIFESTQ */
+
+DELETE #TABLE_GAAP FROM #TABLE_GAAP t, BTRAV..EST_ESID0811_TLIFESTQ p 
+WHERE t.CTR_NF=p.CTR_NF
+AND t.END_NT=p.END_NT
+AND t.SEC_NF=p.SEC_NF
+AND t.UWY_NF=p.UWY_NF
+AND t.UW_NT=p.UW_NT
+AND T.ACY_NF=p.ACY_NF
+AND t.GAAP_NT=p.GAAP_NT
+AND t.DETTRNCOD_CF=p.DETTRNCOD_CF
+AND t.ACM_NF=p.ACM_NF 
+
+--select * from #TABLE_GAAP
+
+/* On supprime de TABLE GAAP les positions qui n'ont pas bougé par rapport à TLIFESTD et donc en dehors du perimètre chargé qui est supprimé precedement */
+
+DELETE FROM #TABLE_GAAP 
+WHERE DIFF_M=DIFF_ORI_M
+
+--select * from #TABLE_GAAP
+
+/* On ajoute à la EST_ESID0811_TLIFESTQ les postions dont le DIFF a changé mais en dohors du périmètre initial */
+
+INSERT INTO BTRAV..EST_ESID0811_TLIFESTQ
+  select p.CTR_NF, p.END_NT, p.SEC_NF, p.UWY_NF, p.UW_NT, getdate() as 'CRE_D', p.BALSHEY_NF, p.BALSHTMTH_NF, p.ACY_NF, p.GAAP_NT, p.DETTRNCOD_CF, p.ACM_NF, p.PRS_CF, p.ACMTRS_NT, p.SSD_CF, p.CUR_CF, p.ESTMNT_M, p.INDSUP_B, p.ORICOD_LS, @p_usr_cf as 'CREUSR_CF', getdate() as 'LSTUPD_D', @p_usr_cf, p.ORICTR_NF, p.ORISEC_NF, p.ORIUWY_NF, t.DIFF_M, p.PROPAGATION_B, p.CALCULATED_B, p.BATCH_B  
+  FROM #TABLE_GAAP t, #LASTPOSITION p 
+  WHERE t.CTR_NF=p.CTR_NF
+  AND t.END_NT=p.END_NT
+  AND t.SEC_NF=p.SEC_NF
+  AND t.UWY_NF=p.UWY_NF
+  AND t.UW_NT=p.UW_NT
+  AND T.ACY_NF=p.ACY_NF
+  AND t.GAAP_NT=p.GAAP_NT
+  AND t.DETTRNCOD_CF=p.DETTRNCOD_CF
+  AND t.ACM_NF=p.ACM_NF
+
+--select * from BTRAV..EST_ESID0811_TLIFESTQ where ACM_NF<>13
+
+IF object_id('#PERIMETER') IS NOT NULL DROP TABLE #PERIMETER
+IF object_id('#TABLE_GAAP') IS NOT NULL DROP TABLE #TABLE_GAAP
+IF object_id('#LASTPOSITION') IS NOT NULL DROP TABLE #LASTPOSITION
+
+return 0
+go
+EXEC sp_procxmode 'PiLIFEST_04_O2', 'unchained'
+go
+IF OBJECT_ID('PiLIFEST_04_O2') IS NOT NULL
+    PRINT '<<< CREATED PROCEDURE PiLIFEST_04_O2 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING PROCEDURE PiLIFEST_04_O2 >>>'
+go
+GRANT EXECUTE ON PiLIFEST_04_O2 TO GOMEGA
+go
+GRANT EXECUTE ON PiLIFEST_04_O2 TO GDBBATCH
+go

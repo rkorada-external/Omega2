@@ -1,0 +1,10 @@
+# Chain Parameter File
+# 4 parameters
+#  1 - Année cloture
+#  2 - Mois cloture
+#  3 - Date cloture
+#
+BALSHTYEA_NF 2013
+BALSHTMTH_NF 12
+CLODAT_D 20131231
+SIMMOD_B 1

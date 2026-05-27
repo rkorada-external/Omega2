@@ -1,0 +1,66 @@
+/* UBGL_ON */
+
+USE BTRAV
+go
+
+IF OBJECT_ID('CPTD0912_WORKFILE') IS NOT NULL
+BEGIN
+    DROP TABLE CPTD0912_WORKFILE
+    IF OBJECT_ID('CPTD0912_WORKFILE') IS NOT NULL
+        PRINT '<<< FAILED DROPPING TABLE CPTD0912_WORKFILE >>>'
+    ELSE
+        PRINT '<<< DROPPED TABLE CPTD0912_WORKFILE >>>'
+END
+GO
+
+/***************************************************
+Table            : BTRAV..CPTD0912_WORKFILE
+Base principale  : BTRAV
+Version          : 1.1
+Auteur           : KBagwe
+Date de creation : 11/04/2019
+Description      : Spira#70043: Complete Account
+-----------------
+MODIFICATION     : [001]
+Auteur           : 
+Date             : 
+Version          : 
+Description      : 
+
+*****************************************************/
+
+CREATE TABLE CPTD0912_WORKFILE
+(
+    CTR_NF       		UCTR_NF       NULL,
+    SEC_NF       		USEC_NF       NULL,
+    ACY_NF       		smallint      NULL,
+    SCOENDMTH_NF 		tinyint       NULL,
+    GSSD_CF        	USSD_CF       NOT NULL,
+    GESB_CF        	UESB_CF       NOT NULL,
+    USR_CF          UUSR_CF       NOT NULL,
+    BALSHT_D         datetime  NULL,  
+    NUMFIC_NT       int           NOT NULL,
+    NUMLIGNE_NT   	int           NULL,
+    ERR_B   	bit                           
+)
+LOCK ALLPAGES
+go
+GRANT UPDATE ON CPTD0912_WORKFILE TO GOMEGA
+go
+GRANT SELECT ON CPTD0912_WORKFILE TO GOMEGA
+go
+GRANT REFERENCES ON CPTD0912_WORKFILE TO GOMEGA
+go
+GRANT INSERT ON CPTD0912_WORKFILE TO GOMEGA
+go
+GRANT DELETE ON CPTD0912_WORKFILE TO GOMEGA
+go
+GRANT SELECT ON CPTD0912_WORKFILE TO GCONSULT
+go
+grant all on CPTD0912_WORKFILE  to GDBBATCH
+go
+IF OBJECT_ID('CPTD0912_WORKFILE') IS NOT NULL
+    PRINT '<<< CREATED TABLE CPTD0912_WORKFILE >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE CPTD0912_WORKFILE >>>'
+go

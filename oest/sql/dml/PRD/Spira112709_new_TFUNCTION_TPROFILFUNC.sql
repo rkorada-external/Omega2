@@ -1,0 +1,67 @@
+--Script to add new profile function and TFUNCTION
+--Changes made for SPIRA 112709
+-- Author : Twinkle 
+
+-- New functions are added 920958 and 920961
+
+
+USE BREF
+GO
+
+
+IF EXISTS( select 1 from BREF..TPROFILFUNC where FUNC_CF = 920958 and APP_CF = 'CPT' and PRF_CF in('SIN02') )
+BEGIN
+exec(" DELETE  from BREF..TPROFILFUNC where FUNC_CF = 920958  ")
+END
+go
+
+IF EXISTS( select 1 from BREF..TPROFILFUNC where FUNC_CF = 920958 and APP_CF = 'CPT' and PRF_CF in('SUPERVIS') )
+BEGIN
+exec(" DELETE  from BREF..TPROFILFUNC where FUNC_CF = 920958  ")
+END
+go
+
+IF EXISTS( select 1 from BREF..TPROFILFUNC where FUNC_CF = 920961 and APP_CF = 'CPT' and PRF_CF in('SIN02') )
+BEGIN
+exec(" DELETE  from BREF..TPROFILFUNC where FUNC_CF = 920961  ")
+END
+go
+
+IF EXISTS( select 1 from BREF..TPROFILFUNC where FUNC_CF = 920961 and APP_CF = 'CPT' and PRF_CF in('SUPERVIS') )
+BEGIN
+exec(" DELETE  from BREF..TPROFILFUNC where FUNC_CF = 920961  ")
+END
+go
+
+IF EXISTS( select 1 from BREF..TFUNCTION where FUNC_CF = 920958 and APP_CF = 'CPT'  )
+BEGIN
+exec(" DELETE  from BREF..TFUNCTION where FUNC_CF = 920958 and APP_CF = 'CPT' " )
+END
+go
+
+IF EXISTS( select 1 from BREF..TFUNCTION where FUNC_CF = 920961 and APP_CF = 'CPT'  )
+BEGIN
+exec(" DELETE  from BREF..TFUNCTION where FUNC_CF = 920961 and APP_CF = 'CPT' " )
+END
+go
+
+INSERT INTO TPROFILFUNC (FUNC_CF, APP_CF, PRF_CF) VALUES (920958, 'CPT', 'SIN02')
+GO
+
+INSERT INTO TPROFILFUNC (FUNC_CF, APP_CF, PRF_CF) VALUES (920958, 'CPT', 'SUPERVIS')
+GO
+
+INSERT INTO TPROFILFUNC (FUNC_CF, APP_CF, PRF_CF) VALUES (920961, 'CPT', 'SIN02')
+GO
+
+INSERT INTO TPROFILFUNC (FUNC_CF, APP_CF, PRF_CF) VALUES (920961, 'CPT', 'SUPERVIS')
+GO
+
+INSERT INTO TFUNCTION (FUNC_CF, APP_CF, FUNC_LS, FUNC_LD, BATDEP_B, UPDATE_B, FNTYP_CT) VALUES (920958, 'CPT', 'U Grp Event Type', 'Update Group Event Type',1, 1, 0)
+go
+
+INSERT INTO TFUNCTION (FUNC_CF, APP_CF, FUNC_LS, FUNC_LD, BATDEP_B, UPDATE_B, FNTYP_CT) VALUES (920961, 'CPT', 'U Sub Event Type', 'Update Subsidiary Event Type',1, 1, 0)
+go
+
+
+

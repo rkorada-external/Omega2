@@ -1,0 +1,8 @@
+
+# Chaine parameter file
+# activation of filter of SAP file on GAAP_CODES
+I4I Y
+EBS Y
+I17P Y
+I17G Y
+I17L Y

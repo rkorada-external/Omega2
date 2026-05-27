@@ -1,0 +1,5 @@
+# Chaine parameter file (ESTD0110)
+# 1 parameter
+# BALSHEYEA_NF ->  Min update date of movements to be kept into BEST..TACCTRNE
+#
+BALSHEYEA_NF 2002

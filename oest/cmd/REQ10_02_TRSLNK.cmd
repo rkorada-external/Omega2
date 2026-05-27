@@ -1,0 +1,135 @@
+#!/bin/ksh
+#=============================================================================
+#set -x
+
+# Call generic functions
+. ${DUTI}/fctgen.cmd
+. ${DUTI}/fcttransfer.cmd
+
+CHAININIT $0 $DENV/CNLD0030.env
+
+
+# Initialization of the Job
+JOBINIT
+export REMOTE_SITE="${REMOTE_SITE_NY}|${REMOTE_SITE_SG}|${REMOTE_SITE_PA}"
+
+#Temperory variable declaration not used for creating EST_FTRSLNK
+BALSHTYEA_NF=2018
+BALSHTMTH_NF=09
+
+EST_FTRSLNK=${DFILP}/${ENV_PREFIX}_ESPT0000_FTRSLNK.dat
+EST_DLEIFTECLEDSIIEP=${DFILP}/${ENV_PREFIX}_ESPD3700_DLEIFTECLEDSIIEP.dat
+EST_FSEGPAR=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FSEGPAR.dat
+EST_FCTRFIC=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FCTRFIC.dat
+EST_FLIFDRI=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FLIFDRI.dat
+EST_FCURQUOT=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FCURQUOT.dat
+EST_FDETTRS=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FDETTRS.dat
+EST_FRETTRF=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FRETTRF.dat
+EST_FSUBSID=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FSUBSID.dat
+EST_FACMTRSH=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FACMTRSH.dat
+EST_FBANTECL=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FBANTECL.dat
+EST_FGRP=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FGRP.dat
+EST_FCURCVSNI=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FCURCVSNI.dat
+EST_FSOBBLOB=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FSOBBLOB.dat
+EST_FSEGMENT=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FSEGMENT.dat
+EST_FLIFTHR=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FLIFTHR.dat
+EST_SUBTRS=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_SUBTRS.dat
+EST_SUBTRSBLOCKLIFEST=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_SUBTRSBLOCKLIFEST.dat
+EST_SUBTRSASSO=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_SUBTRSASSO.dat
+EST_SUBTRSBASE=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_SUBTRSBASE.dat
+EST_TACCPAR=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_TACCPAR.dat
+EST_SUBTRSESBPROP=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_SUBTRSESBPROP.dat
+EST_FLIFDRI_ALL=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FLIFDRI_ALL.dat
+EST_FTRANSCODE=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FTRANSCODE.dat
+EST_FTRANSCODEVRET=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FTRANSCODEVRET.dat
+EST_FTRSLNKVRET=${DFILT}/${NJOB}_${IB}_TMPPERM_EST_FTRSLNKVRET.dat
+EST_FLIFDRIQ_ALL=${DFILT}/${NJOB}_${IB}_TFLIFDRIQ_ALL.dat # [011]
+EST_FLIFDRIY_ALL=${DFILT}/${NJOB}_${IB}_FLIFDRIY_ALL.dat # [011]
+
+ 
+NSTEP=${NJOB}_05
+# Begin C Program
+#------------------------------------------------------------------------------
+LIBEL="Generation of binary format Files"
+PRG=ESIX0061
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+BALSHTYEA_NF  ${BALSHTYEA_NF}
+BALSHTMTH_NF  ${BALSHTMTH_NF}
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_O1=${EST_FSEGPAR}
+export ${PRG}_O2=${EST_FCTRFIC}
+export ${PRG}_O3=${EST_FLIFDRI}
+export ${PRG}_O4=${EST_FTRSLNK}
+export ${PRG}_O5=${EST_FCURQUOT}
+export ${PRG}_O6=${EST_FDETTRS}
+export ${PRG}_O7=${EST_FRETTRF}
+export ${PRG}_O9=${EST_FSUBSID}
+export ${PRG}_O10=${EST_FACMTRSH}
+export ${PRG}_O11=${EST_FBANTECL}
+export ${PRG}_O12=${EST_FGRP}
+export ${PRG}_O13=${EST_FCURCVSNI}
+export ${PRG}_O14=${EST_FSOBBLOB}
+export ${PRG}_O15=${EST_FSEGMENT}
+export ${PRG}_O16=${EST_FLIFTHR}
+export ${PRG}_O17=${EST_SUBTRS}
+export ${PRG}_O18=${EST_SUBTRSBLOCKLIFEST}
+export ${PRG}_O19=${EST_SUBTRSASSO}
+export ${PRG}_O20=${EST_SUBTRSBASE}
+export ${PRG}_O21=${EST_TACCPAR}
+export ${PRG}_O22=${EST_SUBTRSESBPROP}
+export ${PRG}_O23=${EST_FLIFDRI_ALL}
+export ${PRG}_O24=${EST_FTRANSCODE}
+export ${PRG}_O25=${EST_FTRANSCODEVRET}
+export ${PRG}_O26=${EST_FTRSLNKVRET}
+export ${PRG}_O27=${EST_FLIFDRIQ_ALL} # [011]
+export ${PRG}_O28=${EST_FLIFDRIY_ALL} # [011]
+EXECPRG
+
+NSTEP=${NJOB}_06
+#------------------------------------------------------------------------------
+LIBEL="Delete the file EST_DLEIFTECLEDSIIEP"
+if [ -s ${EST_DLEIFTECLEDSIIEP} ]
+then
+ rm ${EST_DLEIFTECLEDSIIEP}
+ touch ${EST_DLEIFTECLEDSIIEP}
+fi 
+
+
+export REMOTE_SITE="${REMOTE_SITE_NY}|${REMOTE_SITE_SG}|${REMOTE_SITE_PA}"
+export EXTCHAIN_SII=${ENV_PREFIX}_ESPD3700
+
+
+export EXTCHAIN=${EXTCHAIN_SII}
+
+NJOB="TEFJ0011SII"
+# Launch technical job TEFJ0011 for SII file
+# Fetching of TL files from the estimation chain ESPD3700 for SII
+${DUTI}/TEFJ0011.cmd 2>&1 | ${TEE}
+
+
+
+NSTEP=${NJOB}_10
+#---------------------------------------------------------------------------
+LIBEL="Get files from directories and delete them"
+GET_FILES_DIR=${REMOTE_SITE}
+GET_FILES_PREFIX=${EXTCHAIN_SII}
+GET_FILES_MERGE="YES"
+GET_FILES_O=${DFILT}/${NSTEP}_${IB}_DLEIFTECLEDSII_O.dat
+GET_FILES
+
+
+
+
+NSTEP=${NJOB}_10
+# Begin rm
+#------------------------------------------------------------------------------
+LIBEL="Step to remove temporary files"
+RMFIL "${DFILT}/${NJOB}_${IB}_TMPPERM_EST*.dat"
+
+
+JOBEND
+
+CHAINEND

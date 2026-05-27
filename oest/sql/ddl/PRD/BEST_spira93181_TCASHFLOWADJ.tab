@@ -1,0 +1,37 @@
+USE BEST
+go
+
+-----------------------------------------------------------
+-- Chack if UWYPLAN_NF column exists in TCASHFLOWADJ
+--> if yes, then delete it  
+-----------------------------------------------------------
+if exists (select 1 from syscolumns
+            where id = object_id("TCASHFLOWADJ")
+            and name = "UWYPLAN_NF")
+begin
+  exec ("alter table TCASHFLOWADJ drop 
+        UWYPLAN_NF")
+end
+
+-- Create a new column UWYPLAN_NF with UUWY_NF as type
+-----------------------------------------------------------
+ALTER TABLE TCASHFLOWADJ ADD UWYPLAN_NF UUWY_NF null
+
+-----------------------------------------------------------
+-- Chack if VRSPLAN_NF column exists in TCASHFLOWADJ
+--> if yes, then delete it 
+-----------------------------------------------------------
+if exists (select 1 from syscolumns
+            where id = object_id("TCASHFLOWADJ")
+            and name = "VRSPLAN_NF")
+begin
+  exec ("alter table TCASHFLOWADJ  
+        drop VRSPLAN_NF")
+end
+
+-- Create a new column VRSPLAN_NF with smallint as type
+-----------------------------------------------------------
+ALTER TABLE TCASHFLOWADJ ADD VRSPLAN_NF smallint null
+go
+
+

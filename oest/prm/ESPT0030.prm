@@ -1,0 +1,16 @@
+#date on the current one we use to copy the objects (ex: 20210930, 20211331)
+ICLODAT_D 20211231
+
+#Norme we want to update (EBS, I17G, I17P, I17L)
+NORME_CF I17G
+
+#Type of inventary on the current one we use to copy the objects (INV, POS)
+TYPEINV INV
+
+#Type of object we want to update (ULR, ULAE, ESTIMATE, EXPENSES, RISK)
+#ULR
+#ULAE for ULAE Ratios (BEST..TULAERAT)
+#ESTIMATE 
+#EXPENSES for Expenses Ratios (BEST..TEXPRAT)
+#RISK for Risk Adjustment Ratios (BEST..TRARAT)
+OBJECT RISK

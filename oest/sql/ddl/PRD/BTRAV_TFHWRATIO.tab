@@ -1,0 +1,120 @@
+/* UBGL_ON */ 
+use BTRAV
+go
+IF OBJECT_ID('ESID0901_TFHWRATIO') IS NOT NULL
+begin
+  drop TABLE  ESID0901_TFHWRATIO
+  if object_id('ESID0901_TFHWRATIO') is not null
+    print '<<< FAILED DROPPING TABLE ESID0901_TFHWRATIO >>>'
+  else
+    print '<<< DROPPED TABLE ESID0901_TFHWRATIO >>>'
+end
+go
+
+
+create table  ESID0901_TFHWRATIO
+(
+  LINE_NF    BIGINT         not null
+ ,USR_CF     UUSR_CF     not null 
+ ,SSD_CF     USSD_CF     null
+ ,ESB_CF     UESB_CF     null
+ ,SEG_NF     USEG_NF     null
+ ,LOB_CF     varchar(32)     null
+ ,CUR_CF     UCUR_CF     null 
+ ,NORME_CF   char(5)     null
+ ,PATTYP_CT  char(5)     not null 
+ ,AN1        decimal(11,8) NULL
+ ,AN2        decimal(11,8) NULL
+ ,AN3        decimal(11,8) NULL
+ ,AN4        decimal(11,8) NULL
+ ,AN5        decimal(11,8) NULL
+ ,AN6        decimal(11,8) NULL
+ ,AN7        decimal(11,8) NULL
+ ,AN8        decimal(11,8) NULL
+ ,AN9        decimal(11,8) NULL
+ ,AN10       decimal(11,8) NULL
+ ,AN11       decimal(11,8) NULL
+ ,AN12       decimal(11,8) NULL
+ ,AN13       decimal(11,8) NULL
+ ,AN14       decimal(11,8) NULL
+ ,AN15       decimal(11,8) NULL
+ ,AN16       decimal(11,8) NULL
+ ,AN17       decimal(11,8) NULL
+ ,AN18       decimal(11,8) NULL
+ ,AN19       decimal(11,8) NULL
+ ,AN20       decimal(11,8) NULL
+ ,AN21       decimal(11,8) NULL
+ ,AN22       decimal(11,8) NULL
+ ,AN23       decimal(11,8) NULL
+ ,AN24       decimal(11,8) NULL
+ ,AN25       decimal(11,8) NULL
+ ,AN26       decimal(11,8) NULL
+ ,AN27       decimal(11,8) NULL
+ ,AN28       decimal(11,8) NULL
+ ,AN29       decimal(11,8) NULL
+ ,AN30       decimal(11,8) NULL
+ ,AN31       decimal(11,8) NULL
+ ,AN32       decimal(11,8) NULL
+ ,AN33       decimal(11,8) NULL
+ ,AN34       decimal(11,8) NULL
+ ,AN35       decimal(11,8) NULL
+ ,AN36       decimal(11,8) NULL
+ ,AN37       decimal(11,8) NULL
+ ,AN38       decimal(11,8) NULL
+ ,AN39       decimal(11,8) NULL
+ ,AN40       decimal(11,8) NULL
+ ,AN41       decimal(11,8) NULL
+ ,AN42       decimal(11,8) NULL
+ ,AN43       decimal(11,8) NULL
+ ,AN44       decimal(11,8) NULL
+ ,AN45       decimal(11,8) NULL
+ ,AN46       decimal(11,8) NULL
+ ,AN47       decimal(11,8) NULL
+ ,AN48       decimal(11,8) NULL
+ ,AN49       decimal(11,8) NULL
+ ,AN50       decimal(11,8) NULL
+ ,AN51       decimal(11,8) NULL
+ ,AN52       decimal(11,8) NULL
+ ,AN53       decimal(11,8) NULL
+ ,AN54       decimal(11,8) NULL
+ ,AN55       decimal(11,8) NULL
+ ,AN56       decimal(11,8) NULL
+ ,AN57       decimal(11,8) NULL
+ ,AN58       decimal(11,8) NULL
+ ,AN59       decimal(11,8) NULL
+ ,AN60       decimal(11,8) NULL
+ ,AN61       decimal(11,8) NULL
+ ,AN62       decimal(11,8) NULL
+ ,AN63       decimal(11,8) NULL
+ ,AN64       decimal(11,8) NULL
+ ,AN65       decimal(11,8) NULL
+)
+go
+IF OBJECT_ID('ESID0901_TFHWRATIO') IS NOT NULL
+  print '<<< CREATED TABLE ESID0901_TFHWRATIO >>>'
+else
+  print '<<< FAILED CREATING TABLE  ESID0901_TFHWRATIO >>>'
+go
+
+GRANT DELETE ON ESID0901_TFHWRATIO TO GOMEGA
+go
+GRANT INSERT ON ESID0901_TFHWRATIO TO GOMEGA
+go
+GRANT SELECT ON ESID0901_TFHWRATIO TO GOMEGA
+go
+GRANT UPDATE ON ESID0901_TFHWRATIO TO GOMEGA
+go
+GRANT REFERENCES ON ESID0901_TFHWRATIO TO GOMEGA
+go
+GRANT DELETE ON ESID0901_TFHWRATIO TO GDBBATCH
+go
+GRANT INSERT ON ESID0901_TFHWRATIO TO GDBBATCH
+go
+GRANT SELECT ON ESID0901_TFHWRATIO TO GDBBATCH
+go
+GRANT UPDATE ON ESID0901_TFHWRATIO TO GDBBATCH
+go
+GRANT REFERENCES ON ESID0901_TFHWRATIO TO GDBBATCH
+go
+GRANT SELECT ON ESID0901_TFHWRATIO TO GCONSULT
+go

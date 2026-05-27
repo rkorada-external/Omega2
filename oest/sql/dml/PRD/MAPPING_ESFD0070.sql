@@ -1,0 +1,85 @@
+-------------------------------
+--mapping of  ESFD0070
+
+	----------   Clean tables   ---------------------
+
+	delete BEST..TI17PERMFIL where IDF_CT in  ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESFD0070')
+	delete BEST..TI17REQFNC where     IDF_CT  in ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESFD0070')
+	delete BEST..TI17FNC where CHAIN_CT='ESFD0070'
+	delete BEST..TI17CHN  where CHAIN_CT='ESFD0070'
+
+	insert into BEST..TI17CHN values ('ESFD0070',  'AE Life extraction')
+
+	----------IDF_CT:   I17G_OMG_EX_LIF ------------------
+
+		insert into BEST..TI17FNC values ('I17G_OMG_EX_LIF','AE Life extraction','ESFD0070',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17G_OMG_EX_LIF',  'ESF_FACCSUPI17LIFE','${DFILP}/${ENV_PREFIX}_ESFD0070_I17G_OMG_EX_LIF_FACCSUPI17LIFE_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17GMINV',  'I17G_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17GQINV',  'I17G_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17GQPOS',  'I17G_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17GYINV',  'I17G_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17GYPOS',  'I17G_OMG_EX_LIF','')
+
+	----------IDF_CT:   I17L_OMG_EX_LIF ------------------
+
+		insert into BEST..TI17FNC values ('I17L_OMG_EX_LIF','AE Life extraction','ESFD0070',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17L_OMG_EX_LIF',  'ESF_FACCSUPI17LIFE','${DFILP}/${ENV_PREFIX}_ESFD0070_I17L_OMG_EX_LIF_FACCSUPI17LIFE_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17LQPOSX',  'I17L_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17LYPOSX',  'I17L_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17LMINV',  'I17L_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17LQINV',  'I17L_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17LQPOS',  'I17L_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17LYINV',  'I17L_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17LYPOS',  'I17L_OMG_EX_LIF','')
+
+	----------IDF_CT:   I17P_OMG_EX_LIF ------------------
+
+		insert into BEST..TI17FNC values ('I17P_OMG_EX_LIF','AE Life extraction','ESFD0070',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17P_OMG_EX_LIF',  'ESF_FACCSUPI17LIFE','${DFILP}/${ENV_PREFIX}_ESFD0070_I17P_OMG_EX_LIF_FACCSUPI17LIFE_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17PYINV',  'I17P_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17PYPOS',  'I17P_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17PMINV',  'I17P_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17PQINV',  'I17P_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17PQPOS',  'I17P_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17PYPOSX',  'I17P_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17PQPOSX',  'I17P_OMG_EX_LIF','')
+
+	----------IDF_CT:   I17S_OMG_EX_LIF ------------------
+
+		insert into BEST..TI17FNC values ('I17S_OMG_EX_LIF','AE Life extraction','ESFD0070',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17S_OMG_EX_LIF',  'ESF_FACCSUPI17LIFE','${DFILP}/${ENV_PREFIX}_ESFD0070_I17S_OMG_EX_LIF_FACCSUPI17LIFE_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17SMINV',  'I17S_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17SQINV',  'I17S_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17SQPOS',  'I17S_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17SYINV',  'I17S_OMG_EX_LIF','')
+			insert into BEST..TI17REQFNC values ('I17SYPOS',  'I17S_OMG_EX_LIF','')
+go
+

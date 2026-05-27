@@ -1,0 +1,86 @@
+/***************************************************
+Program:		SEGRESULTSCREATE
+File script :	BSEG_SEGRESULTSCREATE_RETRO_PROP.tab
+Main database :	BSEG
+Version:		1
+Author:			NGA
+Creation date:	26/02/2014
+Description:
+	. Create segmentation results table (if not exists)
+	. Create segmentation error results table (if not exists)
+Parameters:
+	- #sgtrunNt: Segmentation run ID
+	
+Conditions:
+
+Comments:
+
+****************************************************/
+
+use BSEG
+go
+
+IF OBJECT_ID('TSEGRUNRES_#sgtrunNt') IS NOT NULL
+BEGIN
+   DROP TABLE TSEGRUNRES_#sgtrunNt
+   IF OBJECT_ID('TSEGRUNRES_#sgtrunNt') IS NOT NULL
+      PRINT '<<< FAILED DROPPING TABLE TSEGRUNRES_#sgtrunNt >>>'
+   ELSE
+      PRINT '<<< DROPPED TABLE TSEGRUNRES_#sgtrunNt >>>'
+END
+go
+
+-- Create results table
+CREATE TABLE TSEGRUNRES_#sgtrunNt (
+   SGMT_NF              USGMT_NF                       not null,
+   SGTLVL_NT            int                            not null,
+   SEGCTRTYP_CT         UBANVAL_CT                     null,
+   CTR_NF               UCTR_NF                        not null,
+   UWY_NF               UUWY_NF                        not null,
+   UW_NT                UUW_NT                         not null,
+   SEC_NF               USEC_NF                        not null,
+   RTO_NF               UCLI_NF                        not null,
+   SSD_CF				USSD_CF						   not null,
+   SGTRUL_NT			int							   null
+)
+lock datapages
+go
+
+GRANT ALL on TSEGRUNRES_#sgtrunNt to GDBBATCH
+GRANT SELECT on TSEGRUNRES_#sgtrunNt to GOMEGA
+GRANT SELECT on TSEGRUNRES_#sgtrunNt to GCONSULT
+GRANT SELECT on TSEGRUNRES_#sgtrunNt to dbo
+go
+
+IF OBJECT_ID('TSEGRUNERR_#sgtrunNt') IS NOT NULL
+BEGIN
+   DROP TABLE TSEGRUNERR_#sgtrunNt
+   IF OBJECT_ID('TSEGRUNERR_#sgtrunNt') IS NOT NULL
+      PRINT '<<< FAILED DROPPING TABLE TSEGRUNERR_#sgtrunNt >>>'
+   ELSE
+      PRINT '<<< DROPPED TABLE TSEGRUNERR_#sgtrunNt >>>'
+END
+go
+
+-- Create error results table
+create table TSEGRUNERR_#sgtrunNt (
+   SEGCTRTYP_CT         UBANVAL_CT                     null,
+   CTR_NF               UCTR_NF                        not null,
+   UWY_NF               UUWY_NF                        not null,
+   UW_NT                UUW_NT                         not null,
+   SEC_NF               USEC_NF                        not null,
+   END_NT               UEND_NT                        not null,
+   RTO_NF               UCLI_NF                        not null,
+   PLC_NT               UPLC_NT                        null,
+   SSD_CF				USSD_CF						   not null,
+   SGTERR_CT            char(12)                       not null,
+   SGTERR_LL            UL255                          null,
+  
+)
+lock datapages
+go
+GRANT ALL on TSEGRUNERR_#sgtrunNt to GDBBATCH
+GRANT SELECT on TSEGRUNERR_#sgtrunNt to GOMEGA
+GRANT SELECT on TSEGRUNERR_#sgtrunNt to GCONSULT
+GRANT SELECT on TSEGRUNERR_#sgtrunNt to dbo
+go

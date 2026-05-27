@@ -1,0 +1,54 @@
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDA"
+EXTRT="TNR_EXTRACT_TTECLEDAZOOM_I4_751"
+
+
+//------------------------------------------------------------------------------------//
+// Il est possible d'utiliser une varibale VAR dans la requete QRY (sql)              //
+// Si la variable "${VAR}" n'est pas declare ici ou dans le fichier de configuration  //
+// c'est la valeur dans le fichier {EST_PARAM} qui est utilise par defaut             //
+//------------------------------------------------------------------------------------//
+QRY="
+
+select distinct a.DETTRS_CF, b. ACMTRS_NT, b.ACMTRS_GL 
+into #tcode751
+from BREF..TTRSLNK a, BREF..TACMTRS b
+where a.ACMTRS_NT = b.ACMTRS_NT and a.PRS_CF = b.PRS_CF
+and a.PRS_CF=751
+
+select distinct a.DETTRS_CF, b.ACMTRS_NT, 
+  case 
+    when b.ACMTRS_NT in (100,200,201,202) then 'IFRS4' 
+    when b.ACMTRS_NT in (300) then 'IFRS17 Group'
+    when b.ACMTRS_NT in (301,302) then b.ACMTRS_GL
+  else 'EBS'
+  end as 'ACMTRS_GL'
+into #tcode640
+from BREF..TTRSLNK a, BREF..TACMTRS b
+where a.ACMTRS_NT = b.ACMTRS_NT and a.PRS_CF = b.PRS_CF
+and a.PRS_CF=640
+
+select distinct a.DETTRS_CF, a.ACMTRS_GL as 'ACMTRS_GL_640', b.ACMTRS_NT, b.ACMTRS_GL as 'ACMTRS_GL_751'
+into #tcode
+ from #tcode640 a, #tcode751 b
+where a.DETTRS_CF=b.DETTRS_CF 
+
+SELECT DISTINCT SSD_CF,ESB_CF,CTR_NF,SEC_NF,UWY_NF,UW_NT,END_NT,RETCTR_NF, RETSEC_NF,RETRTY_NF,TRNCOD_CF,CUR_CF,RETCUR_CF,sum(AMT_M)as TOTAL, count(*) as 'NB_ROWS'
+into #ResInterm
+FROM BSAR..${TTECLEDA}
+WHERE SSD_CF in ( ${SSDCLO_LL} )
+GROUP BY SSD_CF,ESB_CF,CTR_NF,SEC_NF,UWY_NF,UW_NT,END_NT,RETCTR_NF, RETSEC_NF,RETRTY_NF,TRNCOD_CF,CUR_CF,RETCUR_CF
+
+select b.ACMTRS_GL_640,b.ACMTRS_NT,b.ACMTRS_GL_751,SSD_CF,ESB_CF,CTR_NF,SEC_NF,UWY_NF,UW_NT,END_NT,RETCTR_NF,CUR_CF,RETSEC_NF,RETRTY_NF,TRNCOD_CF,RETCUR_CF,sum(TOTAL) as 'TOTAL',sum(NB_ROWS) as 'NB_ROWS'
+from #ResInterm a,#tcode b
+where a.TRNCOD_CF=b.DETTRS_CF
+group by b.ACMTRS_GL_640,b.ACMTRS_NT,b.ACMTRS_GL_751,SSD_CF,ESB_CF,CTR_NF,SEC_NF,UWY_NF,UW_NT,END_NT,RETCTR_NF,CUR_CF,RETSEC_NF,RETRTY_NF,TRNCOD_CF,RETCUR_CF
+order by b.ACMTRS_GL_640,b.ACMTRS_NT,b.ACMTRS_GL_751,SSD_CF,ESB_CF,CTR_NF,SEC_NF,UWY_NF,UW_NT,END_NT,RETCTR_NF,CUR_CF,RETSEC_NF,RETRTY_NF,TRNCOD_CF,RETCUR_CF
+
+drop table #tcode
+drop table #tcode640
+drop table #tcode751
+drop table #ResInterm
+
+"

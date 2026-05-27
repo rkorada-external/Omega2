@@ -1,0 +1,18 @@
+# Parameters List     SPOT EST16765
+
+#  03/12/2009  Roger Cassis      :spot:18415 -> Mise à jour parametres plus utilises - Ajout parametre VIE_B
+#  02/11/2015  Roger Cassis :spot:29223 -> Mise à jour des parametres
+
+# BLCSHT_D         Balance sheet date du mois en cours (mois inventaire ouvert)
+# BALSHEY_NF       Balance sheet year du mois GTA
+# BALSHTMTH_NF     Balance sheet_month du mois GTA
+# QTRLIM_NF        trimestre limite écoulé -> les traitements de postes avant/apres cette limite sont differents  SPOT 16765
+# TRANSFESB        flag transfert etablissement (1=Oui / 0=Non par defaut)
+# VIE_B            0/1 -> 0= Transfert contrats non vie, 1= Transfert contrats Vie
+
+BLCSHT_D 20160131
+BALSHEY_NF 2016
+BALSHTMTH_NF 1
+QTRLIM_NF 12
+TRANSFESB 0
+VIE_B 0

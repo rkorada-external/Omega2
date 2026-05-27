@@ -1,0 +1,224 @@
+USE BFAC
+go
+
+IF OBJECT_ID('PuSECIFRS_07') IS NOT NULL
+BEGIN
+    DROP PROCEDURE PuSECIFRS_07
+    IF OBJECT_ID('PuSECIFRS_07') IS NOT NULL
+        PRINT '<<< FAILED DROPPING PROCEDURE PuSECIFRS_07 >>>'
+    ELSE
+        PRINT '<<< DROPPED PROCEDURE PuSECIFRS_07 >>>'
+END
+
+go
+
+create procedure PuSECIFRS_07 (
+		@p_clo_date char(8),
+		@p_prev_clo_date char(8),
+		@p_x_days int,
+		@p_norme_cf char(4),
+		@p_quarter_end varchar(10),
+		@p_erreur varchar(64)=null output
+) with execute as caller as
+
+/***************************************************
+Domaine: (ES) Estimation
+Base principale: BFAC
+Version: 1
+Auteur: Florian CULIOLI
+Date de creation: 03/06/2022
+Description du programme:
+    Spira#102725 Update TSECIFRS on BFAC
+____________________________________
+modifications
+*****************************************************/
+
+DECLARE
+@erreur 				int,
+@v_cur_date VARCHAR(30),
+@v_pos_booking_minus_days datetime,
+@rc int --used to store rowcount
+
+IF(@p_quarter_end = 'NONE')
+BEGIN
+	DECLARE
+	@v_year_clo_date int,
+	@v_month_clo_date int,
+	@v_pos_booking_d datetime	
+	
+	SELECT @v_year_clo_date = CONVERT(int, substring(@p_clo_date, 1, 4))
+	SELECT @v_month_clo_date = CONVERT(int, substring(@p_clo_date, 5, 2))
+	
+	SELECT @v_pos_booking_d = PSTOMGEND17_D FROM BREF..TCALEND WHERE BLCSHTYEA_NF = @v_year_clo_date and BLCSHTMTH_NF =  @v_month_clo_date  --[003]
+	SELECT @v_pos_booking_minus_days = dateadd(day, @p_x_days * -1, @v_pos_booking_d)
+END
+ELSE 
+BEGIN
+	SELECT @v_pos_booking_minus_days = convert(datetime, @p_quarter_end, 103)
+END
+
+
+DECLARE	
+@v_year_prev_clo_date VARCHAR(4),
+@v_ref_quarter VARCHAR(9)
+
+SELECT @v_year_prev_clo_date = substring(@p_prev_clo_date, 1, 4)
+SELECT @v_ref_quarter =
+CASE
+WHEN MONTH(@p_prev_clo_date) = 3  THEN @v_year_prev_clo_date + 'Q1ILL' 
+WHEN MONTH(@p_prev_clo_date) = 6  THEN @v_year_prev_clo_date + 'Q2ILL' 
+WHEN MONTH(@p_prev_clo_date) = 9  THEN @v_year_prev_clo_date + 'Q3ILL' 
+WHEN MONTH(@p_prev_clo_date) = 12 THEN @v_year_prev_clo_date + 'Q4ILL'
+END
+
+--[001]
+IF(@p_norme_cf = 'I17G')
+BEGIN		
+	
+	UPDATE BFAC..TSECIFRS
+ SET SECIFRS.GRPINIPRO_CF  = '3',
+	SECIFRS.GRPINISTS_CT = 1,
+	SECIFRS.GRPFIRCLO_D = @p_clo_date,
+	SECIFRS.LSTUPD_D = getDate(),
+	SECIFRS.LSTUPDUSR_CF = user	
+ FROM BFAC..TSECIFRS SECIFRS	
+	INNER JOIN BFAC..TCONTR CTR ON CTR.CTR_NF = SECIFRS.CTR_NF AND CTR.UWY_NF = SECIFRS.UWY_NF AND CTR.UW_NT = SECIFRS.UW_NT AND CTR.END_NT = SECIFRS.END_NT 
+		AND CTR.CTRSTS_CT IN (16, 18, 19)
+		AND CTR.UWORG_CF IN (248, 247)
+	INNER JOIN BFAC..TSECTION TSEC ON SECIFRS.CTR_NF = TSEC.CTR_NF AND SECIFRS.SEC_NF = TSEC.SEC_NF AND SECIFRS.UWY_NF = TSEC.UWY_NF AND SECIFRS.UW_NT = TSEC.UW_NT AND SECIFRS.END_NT = TSEC.END_NT
+		AND TSEC.LOB_CF NOT IN ('30', '31')
+	INNER JOIN BREF..TBATCHSSD USR ON CTR.SSD_CF = USR.SSD_CF
+		AND USR.BATCHUSER_CF = suser_name()
+	WHERE (SECIFRS.GRPINISTS_CT = 1 or SECIFRS.GRPINISTS_CT is null) AND  SECIFRS.RECOD_D <= @v_pos_booking_minus_days
+	
+	SELECT @rc = @@rowcount
+	SELECT @v_cur_date = CONVERT(VARCHAR(19), getDate(), 21)
+	PRINT '%2! : %1! row(s) updated in BFAC..TSECIFRS ', @rc, @v_cur_date
+	
+	UPDATE BFAC..TSECIFRS
+ SET SECIFRS.GRPRATEINDEX_CT   = @v_ref_quarter	
+ FROM BFAC..TSECIFRS SECIFRS	
+	INNER JOIN BFAC..TCONTR CTR ON CTR.CTR_NF = SECIFRS.CTR_NF AND CTR.UWY_NF = SECIFRS.UWY_NF AND CTR.UW_NT = SECIFRS.UW_NT AND CTR.END_NT = SECIFRS.END_NT 
+		AND CTR.CTRSTS_CT IN (16, 18, 19)
+		AND CTR.UWORG_CF IN (247)
+	INNER JOIN BFAC..TSECTION TSEC ON SECIFRS.CTR_NF = TSEC.CTR_NF AND SECIFRS.SEC_NF = TSEC.SEC_NF AND SECIFRS.UWY_NF = TSEC.UWY_NF AND SECIFRS.UW_NT = TSEC.UW_NT AND SECIFRS.END_NT = TSEC.END_NT
+		AND TSEC.LOB_CF NOT IN ('30', '31')
+	INNER JOIN BREF..TBATCHSSD USR ON CTR.SSD_CF = USR.SSD_CF
+		AND USR.BATCHUSER_CF = suser_name()
+	WHERE (SECIFRS.GRPINISTS_CT = 1 or SECIFRS.GRPINISTS_CT is null) AND  SECIFRS.RECOD_D <= @v_pos_booking_minus_days
+	
+	SELECT @rc = @@rowcount
+	SELECT @v_cur_date = CONVERT(VARCHAR(19), getDate(), 21)
+	PRINT '%2! : %1! row(s) updated in BFAC..TSECIFRS ', @rc, @v_cur_date
+	
+END
+
+IF(@p_norme_cf = 'I17P')
+BEGIN
+	
+	UPDATE BFAC..TSECIFRS
+ SET SECIFRS.PARINIPRO_CF  = '3',
+	SECIFRS.PARINISTS_CT = 1,
+	SECIFRS.PARFIRCLO_D = @p_clo_date,
+	SECIFRS.LSTUPD_D = getDate(),
+	SECIFRS.LSTUPDUSR_CF = user	
+ FROM BFAC..TSECIFRS SECIFRS	
+	INNER JOIN BFAC..TCONTR CTR ON CTR.CTR_NF = SECIFRS.CTR_NF AND CTR.UWY_NF = SECIFRS.UWY_NF AND CTR.UW_NT = SECIFRS.UW_NT AND CTR.END_NT = SECIFRS.END_NT 
+		AND CTR.CTRSTS_CT IN (16, 18, 19)
+		AND CTR.UWORG_CF IN (248, 247)
+	INNER JOIN BFAC..TSECTION TSEC ON SECIFRS.CTR_NF = TSEC.CTR_NF AND SECIFRS.SEC_NF = TSEC.SEC_NF AND SECIFRS.UWY_NF = TSEC.UWY_NF AND SECIFRS.UW_NT = TSEC.UW_NT AND SECIFRS.END_NT = TSEC.END_NT
+		AND TSEC.LOB_CF NOT IN ('30', '31')
+	INNER JOIN BREF..TBATCHSSD USR ON CTR.SSD_CF = USR.SSD_CF
+		AND USR.BATCHUSER_CF = suser_name()
+	WHERE (SECIFRS.PARINISTS_CT = 1  or SECIFRS.PARINISTS_CT is null) AND  SECIFRS.RECOD_D <= @v_pos_booking_minus_days
+	
+	SELECT @rc = @@rowcount
+	SELECT @v_cur_date = CONVERT(VARCHAR(19), getDate(), 21)
+	PRINT '%2! : %1! row(s) updated in BFAC..TSECIFRS ', @rc, @v_cur_date
+	
+	UPDATE BFAC..TSECIFRS
+ SET SECIFRS.PARRATEINDEX_CT   = @v_ref_quarter	
+ FROM BFAC..TSECIFRS SECIFRS	
+	INNER JOIN BFAC..TCONTR CTR ON CTR.CTR_NF = SECIFRS.CTR_NF AND CTR.UWY_NF = SECIFRS.UWY_NF AND CTR.UW_NT = SECIFRS.UW_NT AND CTR.END_NT = SECIFRS.END_NT 
+		AND CTR.CTRSTS_CT IN (16, 18, 19)
+		AND CTR.UWORG_CF IN (247)
+	INNER JOIN BFAC..TSECTION TSEC ON SECIFRS.CTR_NF = TSEC.CTR_NF AND SECIFRS.SEC_NF = TSEC.SEC_NF AND SECIFRS.UWY_NF = TSEC.UWY_NF AND SECIFRS.UW_NT = TSEC.UW_NT AND SECIFRS.END_NT = TSEC.END_NT
+		AND TSEC.LOB_CF NOT IN ('30', '31')
+	INNER JOIN BREF..TBATCHSSD USR ON CTR.SSD_CF = USR.SSD_CF
+		AND USR.BATCHUSER_CF = suser_name()
+	WHERE (SECIFRS.PARINISTS_CT = 1  or SECIFRS.PARINISTS_CT is null) AND  SECIFRS.RECOD_D <= @v_pos_booking_minus_days
+	
+	SELECT @rc = @@rowcount
+	SELECT @v_cur_date = CONVERT(VARCHAR(19), getDate(), 21)
+	PRINT '%2! : %1! row(s) updated in BFAC..TSECIFRS ', @rc, @v_cur_date
+	
+	
+END
+
+IF(@p_norme_cf = 'I17L')
+BEGIN
+	
+	UPDATE BFAC..TSECIFRS
+ SET SECIFRS.LOCINIPRO_CF  = '3',
+	SECIFRS.LOCINISTS_CT = 1,
+	SECIFRS.LOCFIRCLO_D = @p_clo_date,
+	SECIFRS.LSTUPD_D = getDate(),
+	SECIFRS.LSTUPDUSR_CF = user	
+ FROM BFAC..TSECIFRS SECIFRS	
+	INNER JOIN BFAC..TCONTR CTR ON CTR.CTR_NF = SECIFRS.CTR_NF AND CTR.UWY_NF = SECIFRS.UWY_NF AND CTR.UW_NT = SECIFRS.UW_NT AND CTR.END_NT = SECIFRS.END_NT 
+		AND CTR.CTRSTS_CT IN (16, 18, 19)
+		AND CTR.UWORG_CF IN (248, 247)
+	INNER JOIN BFAC..TSECTION TSEC ON SECIFRS.CTR_NF = TSEC.CTR_NF AND SECIFRS.SEC_NF = TSEC.SEC_NF AND SECIFRS.UWY_NF = TSEC.UWY_NF AND SECIFRS.UW_NT = TSEC.UW_NT AND SECIFRS.END_NT = TSEC.END_NT
+		AND TSEC.LOB_CF NOT IN ('30', '31')
+	INNER JOIN BREF..TBATCHSSD USR ON CTR.SSD_CF = USR.SSD_CF
+		AND USR.BATCHUSER_CF = suser_name()
+	WHERE (SECIFRS.LOCINISTS_CT = 1 or SECIFRS.LOCINISTS_CT is null) AND  SECIFRS.RECOD_D <= @v_pos_booking_minus_days
+	
+	SELECT @rc = @@rowcount
+	SELECT @v_cur_date = CONVERT(VARCHAR(19), getDate(), 21)
+	PRINT '%2! : %1! row(s) updated in BFAC..TSECIFRS ', @rc, @v_cur_date
+	
+	UPDATE BFAC..TSECIFRS
+ SET SECIFRS.LOCRATEINDEX_CT   = @v_ref_quarter
+ FROM BFAC..TSECIFRS SECIFRS	
+	INNER JOIN BFAC..TCONTR CTR ON CTR.CTR_NF = SECIFRS.CTR_NF AND CTR.UWY_NF = SECIFRS.UWY_NF AND CTR.UW_NT = SECIFRS.UW_NT AND CTR.END_NT = SECIFRS.END_NT 
+		AND CTR.CTRSTS_CT IN (16, 18, 19)
+		AND CTR.UWORG_CF IN (247)
+	INNER JOIN BFAC..TSECTION TSEC ON SECIFRS.CTR_NF = TSEC.CTR_NF AND SECIFRS.SEC_NF = TSEC.SEC_NF AND SECIFRS.UWY_NF = TSEC.UWY_NF AND SECIFRS.UW_NT = TSEC.UW_NT AND SECIFRS.END_NT = TSEC.END_NT
+		AND TSEC.LOB_CF NOT IN ('30', '31')
+	INNER JOIN BREF..TBATCHSSD USR ON CTR.SSD_CF = USR.SSD_CF
+		AND USR.BATCHUSER_CF = suser_name()
+	WHERE (SECIFRS.LOCINISTS_CT = 1 or SECIFRS.LOCINISTS_CT is null) AND  SECIFRS.RECOD_D <= @v_pos_booking_minus_days
+	
+	SELECT @rc = @@rowcount
+	SELECT @v_cur_date = CONVERT(VARCHAR(19), getDate(), 21)
+	PRINT '%2! : %1! row(s) updated in BFAC..TSECIFRS ', @rc, @v_cur_date
+
+END
+
+SELECT @erreur = @@error
+IF @erreur != 0
+BEGIN
+	goto err
+END
+
+
+return 0
+
+err:
+ROLLBACK TRANSACTION
+return @erreur
+
+go
+
+IF OBJECT_ID('PuSECIFRS_07') IS NOT NULL
+    PRINT '<<< CREATED PROCEDURE PuSECIFRS_07 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING PROCEDURE PuSECIFRS_07 >>>'
+GO
+
+GRANT EXECUTE ON PuSECIFRS_07 TO GOMEGA
+go
+
+GRANT EXECUTE ON PuSECIFRS_07 TO GDBBATCH
+go

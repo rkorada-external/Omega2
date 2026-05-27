@@ -1,0 +1,752 @@
+#! /bin/ksh
+#===============================================================================
+# Application name : DATACMP
+# 
+# Option list :
+# -lsf :left side files.
+# -lst : t for table.
+# -rsf : right side files.
+# -rst : t for table.
+# -mx | -mn | -d | -c | -lenv | -renv | -lstr | -rstr | -ws | -H | -k | -lk 
+# -rk | -f | -lf | -rf | -olf | -orf
+#
+# Subject          : Compars data between tow source of data (source can be one 
+# or more file of data | one or more sql table | file and sql table ...) 
+#
+# Modifications
+# [00]             : B.LAGHA 31/01/2019
+#===============================================================================
+
+. $DSH/FUNCTIONS
+# Importation des variables d'envirenment 
+#-------------------------------------------------------------------------------
+DATE=`date +"%Y%m%d"`
+DATACMP_ano="${DFILT}/DATACMP_${DATE}.ano"
+>${DATACMP_ano}
+# Recuperation des parametres
+# si un parametre contiens des espaces il doit etre entourer des (")
+#-------------------------------------------------------------------------------
+# Initialisation de varaiables
+#-----------------------------
+export let "I=0"
+export len=$#
+set -A PARAM
+set -A LINF
+set -A LTABLES
+set -A RINF
+set -A RTABLES
+export CONDITION=""
+export LENVMT=""
+export RENVMT=""
+export LEVEL=""
+export Rmx="9999"
+export Rmn="1"
+export SEP=""
+export LEFT_STRUCT=""
+export RIGHT_STRUCT=""
+export WORKSPACE="."
+export ERR=0
+export LSRV=""
+export RSRV=""
+export KEYS=""
+export LEFT_KEYS=""
+export RIGHT_KEYS=""
+export LKEYS=""
+export RKEYS=""
+export LFIELDS=""
+export RFIELDS=""
+export LEFT_FIELDS=""
+export RIGHT_FIELDS=""
+export LEFT_ADD_FIELDS=""
+export RIGHT_ADD_FIELDS=""
+export LEFT_ADDFIELDS=""
+export RIGHT_ADDFIELDS=""
+export HEADER=""
+export HD_L=""
+export HD_R=""
+export DATACMP_O=""
+export H="0"
+export MSG_ERR=""
+export TMPFIL=""
+# Lecture de tout les parametres de la commande
+#----------------------------------------------
+
+while [ $# -gt 0 ]
+do 
+   PARAM[$I]="$1"
+   let "I++"
+   shift
+done
+
+
+# fonction principale de trie des parametres
+#-------------------------------------------
+function read_param 
+{
+case ${PARAM[$I]} in 
+"-lsf"|"-LSF")
+   let "I++"; get_left_side_files;    return
+   ;;
+"-lst"|"-LST")
+   let "I++"; get_left_side_tables;   return
+   ;;
+"-rsf"|"-RSF")
+   let "I++"; get_rigth_side_files;   return
+   ;;
+"-rst"|"-RST")
+   let "I++"; get_right_side_tables;  return
+   ;;
+"-lk"|"-LK"|"-k"|"-K")
+   let "I++"; get_keys 'l';           return
+   ;;
+"-rk"|"-RK")
+   let "I++"; get_keys 'r';           return
+   ;;
+"-lf"|"-LF"|"-f"|"-F")
+   let "I++"; get_fildes "l";             return
+   ;;
+"-rf"|"-RF")
+   let "I++"; get_fildes "r";             return
+   ;;
+"-lstr"|"-LSTR"|"-str"|"-STR")
+   let "I++"; get_struct 'l';         return 
+   ;;
+"-rstr"|"-RSTR")
+   let "I++"; get_struct 'r';         return 
+   ;;
+"-d")
+   let "I++";
+   if [[ ! ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      SEP=${PARAM[$I]}; let "I++";
+   fi
+   read_param
+   ;;
+"-mx"|"-MX")
+   let "I++";
+   if [[ ! ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      Rmx=${PARAM[$I]}; let "I++";
+   fi
+   read_param
+   ;;
+"-mn"|"-MN")
+   let "I++";
+   if [[ ! ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      Rmn=${PARAM[$I]}; let "I++"; 
+   fi
+   read_param 
+   ;;
+"-c"|"-C")
+   let "I++";
+   if [[ ! ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      CONDITION=${PARAM[$I]}; let "I++";
+   fi 
+   read_param
+   ;;
+"-lenv"|"-LENV")
+   let "I++";
+   if [[ ! ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      LENVMT=${PARAM[$I]}; let "I++"; 
+   fi
+   read_param
+   ;;
+"-renv"|"-RENV")
+   let "I++";
+   if [[ ! ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      RENVMT=${PARAM[$I]}; let "I++";
+   fi
+   read_param
+   ;;
+"-lvl"|"-LVL")
+   let "I++";
+   if [[ ! ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      LEVEL=${PARAM[$I]}; let "I++"; 
+   fi
+   read_param
+   ;;
+"-ws"|"-WS")
+   let "I++";
+   if [[ ! ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      WORKSPACE=${PARAM[$I]}; let "I++";
+   fi
+   read_param
+   ;;
+"-LS")
+   let "I++";
+   if [[ ! ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      LSRV=${PARAM[$I]}; let "I++";
+   fi
+   read_param
+   ;;
+"-RS")
+   let "I++";
+   if [[ ! ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      RSRV=${PARAM[$I]};      let "I++";
+   fi
+   read_param
+   ;;
+"-o")
+   let "I++";
+   if [[ ! ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      DATACMP_O=${PARAM[$I]}; let "I++";
+   fi
+   read_param
+   ;;
+"-H")
+   let "I++";
+   if [[ ! ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      H=${PARAM[$I]}; let "I++";
+   fi
+   read_param
+   ;;
+"-olf")
+   let "I++";
+   if [[ ! ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      LEFT_ADD_FIELDS=${PARAM[$I]}; let "I++";
+   fi
+   read_param
+   ;;
+"-orf")
+   let "I++";
+   if [[ ! ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      RIGHT_ADD_FIELDS=${PARAM[$I]}; let "I++";
+   fi
+   read_param
+   ;;
+-*)
+   echo -e "$0 : '${PARAM[$I]}': invalide option"
+   ERR=10
+   ;;
+*)
+   return 
+   ;;
+esac
+}
+	
+# Lecture et trie des parametres
+#-------------------------------------------------------------------------------
+let "I=0"
+read_param
+if [ "${MSG_ERR}" != "" ]; then
+   echo "#========================================================================="
+   echo -e "${MSG_ERR}"
+   MSG_ERR=""
+   exit_faild 10   
+fi
+
+
+KEYS=${LEFT_KEYS}
+if [[ "${RIGHT_KEYS}" =~ ^[ \t]*$ ]]; then
+  RIGHT_KEYS="${LEFT_KEYS}"
+fi
+if [ "${LEFT_KEYS}" != "" ]; then
+  LEFT_KEYS="`echo ${LEFT_KEYS} | sed 's/^[ \t,]*\|[ \t,]*$//g; s/^/LEFT_/g; s/, */, LEFT_/g'`"
+  LKEYS="`echo ${LEFT_KEYS} | sed 's/^[ \t,]*\|[ \t,]*$//g; s/^/LEFTSIDE:/g; s/, */, LEFTSIDE:/g'`"
+fi
+if [ "${RIGHT_KEYS}" != "" ]; then
+  RIGHT_KEYS="`echo ${RIGHT_KEYS} | sed 's/^[ \t,]*\|[ \t,]*$//g; s/^/RIGHT_/g; s/, */, RIGHT_/g'`"
+  RKEYS="`echo ${RIGHT_KEYS} | sed 's/^[ \t,]*\|[ \t,]*$//g; s/^/RIGHTSIDE:/g; s/, */, RIGHTSIDE:/g'`"
+fi
+
+
+if [[ "${RIGHT_FIELDS}" =~ ^[ \t]*$ ]];then
+  RIGHT_FIELDS="${LEFT_FIELDS}"
+fi
+if [ "${LEFT_FIELDS}" != "" ]; then 
+  LEFT_FIELDS="`echo ${LEFT_FIELDS} | sed 's/^[ \t,]*\|[ \t,]*$//g; s/^/LEFT_/g; s/, */, LEFT_/g'`"
+  LFIELDS="`echo ${LEFT_FIELDS} | sed 's/^[ \t,]*\|[ \t,]*$//g; s/^/LEFTSIDE:/g; s/, */, LEFTSIDE:/g'`"
+fi
+if [ "${RIGHT_KEYS}" != "" ]; then
+  RIGHT_FIELDS="`echo ${RIGHT_FIELDS} | sed 's/^[ \t,]*\|[ \t,]*$//g; s/^/RIGHT_/g; s/, */, RIGHT_/g'`"
+  RFIELDS="`echo ${RIGHT_FIELDS} | sed 's/^[ \t,]*\|[ \t,]*$//g; s/^/RIGHTSIDE:/g; s/, */, RIGHTSIDE:/g'`"
+fi
+
+
+if [[ "${HD_R}" =~ ^[ \t]*$ ]]; then
+   HD_R="${HD_L}"
+fi
+if [ "${LEFT_ADD_FIELDS}" != "" ]; then
+   HD_L="${HD_L} `echo ${LEFT_ADD_FIELDS} | sed 's/^[ \t,]*\|[ \t,]*$//g; s/^/LEFTSIDE:/g; s/, */, LEFTSIDE:/g'`;"
+   LEFT_ADDFIELDS="`echo ${LEFT_ADD_FIELDS} | sed 's/^[ \t,]*\|[ \t,]*$//g; s/^/LEFTSIDE:LEFT_/g; s/, */, LEFTSIDE:LEFT_/g'`"
+fi
+if [ "${RIGHT_ADD_FIELDS}" != "" ]; then
+   HD_R="${HD_R} `echo ${RIGHT_ADD_FIELDS} | sed 's/^[ \t,]*\|[ \t,]*$//g; s/^/RIGHTSIDE:/g; s/, */, RIGHTSIDE:/g'`;"
+   RIGHT_ADDFIELDS="`echo ${RIGHT_ADD_FIELDS} | sed 's/^[ \t,]*\|[ \t,]*$//g; s/^/RIGHTSIDE:RIGHT_/g; s/, */, RIGHTSIDE:RIGHT_/g'`"
+fi
+
+
+HEADER="${HEADER} ${HD_L} ${HD_R}"
+HEADER=`print ${HEADER} | sed 's/;$//'`
+LKEYS=`print  ${LKEYS}  | sed 's/,$//'`
+RKEYS=`print  ${RKEYS}  | sed 's/,$//'`
+
+if [ "${LENVMT}" != "" ]; then 
+   HEADER=`print ${HEADER} | sed "s/LEFTSIDE/${LENVMT}/g"`
+fi
+if [ "${RENVMT}" != "" ]; then
+   HEADER=`print ${HEADER} | sed "s/RIGHTSIDE/${RENVMT}/g"`
+fi
+echo "#========================================================================="
+echo "# Recuperation des parametres : OK"
+
+
+#-------------------------------------------------------------------------------
+# Gestion d'erreurs
+#-------------------------------------------------------------------------------
+
+#if [[ $SEP != ""  &&  (${STRUCT} == ""  ||  ${CONDITION} == "") ]]
+#then
+ #  echo "$0 : invalid option -d without options -c and -lstr | -rstr"
+ #  ERR=1
+#fi
+
+if [ ${#LINF[@]} -eq 0 ] && [ ${#LTABLES[@]} -eq 0 ]
+then
+   echo -e "$0 : missing operand '-lsf' left side files and/or '-lst' left side tables."
+   ERR=10
+fi
+
+if [ ${#RINF[@]} -eq 0 ] && [ ${#RTABLES[@]} -eq 0 ]
+then
+   echo -e "$0 : missing operand '-rsf' right side files and/or '-rst' right side tables."
+   ERR=10
+fi
+
+if [ ${ERR} = "1" ]
+then
+   echo "try '$0 -h | --help'"
+   exit_faild $ERR 
+fi
+
+if [ ! -e ${WORKSPACE} ] || [ ! -d ${WORKSPACE} ]
+then
+   echo -n "${WORKSPACE}: directory not found do you like create it ?. Y|N : "
+   read rep
+   if [ $rep = "Y" ] || [ $rep = "y" ]
+   then
+      mkdir ${WORKSPACE}
+      echo "${WORKSPACE} workspace directory is created."
+   fi
+fi
+
+
+#-------------------------------------------------------------------------------
+# Preparation de SyncSort
+#-------------------------------------------------------------------------------
+LSIDEF=""
+RSIDEF=""
+
+
+RSLT=`get_infiles_sync_code "LINF" $Rmx $Rmn $SEP`
+GINFSC_ERR=$?
+LSIDEF=`echo ${RSLT} | sed  's/|.*//g'`
+TMPFIL="${TMPFIL} `echo ${RSLT} | sed  's/^.*|//g'`"
+
+if [ $GINFSC_ERR != 0 ]; then
+   MSG_ERR=`echo -e "${MSG_ERR}\n${LSIDEF}"`
+fi
+RSLT=`get_infiles_sync_code "RINF" $Rmx $Rmn $SEP`
+GINFSC_ERR=$?
+RSIDEF=`echo ${RSLT} | sed  's/|.*//g'`
+TMPFIL="${TMPFIL} `echo ${RSLT} | sed  's/^.*|//g'`"
+
+if [ $GINFSC_ERR != 0 ]; then
+   MSG_ERR=`echo -e "${MSG_ERR}\n$RSIDEF"`
+fi
+INFILE=`ls ${LINF[0]} 2>/dev/null`
+if [ "${INFILE}" != "" ]; then
+   HEADER_=`sed -n '1p' ${INFILE}`
+fi
+
+if [ "${H}" == "1" ]; then
+   for f in ${TMPFIL[@]}; do
+      sed -i '1d' ${DFILT}/${f}
+   done
+fi
+
+if [ "${MSG_ERR}" != "" ]; then
+   echo "#========================================================================="
+   echo -e "#$MSG_ERR"; MSG_ERR=""
+   echo -e "#$MSG_ERR"; MSG_ERR="" >> ${DATACMP_ano}
+   exit_faild 1
+fi
+# Comparaison des donnees 
+#===============================================================================
+
+
+#-------------------------------------------------------------------------------
+# Trie de donnees selon la condition de trie passer en param
+#-------------------------------------------------------------------------------
+
+if [ "${RIGHT_STRUCT}" != "" ]; then
+   RIGHT_STRUCT=$(echo  "${RIGHT_STRUCT}" | sed 's/, */, RIGHT_/g; s/^ */RIGHT_/g; s/RIGHT_ *$//g')
+fi
+if [ "${LEFT_STRUCT}" != "" ]; then
+   LEFT_STRUCT=$(echo  "${LEFT_STRUCT}" | sed 's/, */, LEFT_/g; s/^ */LEFT_/g; s/LEFT_ *$//g')
+fi
+
+if [ ! "${LEFT_STRUCT}" == "" ] && [ ! "${CONDITION}" == "" ] 
+then
+if [ ! "${LSIDEF}" == "" ] #LSIDEF if
+then
+syncsort 2>${DATACMP_ano} << EOS
+   /SILENT
+   /WORKSPACE ${WORKSPACE}
+   /FIELDS 
+   ${LEFT_STRUCT}
+
+   ${LSIDEF}
+   /CONDITION COND ${CONDITION}
+
+   /INCLUDE COND
+   /COPY
+   /OUTFILE ${WORKSPACE}/${DATACMP_O}_${DATE}_LEFT_PRESORTED.csv OVERWRITE
+   /END
+EOS
+SORT_ERR=$?
+if [ $SORT_ERR != 0 ]; then
+   echo "#========================================================================="
+   echo "# Filtrage des donnees des fichiers : KO"
+   exit_faild 2
+fi
+LSIDEF="/INFILE ${WORKSPACE}/${DATACMP_O}_${DATE}_LEFT_PRESORTED.csv ${Rmx} ${Rmn}"
+
+fi #end of LSIDEF if
+
+if [ ! "${RSIDEF}" == "" ] #RSIDEF if
+then
+  if [ "${RIGHT_STRUCT}" == "" ]; then
+    RIGHT_STRUCT="${LEFT_STRUCT}"
+  fi
+syncsort 2>${DATACMP_ano} << EOS
+   /SILENT
+   /WORKSPACE ${WORKSPACE}
+   /FIELDS 
+   ${RIGHT_STRUCT}
+
+   ${RSIDEF}
+   /CONDITION COND ${CONDITION}
+
+   /INCLUDE COND
+   /COPY
+   /OUTFILE ${WORKSPACE}/${DATACMP_O}_${DATE}_RIGHT_PRESORTED.csv OVERWRITE
+   /END
+EOS
+SORT_ERR=$?
+if [ $SORT_ERR != 0 ]; then
+   echo "#========================================================================="
+   echo "# Filtrage des donnees des fichiers : KO"
+   exit_faild 2
+fi
+RSIDEF="/INFILE ${WORKSPACE}/${DATACMP_O}_${DATE}_RIGHT_PRESORTED.csv ${Rmx} ${Rmn}"
+
+fi #end of RSIDEF if
+echo "#========================================================================="
+echo "# Filtrage des donnees des fichiers : OK"
+fi #end of global if
+
+#===============================================================================
+
+#-------------------------------------------------------------------------------
+# Si les donnees sont dans des table
+# alors on  les recupere dans des fichier
+#-------------------------------------------------------------------------------
+
+where=""
+if [ ! ${CONDITION} == "" ]
+then
+   where="where ${CONDITION}"
+fi
+
+#import data from tables to left side files of sync_sort
+#----------------------/scor/home/u008291/DEV_ENV/temporaire/DATACMP_20190208.ano---------------------------------
+let "len=${#LTABLES[@]} - 1"
+for i in `seq 0 $len`
+do
+   table=${LTABLES[$i]}
+   if [ ! ${table} == "" ]
+   then
+      ${BCPPDIR}/bcpmulti BIDON out ${table}_LEFT_PRESORTED.csv -UDom_Gen_RO \
+      -S${LSRV} -c to ${WORKSPACE} -Jiso_1 -PscorRO -t'~' -r'\n' -d0 -M0 -Q "
+      select * from ${table} ${where}
+      "
+   fi
+   left_data_files=(`ls ${WORKSPACE}/${table}_LEFT_PRESORTED.csv.* 2>/dev/null`)
+   LSIDEF="$LSIDEF `get_infiles_sync_code "left_data_files" ${Rmx} ${Rmn}`"
+done
+
+#import data from tables to right side files of sync_sort
+#--------------------------------------------------------
+let "len=${#RTABLES[@]} - 1"
+for i in `seq 0 $len`
+do
+   table=${RTABLES[$i]}
+   if [ ! ${table} == "" ]
+   then
+      ${BCPPDIR}/bcpmulti BIDON out ${table}_RIGHT_PRESORTED.csv -UDom_Gen_RO \
+      -S${RSRV} -c to ${WORKSPACE} -Jiso_1 -PscorRO -t'~' -r'\n' -d0 -M0 -Q "
+      select * from ${table} ${where}
+      "
+  fi
+  right_data_files=(`ls ${WORKSPACE}/${table}_RIGHT_PRESORTED.csv.* 2>/dev/null`)
+  RSIDEF="$RSIDEF `get_infiles_sync_code "right_data_files" ${Rmx} ${Rmn}`"
+done
+
+if [ ${#LTABLES[@]} -gt 0 ] || [ ${#RTABLES[@]} -gt 0 ]; then
+   echo "Recuperation et filtrage de donnes des tables ->	OK"	
+fi
+
+
+#-------------------------------------------------------------------------------
+# Preparation des parametres de comparaison
+#-------------------------------------------------------------------------------
+KEYS=`print ${KEYS} | sed -r 's/^[ \t]*//g'`
+LFIELDS=`print ${LFIELDS} | sed -r 's/^LEFTSIDE:[ \t]*$\| *,* *$//g'`
+RFIELDS=`print ${RFIELDS} | sed -r 's/^RIGHTSIDE:[ \t]*$\| *,* *$//g'`
+
+LFN=$(get_max_fields_number "LINF")
+GMFN_ERR=$?
+if [ $GMFN_ERR != 0 ]; then 
+   echo $FN
+   exit_faild 1
+fi
+
+RFN=$(get_max_fields_number "RINF")
+GMFN_ERR=$?
+if [ $GMFN_ERR != 0 ]; then 
+   echo $FN
+   exit_faild 1
+fi
+
+
+if [ "${LEFT_STRUCT}" != "" ] && [ "${KEYS}" != "" ]
+then
+  if [ "${RIGHT_STRUCT}" == "" ]; then
+    RIGHT_STRUCT="`echo ${LEFT_STRUCT} | sed 's/LEFT/RIGHT/g'`"
+  fi
+   L_STR="${LEFT_STRUCT}, LEFT_ALL 1:1 - $LFN:"
+   R_STR="${RIGHT_STRUCT}, RIGHT_ALL 1:1 - $RFN:"
+   LJKEYS="${LEFT_KEYS}, ${LEFT_FIELDS}"
+   RJKEYS="${RIGHT_KEYS}, ${RIGHT_FIELDS}"
+
+else
+   L_STR="LEFT_ALL 1:1 - $LFN:"
+   R_STR="RIGHT_ALL 1:1 - $RFN:"
+
+   LJKEYS="LEFT_ALL"
+   RJKEYS="RIGHT_ALL"
+fi
+echo "#" 
+echo "# KEYS   : ${KEYS}"
+echo "# FIELDS : `echo ${LFIELDS} | sed 's/LEFTSIDE:LEFT_//g'`"
+
+#-------------------------------------------------------------------------------
+# Conserver les enregistrements non apparies du premier cote 
+#-------------------------------------------------------------------------------
+syncsort 2>${DATACMP_ano} << EOS
+
+/SILENT
+/WORKSPACE ${WORKSPACE}
+/FIELDS	${L_STR}, ${R_STR}
+
+${LSIDEF}
+/JOINKEYS ${LJKEYS} 
+
+${RSIDEF}
+/JOINKEYS ${RJKEYS}
+
+/JOIN UNPAIRED LEFTSIDE ONLY
+/OUTFILE ${WORKSPACE}/${DATACMP_O}_${DATE}_LEFT.csv OVERWRITE
+/REFORMAT LEFTSIDE:LEFT_ALL
+
+/END
+
+EOS
+DCMP_ERR=$?
+if [ $DCMP_ERR != 0 ]; then 
+   echo "#========================================================================="
+   echo "# Comparaison de donnees : KO"
+   echo "#"
+   exit_faild 3 
+fi
+
+
+#-------------------------------------------------------------------------------
+# Conserver les enregistrements non apparies du deuxieme cote
+#-------------------------------------------------------------------------------
+syncsort 2>${DATACMP_ano} << EOS
+
+/SILENT
+/WORKSPACE ${WORKSPACE}
+/FIELDS	${L_STR}, ${R_STR}
+	
+${LSIDEF}
+/JOINKEYS ${LJKEYS}
+
+${RSIDEF}
+/JOINKEYS ${RJKEYS}
+
+/JOIN UNPAIRED RIGHTSIDE ONLY
+/OUTFILE ${WORKSPACE}/${DATACMP_O}_${DATE}_RIGHT.csv OVERWRITE
+/REFORMAT RIGHTSIDE:RIGHT_ALL
+
+/END
+
+EOS
+
+DCMP_ERR=$?
+if [ $DCMP_ERR != 0 ]; then 
+   echo "#========================================================================="
+   echo "# Comparaison de donnees : KO"
+   echo "#"
+   exit_faild 3
+fi
+LFRESULT="${WORKSPACE}/${DATACMP_O}_${DATE}_LEFT.csv"
+RFRESULT="${WORKSPACE}/${DATACMP_O}_${DATE}_RIGHT.csv"
+if [ "${SEP}" != "" ]; then
+   LSIDEF="${WORKSPACE}/${DATACMP_O}_${DATE}_LEFT.csv $Rmx $Rmn '$SEP'"
+   RSIDEF="${WORKSPACE}/${DATACMP_O}_${DATE}_RIGHT.csv $Rmx $Rmn '$SEP'"
+else
+   LSIDEF="${WORKSPACE}/${DATACMP_O}_${DATE}_LEFT.csv $Rmx $Rmn"
+   RSIDEF="${WORKSPACE}/${DATACMP_O}_${DATE}_RIGHT.csv $Rmx $Rmn"
+fi
+
+
+#-------------------------------------------------------------------------------
+# Presentation des donnees
+#-------------------------------------------------------------------------------
+KEYS=`print ${KEYS} | sed -r 's/^[ \t]*//g'`
+LFIELDS=`print ${LFIELDS} | sed -r 's/^LEFTSIDE:[ \t]*$//g' | sed 's/ *,* *$//g'`
+RFIELDS=`print ${RFIELDS} | sed -r 's/^RIGHTSIDE:[ \t]*$//g'| sed 's/ *,* *$//g'`
+
+
+if [ "${LEFT_STRUCT}" != "" ] && [ "${KEYS}" != "" ]
+then
+   if [ "${LFIELDS}" != "" ]; then
+      FIELD_LIST=", ${LFIELDS}"
+   fi
+   if [ "${LEFT_ADDFIELDS}" != "" ]; then
+      FIELD_LIST="${FIELD_LIST}, ${LEFT_ADDFIELDS}"
+   fi
+   if [ "${RFIELDS}" != "" ]; then
+      FIELD_LIST="${FIELD_LIST}, ${RFIELDS}"
+   fi
+   if [ "${RIGHT_ADDFIELDS}" != "" ]; then
+      FIELD_LIST="${FIELD_LIST}, ${RIGHT_ADDFIELDS}"
+   fi
+   if [ "${LDATE}" != "" ] && [ "${RDATE}" != "" ]; then
+      NB_KEY_FIELD="`echo ${KEYS}   | awk -F, '{print NF}'`"
+      NB_CMP_FIELD="`echo ${LFIELDS} | awk -F, '{print NF-1}'`"
+      NB_ADD_FIELD="`echo ${LEFT_ADDFIELDS} | awk -F, '{print NF}'`"
+      let "NB_CMP_FIELD=${NB_CMP_FIELD} + ${NB_ADD_FIELD}"
+      _NB_KEY_FIELD=`printf "%${NB_KEY_FIELD}s"`
+      _NB_CMP_FIELD=`printf "%${NB_CMP_FIELD}s"`
+      _HEADER=$(printf "${_NB_KEY_FIELD// /;}Launch closing date : `date -d ${LDATE} +%Y/%m/%d`${_NB_CMP_FIELD// /;};Launch closing date : `date -d ${RDATE} +%Y/%m/%d`${_NB_CMP_FIELD// /;}")
+   fi
+   printf "${_HEADER}\n${HEADER}\n" > ${WORKSPACE}/${DATACMP_O}_${DATE}_REPORT.csv
+syncsort 2>${DATACMP_ano} << EOS
+       /SILENT
+       /WORKSPACE ${WORKSPACE}
+       /FIELDS ${LEFT_STRUCT}, ${RIGHT_STRUCT}
+
+       /INFILE ${LSIDEF}
+       /JOINKEYS SORTED ${LEFT_KEYS}
+ 
+       /INFILE ${RSIDEF}
+       /JOINKEYS SORTED ${RIGHT_KEYS}
+ 
+       /OUTFILE ${WORKSPACE}/${DATACMP_O}_${DATE}_REPORT.csv APPEND 
+       /REFORMAT ${LKEYS} ${FIELD_LIST}
+
+       /END
+EOS
+
+SYSORT_ERR=$?
+if [ $SYSORT_ERR != 0 ]; then
+   echo "#========================================================================="
+   echo "# Comparaison de donnees : KO"
+   echo "#"
+   exit_faild 4
+fi
+syncsort 2>${DATACMP_ano} << EOS
+       /SILENT
+       /WORKSPACE ${WORKSPACE}
+       /FIELDS ${LEFT_STRUCT}, ${RIGHT_STRUCT}
+
+       /INFILE ${LSIDEF}
+       /JOINKEYS SORTED ${LEFT_KEYS}
+ 
+       /INFILE ${RSIDEF}
+       /JOINKEYS SORTED ${RIGHT_KEYS}
+
+       /JOIN UNPAIRED LEFTSIDE ONLY 
+       /OUTFILE ${WORKSPACE}/${DATACMP_O}_${DATE}_REPORT.csv APPEND
+       /REFORMAT ${LKEYS} ${FIELD_LIST}
+
+       /END
+EOS
+SYSORT_ERR=$?
+if [ $SYSORT_ERR != 0 ]; then
+   echo "#========================================================================="
+   echo "# Comparaison de donnees : KO"
+   echo "#"
+   exit_faild 4
+fi
+syncsort 2>${DATACMP_ano} << EOS
+       /SILENT
+       /WORKSPACE ${WORKSPACE}
+       /FIELDS ${LEFT_STRUCT}, ${RIGHT_STRUCT}
+
+       /INFILE ${LSIDEF}
+       /JOINKEYS SORTED ${LEFT_KEYS}
+
+       /INFILE ${RSIDEF}
+       /JOINKEYS SORTED ${RIGHT_KEYS}
+
+       /JOIN UNPAIRED RIGHTSIDE ONLY
+       /OUTFILE ${WORKSPACE}/${DATACMP_O}_${DATE}_REPORT.csv APPEND
+       /REFORMAT ${RKEYS} ${FIELD_LIST}
+
+       /END
+EOS
+SYSORT_ERR=$?
+if [ $SYSORT_ERR != 0 ]; then
+   echo "#========================================================================="
+   echo "# Comparaison de donnees : KO"
+   echo "#"
+   exit_faild 4
+fi
+
+
+#-------------------------------------------------------------------------------
+# Suppression des fichier intermidieres
+#--------------------------------------
+      rm ${LSIDEF} 1> /dev/null 2>&1
+      rm ${RSIDEF} 1> /dev/null 2>&1
+else
+   if [ $H == 1 ]; then
+      sed -i "1s/^/${HEADER_}\n/" ${LFRESULT}
+      sed -i "1s/^/${HEADER_}\n/" ${RFRESULT}
+   fi
+fi
+
+
+#-------------------------------------------------------------------------------
+#a faire ici la presentation
+#-------------------------------------------------------------------------------
+echo "#========================================================================="
+echo "# Comparaison de donnees : OK"
+echo "#"
+
+
+#-------------------------------------------------------------------------------
+# suppression des fichiers intermediaires
+#-----------------------------------------
+#if ls ${WORKSPACE}/*PRESORTED.csv 1> /dev/null 2>&1; then	
+#	rm ${WORKSPACE}/*PRESORTED.csv*
+#fi
+echo "# WORKSPACE  : ${WORKSPACE}/"   
+echo "# RSULT FILE : ${DATACMP_O}_${DATE}_REPORT.csv"   
+exit_success 0
+# FIN
+#----
+

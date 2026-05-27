@@ -1,0 +1,101 @@
+/* UBGL_ON */
+
+USE BTRAV
+GO
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('EST_ESID0841_SIICASHFLOWS')
+            and   type = 'U')
+   drop table EST_ESID0841_SIICASHFLOWS
+GO
+
+/*==============================================================*/
+/* Table: EST_ESID0841_SIICASHFLOWS 					        */
+/*==============================================================*/
+CREATE TABLE EST_ESID0841_SIICASHFLOWS 
+(
+   CTR_NF               UCTR_NF                         not null,
+   SEC_NF               USEC_NF                         not null,
+   UWY_NF               UUWY_NF                         not null,
+   ACMTRS_NT            smallint                        not null,
+   CUR_CF               UCUR_CF                         not null,
+   AN1                  UAMT_M                          null,
+   AN2                  UAMT_M                          null,
+   AN3                  UAMT_M                          null,
+   AN4                  UAMT_M                          null,
+   AN5                  UAMT_M                          null,
+   AN6                  UAMT_M                          null,
+   AN7                  UAMT_M                          null,
+   AN8                  UAMT_M                          null,
+   AN9                  UAMT_M                          null,
+   AN10                 UAMT_M                          null,
+   AN11                 UAMT_M                          null,
+   AN12                 UAMT_M                          null,
+   AN13                 UAMT_M                          null,
+   AN14                 UAMT_M                          null,
+   AN15                 UAMT_M                          null,
+   AN16                 UAMT_M                          null,
+   AN17                 UAMT_M                          null,
+   AN18                 UAMT_M                          null,
+   AN19                 UAMT_M                          null,
+   AN20                 UAMT_M                          null,
+   AN21                 UAMT_M                          null,
+   AN22                 UAMT_M                          null,
+   AN23                 UAMT_M                          null,
+   AN24                 UAMT_M                          null,
+   AN25                 UAMT_M                          null,
+   AN26                 UAMT_M                          null,
+   AN27                 UAMT_M                          null,
+   AN28                 UAMT_M                          null,
+   AN29                 UAMT_M                          null,
+   AN30                 UAMT_M                          null,
+   AN31                 UAMT_M                          null,
+   AN32                 UAMT_M                          null,
+   AN33                 UAMT_M                          null,
+   AN34                 UAMT_M                          null,
+   AN35                 UAMT_M                          null,
+   AN36                 UAMT_M                          null,
+   AN37                 UAMT_M                          null,
+   AN38                 UAMT_M                          null,
+   AN39                 UAMT_M                          null,
+   AN40                 UAMT_M                          null,
+   AN41                 UAMT_M                          null,
+   AN42                 UAMT_M                          null,
+   AN43                 UAMT_M                          null,
+   AN44                 UAMT_M                          null,
+   AN45                 UAMT_M                          null,
+   AN46                 UAMT_M                          null,
+   AN47                 UAMT_M                          null,
+   AN48                 UAMT_M                          null,
+   AN49                 UAMT_M                          null,
+   AN50                 UAMT_M                          null,
+   AN51                 UAMT_M                          null,
+   AN52                 UAMT_M                          null,
+   AN53                 UAMT_M                          null,
+   AN54                 UAMT_M                          null,
+   AN55                 UAMT_M                          null,
+   AN56                 UAMT_M                          null,
+   AN57                 UAMT_M                          null,
+   AN58                 UAMT_M                          null,
+   AN59                 UAMT_M                          null,
+   AN60                 UAMT_M                          null,
+   AN61                 UAMT_M                          null,
+   AN62                 UAMT_M                          null,
+   AN63                 UAMT_M                          null,
+   AN64                 UAMT_M                          null,
+   AN65                 UAMT_M                          null,
+   CREUSR_CF			UUPDUSR_CF						null,
+   LINE_N				int								
+)
+
+grant all on EST_ESID0841_SIICASHFLOWS to GOMEGA
+grant all on EST_ESID0841_SIICASHFLOWS to GDBBATCH
+grant select on EST_ESID0841_SIICASHFLOWS to GCONSULT
+GO
+
+IF OBJECT_ID('EST_ESID0841_SIICASHFLOWS') IS NOT NULL
+    PRINT '<<< CREATED TABLE EST_ESID0841_SIICASHFLOWS >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE EST_ESID0841_SIICASHFLOWS >>>'
+GO

@@ -1,0 +1,3 @@
+# Chaine parameter file
+# -Number of days before the soft deletion action
+NBR_DAY 7

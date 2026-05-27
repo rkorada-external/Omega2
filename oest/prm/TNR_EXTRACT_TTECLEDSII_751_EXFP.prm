@@ -1,0 +1,58 @@
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDSII"
+EXTRT="TNR_EXTRACT_TTECLEDSII_751"
+
+
+//------------------------------------------------------------------------------------//
+// Il est possible d'utiliser une varibale VAR dans la requete QRY (sql)              //
+// Si la variable "${VAR}" n'est pas declare ici ou dans le fichier de configuration  //
+// c'est la valeur dans le fichier {EST_PARAM} qui est utilise par defaut             //
+//------------------------------------------------------------------------------------//
+QRY="
+select d.SSD_CF ,d.CUR_CF,round(d.EXC_R/A.EXC_R,6) as 'EXC_R' 
+into #Rates
+from BREF..TCURQUOT d, (
+        select E.SSD_CF,  E.EXC_R
+        from BREF..TCURQUOT E
+        where E.SSD_CF in ( ${SSDCLO_LL} )
+        and E.CUR_CF = 'EUR'
+        and E.Exc_d=(select max(Exc_d) from BREF..TCURQUOT c where c.SSD_CF = E.SSD_CF and c.CUR_CF = E.CUR_CF group by c.SSD_CF,c.CUR_CF)
+        ) A
+where d.SSD_CF in ( ${SSDCLO_LL} )
+and d.SSD_CF = A.SSD_CF
+and d.Exc_d=(select max(Exc_d) from BREF..TCURQUOT c where c.SSD_CF = d.SSD_CF and c.CUR_CF = d.CUR_CF group by c.SSD_CF,c.CUR_CF)
+
+select distinct a.PRS_CF, a.ACMTRS_NT, b.ACMTRS_GL
+into #tcode
+from BREF..TTRSLNK a, BREF..TACMTRS b
+where a.ACMTRS_NT = b.ACMTRS_NT and a.PRS_CF = b.PRS_CF
+and a.PRS_CF=751
+
+SELECT DISTINCT SSD_CF,NORME_CF,CLOTYP_CT,PATCAT_CT,PATTYP_CT,a.PRS_CF,ACMTRS3_NT,b.ACMTRS_GL,
+case when CUR_CF is null then 'EUR' else CUR_CF End as 'CUR_CF',
+sum(TOTAUX)as 'TOTAL',sum(ACMAMT_M) as 'TOTAL_INITIAL', count(*) as 'NB_ROWS'
+into #ResInterm
+FROM BSAR..${TTECLEDSII} a, #tcode b
+WHERE SSD_CF in ( ${SSDCLO_LL} )
+and   a.ACMTRS3_NT = CAST(b.ACMTRS_NT as CHAR)
+and   a.PRS_CF = b.PRS_CF
+GROUP BY SSD_CF,NORME_CF,CLOTYP_CT,PATCAT_CT,PATTYP_CT,a.PRS_CF,ACMTRS3_NT,b.ACMTRS_GL,CUR_CF
+
+select a.SSD_CF,NORME_CF,CLOTYP_CT,PATCAT_CT,PATTYP_CT,a.PRS_CF,ACMTRS3_NT,a.ACMTRS_GL,a.CUR_CF,c.EXC_R, sum(TOTAL) as 'TOTAL', sum(TOTAL_INITIAL) as 'TOTAL_INITIAL',sum(NB_ROWS) as 'NB_ROWS'
+into #ResBrut
+from #ResInterm a,#Rates c
+where a.SSD_CF=c.SSD_CF
+and   a.CUR_CF=c.CUR_CF
+group by a.SSD_CF,NORME_CF,CLOTYP_CT,PATCAT_CT,PATTYP_CT,a.PRS_CF,ACMTRS3_NT,a.ACMTRS_GL,a.CUR_CF,c.EXC_R
+order by a.SSD_CF,NORME_CF,CLOTYP_CT,PATCAT_CT,PATTYP_CT,a.PRS_CF,ACMTRS3_NT,a.ACMTRS_GL,a.CUR_CF ASC
+
+select NORME_CF,CASE when CLOTYP_CT = 'INI' then 'INI' else 'POS' End as 'CLOTYP_CT',PATCAT_CT,PATTYP_CT,PRS_CF,ACMTRS3_NT,ACMTRS_GL, cast(round(sum(convert(float, TOTAL)*convert (float , EXC_R)),0)as NUMERIC(26,0)) as 'TOTAL', cast(round(sum(convert(float, TOTAL_INITIAL)*convert (float , EXC_R)),0)as NUMERIC(26,0)) as 'TOTAL_INITIAL', sum(NB_ROWS) as 'NB_ROWS' from #ResBrut
+group by NORME_CF,CLOTYP_CT,PATCAT_CT,PATTYP_CT,PRS_CF,ACMTRS3_NT,ACMTRS_GL
+order by NORME_CF,CLOTYP_CT,PATCAT_CT,PATTYP_CT,PRS_CF,ACMTRS3_NT,ACMTRS_GL ASC
+
+drop table #Rates
+drop table #tcode
+drop table #ResInterm
+drop table #ResBrut
+"

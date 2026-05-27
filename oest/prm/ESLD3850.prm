@@ -1,0 +1,7 @@
+#*****************************************************
+#[000] 11/09/2017 Roger Cassis  :spira:61508 - Nouvelle chaine Ecritures de service locales
+#*****************************************************
+
+# PROCESSONEGL_CF  Processs or not OneGl process (1=process/0=no process)
+
+PROCESSONEGL_CT 0

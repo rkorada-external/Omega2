@@ -1,0 +1,11 @@
+use BREF
+go
+
+/*==============================================================*/
+/* Table: TCALEND                                  */
+/*==============================================================*/
+
+ALTER TABLE dbo.TCALEND ADD ACCRETSTART_D datetime  NULL
+go
+ALTER TABLE dbo.TCALEND ADD ACCRETEND_D datetime  NULL
+go

@@ -1,0 +1,10 @@
+# Chaine parameter file (ESIH8020)
+# 3 parameters
+# - Treatment date
+# - Required date (manual)
+# - Subsiday code
+#
+
+DATE_T 20130926
+FORCE_DTE null
+SSD_CF 99

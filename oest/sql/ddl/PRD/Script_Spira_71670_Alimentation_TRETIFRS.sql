@@ -1,0 +1,14 @@
+USE BRET
+go
+delete from BRET..TRETIFRS
+go
+--'Alimentation de la table TRETIFRS via le script ci dessous'
+insert into BRET..TRETIFRS (RETCTR_NF, RTY_NF, PRICEDCTR_B, FOREWRITERLCK_B, PRICINGTOOL_CT, PRICEDLR_R, CRE_D, LSTUPDUSR_CF) 
+select distinct RETSEC.RETCTR_NF, RETSEC.RTY_NF, 1, 0, '1', 10.5, getdate(), getdate()
+from   BRET..TRETSEC RETSEC, BRET..TRETCTR RETCTR,  BRET..TRACCCOND RACCCOND
+where  (RETCTRSTS_CT=3 or RETCTRSTS_CT=19)
+         and TERCTR_B <> 1
+         and LOB_CF<>'30' and LOB_CF<>'31'
+         and RETSEC.RETCTR_NF=RETCTR.RETCTR_NF and RETSEC.RTY_NF=RETCTR.RTY_NF
+         and RETSEC.RETCTR_NF*=RACCCOND.RETCTR_NF
+go

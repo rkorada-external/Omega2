@@ -1,0 +1,16 @@
+/*==============================================================
+10/03/2015 R. Cassis :spot:28328 - TACCSUP - ADD COLUMN EVT_NF,REVT_NF as varchar
+==============================================================*/
+
+USE BSAR
+GO
+if not exists (SELECT 1 FROM syscolumns col, sysobjects obj
+               WHERE col.name in ('EVT_NF', 'REVT_NF')
+               AND   obj.name = 'TACCSUP'
+               AND   col.id   = obj.id )
+begin
+	ALTER TABLE dbo.TACCSUP ADD 
+	   EVT_NF varchar(10)   NULL,
+	   REVT_NF varchar(10)  NULL
+end
+go

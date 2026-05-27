@@ -1,0 +1,5 @@
+USE BREF
+go
+
+update TNOTIFTYPE set NOTNAT_CT = 'FOI' where NOTIFTYP_NT in (251, 252, 253)
+go

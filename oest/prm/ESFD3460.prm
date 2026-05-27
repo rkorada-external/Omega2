@@ -1,0 +1,7 @@
+# Parameters List  18/04/2023  JYP/TD :spira:109440 ne chain to check SAP file and recover
+# status of return file from SAP : Y=missing file so need to recover ,  N=no need to recover
+EBS_RECOVERY_MODE N
+I17G_RECOVERY_MODE N
+I17P_RECOVERY_MODE N
+I17L_RECOVERY_MODE N
+I17S_RECOVERY_MODE N

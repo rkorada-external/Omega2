@@ -1,0 +1,57 @@
+USE BRET
+
+GO
+IF OBJECT_ID('dbo.PsCSMENPERIRET_01') IS NOT NULL
+BEGIN
+    DROP PROCEDURE dbo.PsCSMENPERIRET_01
+    IF OBJECT_ID('dbo.PsCSMENPERIRET_01') IS NOT NULL
+        PRINT '<<< FAILED DROPPING PROCEDURE dbo.PsCSMENPERIRET_01 >>>'
+    ELSE
+        PRINT '<<< DROPPED PROCEDURE dbo.PsCSMENPERIRET_01 >>>'
+END
+GO
+
+CREATE PROCEDURE dbo.PsCSMENPERIRET_01
+(
+   @p_NORME_CF    CHAR(5)
+)
+AS
+/***************************************************
+Domaine                 : (ES) Estimation
+Base principale         : BRET
+Auteur                  : Cyril AVINENS
+Date de creation        : 05/06/2020
+Description du programme: Create the tempory Pericase file from BRET..TRETCTR and BRET..TRETIFRS
+Conditions d'execution  : chaine ESFD3860
+Commentaires            : Spira #85996
+_________________
+MODIFICATIONS
+
+*****************************************************/
+
+SELECT DISTINCT
+A.RETCTR_NF,
+A.RTY_NF,
+A.SSD_CF,
+A.ESB_CF,
+B.GRPINISTS_CT,
+B.PARINISTS_CT,
+B.LOCINISTS_CT,
+B.GRPIFRSTRA_CT,
+B.PARIFRSTRA_CT,
+B.LOCIFRSTRA_CT
+FROM BRET..TRETCTR A
+JOIN BRET..TRETIFRS B on (A.RETCTR_NF = B.RETCTR_NF and A.RTY_NF = B.RTY_NF)
+WHERE (RETCTRSTS_CT = 3)
+AND (('I17P' = 'I17G' AND A.CTRINC_D = A.CTRINCUWY_D) OR 'I17P' <> 'I17G')
+
+GO
+IF OBJECT_ID('dbo.PsCSMENPERIRET_01') IS NOT NULL
+    PRINT '<<< CREATED PROCEDURE dbo.PsCSMENPERIRET_01 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING PROCEDURE dbo.PsCSMENPERIRET_01 >>>'
+GO
+GRANT EXECUTE ON dbo.PsCSMENPERIRET_01 TO GOMEGA
+GO
+GRANT EXECUTE ON dbo.PsCSMENPERIRET_01 TO GDBBATCH
+GO

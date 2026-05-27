@@ -1,0 +1,101 @@
+#============================================================================
+#
+#
+#
+#============================================================================
+SOURCE1=ESTC3201.c
+SOURCE2=ESTC3203.c
+SOURCE3=ESTC3204.c
+SOURCE4=ESTC3205.c
+SOURCE5=ESTC3206.c
+SOURCE6=ESTC3207.c
+
+SOURCE7=ESTC0102.c
+SOURCE8=ESTC0103.c
+SOURCE9=ESTC0104.c
+SOURCE10=ESTC0105.c
+SOURCE11=ESTC0106.c
+
+SOURCE12=ESTM7605.c
+SOURCE13=ESTM7606.c
+SOURCE14=ESIX0061.c
+SOURCE15=ESCX0001.c
+
+SOURCE16=ESTC2032.c
+SOURCE17=ESTC2033.c
+SOURCE18=ESTC2034.c
+SOURCE19=ESTC2035.c
+SOURCE20=ESTC2036.c
+SOURCE21=ESTC2037.c
+SOURCE22=ESTC2037B.c
+SOURCE23=ESTC2038.c
+SOURCE24=ESTC2040.c
+SOURCE25=ESTC203B.c
+
+SOURCE26=ESTR203A.c
+
+
+
+EXE1=ESTC3201.exe
+EXE2=ESTC3203.exe
+EXE3=ESTC3204.exe
+EXE4=ESTC3205.exe
+EXE5=ESTC3206.exe
+EXE6=ESTC3207.exe
+
+EXE7=ESTC0102.exe
+EXE8=ESTC0103.exe
+EXE9=ESTC0104.exe
+EXE10=ESTC0105.exe
+EXE11=ESTC0106.exe
+
+EXE12=ESTM7605.exe
+EXE13=ESTM7606.exe
+EXE14=ESIX0061.exe
+EXE15=ESCX0001.exe
+
+EXE16=ESTC2032.exe
+EXE17=ESTC2033.exe
+EXE18=ESTC2034.exe
+EXE19=ESTC2035.exe
+EXE20=ESTC2036.exe
+EXE21=ESTC2037.exe
+EXE22=ESTC2037B.exe
+EXE23=ESTC2038.exe
+EXE24=ESTC2040.exe
+EXE25=ESTC203B.exe
+
+EXE26=ESTR203A.exe
+
+SYBLIBDIR = $(SYBASE)/lib
+LDFLAGS	  = -L$(SYBLIBDIR)
+CFLAGS    = -I. -I$(SYBASE)/include -I$(DINC2)
+CC = cc -Ae
+#DBX = -g
+
+
+SYBLIBS = \
+	$(SYBLIBDIR)/libct.a \
+	$(SYBLIBDIR)/libcs.a \
+	$(SYBLIBDIR)/libblk.a \
+	$(SYBLIBDIR)/libcomn.a \
+	$(SYBLIBDIR)/libtcl.a \
+	$(SYBLIBDIR)/libintl.a\
+    $(SYBLIBDIR)/libinsck.a
+
+SCKLIBS = $(SYBLIBS) $(MATHLIBS)
+
+UTCTLIB=$(DCTLIB2)/pdbcu.a $(DCTLIB2)/utctlib.a 
+CTLIBS=$(UTCTLIB) $(SCKLIBS)
+
+PRECOMP = $${SYBASE}/bin/cpre
+
+all: $(EXE1) $(EXE2) $(EXE3) $(EXE4) $(EXE5) $(EXE6) $(EXE7) $(EXE8) $(EXE9) $(EXE10) $(EXE11) $(EXE12) $(EXE13) $(EXE14) $(EXE15) $(EXE16) $(EXE17) $(EXE18) $(EXE19) $(EXE20) $(EXE21) $(EXE22) $(EXE23) $(EXE24) $(EXE25) $(EXE26) CHMOD
+#----------------------------------------------------------------------------
+.SUFFIXES: .exe .c
+.c.exe: $(UTCTLIB)
+	$(CC) $(DBX) $(CFLAGS) $(LDFLAGS) $? -o $(DEXE)/$@ $(DCTLIB2)/estserv.a $(CTLIBS)
+	touch $@
+#----------------------------------------------------------------------------
+CHMOD:
+	chmod 755 $(DEXE)/*.exe

@@ -1,0 +1,44 @@
+Use BEST
+Go
+
+if NOT exists(select 1 from syscolumns where Id = Object_ID('dbo.TPATSEGSII') and Name = 'ESB_CF')
+begin
+	ALTER TABLE BEST..TPATSEGSII
+	ADD ESB_CF       UESB_CF    NULL
+	
+
+	PRINT '<<< New Column added successfully >>>'
+end 
+else
+begin
+	PRINT '<<< Column already exists >>>'
+end
+
+go
+
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TPATSEGSII') AND name='IPATSEG_00') 
+		AND exists(select 1 from syscolumns where Id = Object_ID('dbo.TPATSEGSII') and Name = 'ESB_CF')
+BEGIN
+    DROP INDEX TPATSEGSII.IPATSEG_00
+    IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TPATSEGSII') AND name='IPATSEG_00')
+        PRINT '<<< FAILED DROPPING INDEX TPATSEGSII.IPATSEG_00 >>>'
+    ELSE
+        PRINT '<<< DROPPED INDEX TPATSEGSII.IPATSEG_00 >>>'
+	
+	
+	
+	CREATE UNIQUE CLUSTERED INDEX IPATSEG_00
+    ON dbo.TPATSEGSII(PATCAT_CT,PATTYP_CT,PATTERN_ID,CLODAT_D,PER_CF,SSD_CF,SEG_NF,LOB_CF,CUR_CF,NORME_CF,SEGNAT_CT,ORIPATCAT_CT,ORIPATTYP_CT, RATEINDEX_CT,ESB_CF)
+	LOCAL INDEX IPATSEG_00_245572882
+	
+	IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TPATSEGSII') AND name='IPATSEG_00')
+		PRINT '<<< CREATED INDEX dbo.TPATSEGSII.IPATSEG_00 >>>'
+	ELSE
+		PRINT '<<< FAILED CREATING INDEX dbo.TPATSEGSII.IPATSEG_00 >>>'	
+        
+        
+END
+
+
+go
+

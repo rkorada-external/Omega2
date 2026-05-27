@@ -1,0 +1,123 @@
+USE BEST
+go
+IF OBJECT_ID('TLIFESTD') IS NOT NULL
+BEGIN
+    -- Backup when there are data in TLIFESTD
+    CREATE TABLE #backupTLIFESTD (
+        CTR_NF        UCTR_NF    NOT NULL,
+        END_NT        UEND_NT    NOT NULL,
+        SEC_NF        USEC_NF    NOT NULL,
+        UWY_NF        UUWY_NF    NOT NULL,
+        UW_NT         UUW_NT     NOT NULL,
+        CRE_D         UUPD_D     NOT NULL,
+        BALSHEY_NF    smallint   NOT NULL,
+        BALSHTMTH_NF  tinyint    NOT NULL,
+        ACY_NF        smallint   NOT NULL,
+        GAAP_NT       tinyint    NOT NULL,
+        DETTRNCOD_CF  char(5)    DEFAULT '' NOT NULL,
+        ACM_NF        tinyint    NOT NULL,
+        PRS_CF        smallint   NOT NULL,
+        ACMTRS_NT     smallint   NOT NULL,
+        SSD_CF        USSD_CF    NOT NULL,
+        CUR_CF        UCUR_CF    NOT NULL,
+        ESTMNT_M      UAMT_M     NOT NULL,
+        INDSUP_B      bit        DEFAULT 0  NOT NULL,
+        ORICOD_LS     UL16       NULL,
+        CREUSR_CF     UUPDUSR_CF NOT NULL,
+        LSTUPD_D      UUPD_D     NOT NULL,
+        LSTUPDUSR_CF  UUPDUSR_CF NOT NULL,
+        ORICTR_NF     UCTR_NF    NULL,
+        ORISEC_NF     USEC_NF    NULL,
+        ORIUWY_NF     UUWY_NF    NULL,
+        DIFF_M        UAMT_M     NULL,
+        PROPAGATION_B bit        DEFAULT 0  NOT NULL,
+        CALCULATED_B  bit        DEFAULT 0  NOT NULL,
+        BATCH_B       bit        DEFAULT 0  NOT NULL
+    )
+    IF OBJECT_ID('#backupTLIFESTD') IS NOT NULL
+        PRINT '<<< CREATED TABLE #backupTLIFESTD >>>'
+    ELSE
+        PRINT '<<< FAILED CREATING TABLE #backupTLIFESTD >>>'
+
+    INSERT INTO #backupTLIFESTD
+    SELECT
+        CTR_NF, END_NT, SEC_NF, UWY_NF, UW_NT, CRE_D, BALSHEY_NF, 
+        BALSHTMTH_NF, ACY_NF, GAAP_NT, DETTRNCOD_CF, ACM_NF, PRS_CF, 
+        ACMTRS_NT, SSD_CF, CUR_CF, ESTMNT_M, INDSUP_B, ORICOD_LS, 
+        CREUSR_CF, LSTUPD_D, LSTUPDUSR_CF, ORICTR_NF, ORISEC_NF, 
+        ORIUWY_NF, DIFF_M, PROPAGATION_B, CALCULATED_B, BATCH_B 
+    FROM 
+        TLIFESTD
+
+    DROP TABLE TLIFESTD
+    IF OBJECT_ID('TLIFESTD') IS NOT NULL
+        PRINT '<<< FAILED DROPPING TABLE TLIFESTD >>>'
+    ELSE
+        PRINT '<<< DROPPED TABLE TLIFESTD >>>'
+END
+go
+CREATE TABLE TLIFESTD
+(
+    CTR_NF        UCTR_NF    NOT NULL,
+    END_NT        UEND_NT    NOT NULL,
+    SEC_NF        USEC_NF    NOT NULL,
+    UWY_NF        UUWY_NF    NOT NULL,
+    UW_NT         UUW_NT     NOT NULL,
+    CRE_D         UUPD_D     NOT NULL,
+    BALSHEY_NF    smallint   NOT NULL,
+    BALSHTMTH_NF  tinyint    NOT NULL,
+    ACY_NF        smallint   NOT NULL,
+    GAAP_NT       tinyint    NOT NULL,
+    DETTRNCOD_CF  char(5)    DEFAULT '' NOT NULL,
+    ACM_NF        tinyint    NOT NULL,
+    PRS_CF        smallint   NOT NULL,
+    ACMTRS_NT     smallint   NOT NULL,
+    SSD_CF        USSD_CF    NOT NULL,
+    CUR_CF        UCUR_CF    NOT NULL,
+    ESTMNT_M      UAMT_M     NOT NULL,
+    INDSUP_B      bit        DEFAULT 0  NOT NULL,
+    ORICOD_LS     UL16       NULL,
+    CREUSR_CF     UUPDUSR_CF NOT NULL,
+    LSTUPD_D      UUPD_D     NOT NULL,
+    LSTUPDUSR_CF  UUPDUSR_CF NOT NULL,
+    ORICTR_NF     UCTR_NF    NULL,
+    ORISEC_NF     USEC_NF    NULL,
+    ORIUWY_NF     UUWY_NF    NULL,
+    DIFF_M        UAMT_M     NULL,
+    PROPAGATION_B bit        DEFAULT 0  NOT NULL,
+    CALCULATED_B  bit        DEFAULT 0  NOT NULL,
+    BATCH_B       bit        DEFAULT 0  NOT NULL
+)
+LOCK DATAROWS
+go
+IF OBJECT_ID('TLIFESTD') IS NOT NULL
+    PRINT '<<< CREATED TABLE TLIFESTD >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE TLIFESTD >>>'
+go
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('TLIFESTD') AND name='ITLIFESTD_00')
+BEGIN
+    DROP INDEX TLIFESTD.ITLIFESTD_00
+    IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('TLIFESTD') AND name='ITLIFESTD_00')
+        PRINT '<<< FAILED DROPPING INDEX TLIFESTD.ITLIFESTD_00 >>>'
+    ELSE
+        PRINT '<<< DROPPED INDEX TLIFESTD.ITLIFESTD_00 >>>'
+END
+go
+CREATE NONCLUSTERED INDEX ITLIFESTD_00
+    ON TLIFESTD(CTR_NF ASC, END_NT ASC, SEC_NF ASC, UWY_NF ASC, UW_NT ASC, BALSHEY_NF ASC, BALSHTMTH_NF ASC, ACY_NF ASC, PRS_CF ASC, ACMTRS_NT ASC, GAAP_NT ASC, DETTRNCOD_CF ASC, CRE_D ASC, SSD_CF ASC, ACM_NF ASC)
+go
+IF OBJECT_ID('#backupTLIFESTD') IS NOT NULL 
+BEGIN
+    INSERT INTO TLIFESTD
+    SELECT * FROM #backupTLIFESTD
+    PRINT '<<< INSERTING DATA in TLIFESTD >>>'
+    DROP TABLE #backupTLIFESTD
+END
+go
+GRANT ALL ON TLIFESTD TO GOMEGA 
+go
+GRANT ALL ON TLIFESTD TO GDBBATCH
+go
+GRANT SELECT ON TLIFESTD TO GCONSULT
+go

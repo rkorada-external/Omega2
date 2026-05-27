@@ -1,0 +1,82 @@
+USE BTRAV
+go
+IF OBJECT_ID(user_name()+'.TESTUTISUP') IS NOT NULL
+BEGIN
+    DROP TABLE TESTUTISUP
+    IF OBJECT_ID(user_name()+'.TESTUTISUP') IS NOT NULL
+        PRINT '<<< FAILED DROPPING TABLE TESTUTISUP >>>'
+    ELSE
+        PRINT '<<< DROPPED TABLE TESTUTISUP >>>'
+END
+go
+--23/10/2013 Florent  :spot:25427 - user géographique
+CREATE TABLE TESTUTISUP
+(
+    TRN_NT          numeric(10,0) NULL,
+    ACCTYP_NF       tinyint       NULL,
+    SSD_CF          USSD_CF       NULL,
+    ESB_CF          UESB_CF       NULL,
+    ENTPERY_NF      UUWY_NF       NULL,
+    ENTPERMTH_NF    tinyint       NULL,
+    BALSHEY_NF      UUWY_NF       NOT NULL,
+    BALSHRMTH_NF    tinyint       NOT NULL,
+    BALSHRDAY_NF    tinyint       NOT NULL,
+    VALPERY_NF      UUWY_NF       NOT NULL,
+    VALPERMTH_NF    tinyint       NOT NULL,
+    TRNCOD_CF       UDETTRS_CF    NOT NULL,
+    DBLTRNCOD_CF    UDETTRS_CF    NULL,
+    RETAUTGEN_B     bit           NOT NULL,
+    CTR_NF          UCTR_NF       NULL,
+    END_NT          UEND_NT       NULL,
+    SEC_NF          USEC_NF       NULL,
+    UWY_NF          UUWY_NF       NULL,
+    UW_NT           UUW_NT        NULL,
+    OCCYEA_NF       UUWY_NF       NULL,
+    ACY_NF          UUWY_NF       NULL,
+    SCOSTRMTH_NF    tinyint       NULL,
+    SCOENDMTH_NF    tinyint       NULL,
+    CLM_NF          UCLM_NF       NULL,
+    CUR_CF          UCUR_CF       NULL,
+    AMT_M           UAMT_M        NULL,
+    CED_NF          UCLI_NF       NULL,
+    BRK_NF          UCLI_NF       NULL,
+    GEMPRMPAY_NF    UCLI_NF       NULL,
+    GANPAYORD_NT    UPAYORD_NT    NULL,
+    RETCTR_NF       URETCTR_NF    NULL,
+    RETEND_NT       UEND_NT       NULL,
+    RETSEC_NF       URETSEC_NF    NULL,
+    RTY_NF          UUWY_NF       NULL,
+    RETUW_NT        UUW_NT        NULL,
+    PLC_NT          UPLC_NT       NULL,
+    RETOCCYEA_NF    UUWY_NF       NULL,
+    RETACY_NF       UUWY_NF       NULL,
+    RETSCOSTRMTH_NF tinyint       NULL,
+    RETSCOENDMTH_NF tinyint       NULL,
+    RCL_NF          UCLM_NF       NULL,
+    RETCUR_CF       UCUR_CF       NULL,
+    RETAMT_M        UAMT_M        NULL,
+    RTO_NF          UCLI_NF       NULL,
+    INT_NF          UCLI_NF       NULL,
+    RETPAY_NF       UCLI_NF       NULL,
+    RETKEY_CF       char(1)       NULL,
+    ACCTRN_NT       numeric(10,0) NULL,
+    COMMAC_LL       UL64          NULL,
+    CRE_D           UUPD_D        NULL,
+    CREUSR_CF       UUPDUSR_CF    NULL,
+    LSTUPD_D        UUPD_D        NULL,
+    LSTUPDUSR_CF    UUPDUSR_CF    NULL,
+    NUMLINE_NT      int           DEFAULT 0 NOT NULL
+)
+LOCK DATAROWS
+go
+IF OBJECT_ID(user_name()+'.TESTUTISUP') IS NOT NULL
+    PRINT '<<< CREATED TABLE TESTUTISUP >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE TESTUTISUP >>>'
+go
+GRANT SELECT ON TESTUTISUP TO GCONSULT
+go
+GRANT ALL ON TESTUTISUP TO GOMEGA
+go
+GRANT ALL ON TESTUTISUP TO GDBBATCH
+go

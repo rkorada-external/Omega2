@@ -1,0 +1,26 @@
+# Parameters List     SPOT EST16765
+
+#  17/11/2009  R. Cassis   :spot:18415 -> Copie reconduction en date 01/01 puis annulation au 02/01 pour contrats Vie : parm VIE_B
+#  02/11/2015  Roger Cassis :spot:29223 -> Mise à jour des parametres
+
+# BLCSHT_D         Balance sheet date
+# BALSHEY_NF       Balance sheet year du mois GTA
+# BALSHTMTH_NF     Balance sheet_month du mois GTA
+# QTRLIM_NF        : trimestre limite écoulé -> les traitements de postes avant/apres cette limite sont differents  SPOT 16765
+# ESTIM_B          0/1 -> si 1, on traite les postes Estimations
+# FORCEBILAN       Flag Forcé Bilan à à 31/12/N-1 (1=Oui par Défaut / 0= Bilan N préservé)
+# TRANSFESB        flag transfert etablissement (1=Oui / 0=Non par defaut)
+# GTRETRO          0/1 -> 0= sans retro / 1= avec retro
+# CREATION_GT      0/1 -> 0= le traitement ne cree pas de GT / 1= le traitement cree un GT
+# VIE_B            0/1 -> 0= Transfert contrats non vie, 1= Transfert contrats Vie
+
+BLCSHT_D 20160131
+BALSHEY_NF 2016
+BALSHTMTH_NF 1
+QTRLIM_NF 12
+ESTIM_B 1
+FORCEBILAN 1
+TRANSFESB 0
+GTRETRO 0
+CREATION_GT 1
+VIE_B 0

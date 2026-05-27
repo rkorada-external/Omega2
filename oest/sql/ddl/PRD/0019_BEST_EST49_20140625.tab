@@ -1,0 +1,100 @@
+/*==============================================================*/
+/* EST49                                                          */
+/*==============================================================*/
+
+use BEST
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TULAERAT')
+            and   type = 'U')
+   drop table TULAERAT
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TRSKMRGSSD')
+            and   type = 'U')
+   drop table TRSKMRGSSD
+go
+
+
+/*==============================================================*/
+/* Table: TULAERAT                                              */
+/*==============================================================*/
+create table TULAERAT 
+(
+   SSD_CF               USSD_CF                         not null,
+   ESB_CF               UESB_CF                         not null,
+   PER_CF               UBANVAL_CT                      not null,
+   CLOSING_D            UUPD_D                          not null,
+   RATIO_NF             USHA_R                          not null,
+   CREUSR_CF            UUPDUSR_CF                      not null,
+   CRE_D                UUPD_D                          not null
+)
+go
+
+/*==============================================================*/
+/* Index: IULAERAT_00                                           */
+/*==============================================================*/
+create unique clustered index IULAERAT_00 on TULAERAT (
+SSD_CF ASC,
+ESB_CF ASC,
+PER_CF ASC,
+CLOSING_D ASC
+)
+go
+
+grant all on TULAERAT TO GOMEGA
+grant all on  TULAERAT to GDBBATCH
+grant select on  TULAERAT to GCONSULT
+go
+
+
+/*==============================================================*/
+/* Table: TRSKMRGSSD                                             */
+/*==============================================================*/
+create table TRSKMRGSSD (
+   LGENSGTVRS_NT        USGTVER_NT                      not null,
+   LGENSGMT_NF          USGMT_NF                        not null,
+   LOBSIISGMTVRS_NT     USGTVER_NT                      not null,
+   LOBSIISGMT_NF        USGMT_NF                        not null,
+   NORME_CF             UBANVAL_CT                      not null,
+   PER_CF               UBANVAL_CT                      not null,
+   CLOSING_D            UUPD_D                          not null,
+   AMT_M                UAMT_M                          not null,
+   CUR_CF               UCUR_CF                         not null,
+   CREUSR_CF            UUPDUSR_CF                      not null,
+   CRE_D                UUPD_D                          not null
+  )
+go 
+/*==============================================================*/
+/* Index: IRSKMRGSSD_00                                          */
+/*==============================================================*/
+create unique clustered index IRSKMRGSSD_00 on TRSKMRGSSD (
+LGENSGTVRS_NT ASC,
+LGENSGMT_NF ASC,
+LOBSIISGMTVRS_NT ASC,
+LOBSIISGMT_NF ASC,
+NORME_CF ASC,
+PER_CF ASC,
+CLOSING_D ASC
+)
+go
+
+grant all on TRSKMRGSSD TO GOMEGA
+grant all on  TRSKMRGSSD to GDBBATCH
+grant select on  TRSKMRGSSD to GCONSULT
+go   
+IF OBJECT_ID('dbo.TULAERAT') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.TULAERAT >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.TULAERAT >>>'
+GO
+
+IF OBJECT_ID('dbo.TRSKMRGSSD') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.TRSKMRGSSD >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.TRSKMRGSSD >>>'
+GO

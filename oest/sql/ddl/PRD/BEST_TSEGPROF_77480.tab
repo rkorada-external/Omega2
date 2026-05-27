@@ -1,0 +1,88 @@
+USE BEST 
+go
+
+IF OBJECT_ID('dbo.TSEGPROF') IS NOT NULL
+BEGIN
+    DROP TABLE dbo.TSEGPROF
+    IF OBJECT_ID('dbo.TSEGPROF') IS NOT NULL
+       PRINT '<<<  FAILED DROPPING TABLE dbo.TSEGPROF >>>'
+    ELSE
+       PRINT '<<< TABLE DROPPED dbo.TSEGPROF >>>'
+END
+go
+
+/*==============================================================*/
+/* Table: dbo.TSEGPROF                                              */
+/*==============================================================*/
+create table dbo.TSEGPROF
+(
+	IFRSSEG_CT           USEG_NF                         NOT NULL,
+	UWY_NF               UUWY_NF                         NOT NULL,
+	NORME_CF             UBANVAL_CT                      NOT NULL,
+	INIPRO_CF            UBANVAL_CT                      NOT NULL,
+	CLODAT_D             datetime                        NOT NULL,
+	PER_CF               UBANVAL_CT                      NOT NULL,
+	BCHUSR_CF			 UUPDUSR_CF 					 NOT NULL,
+	CLOPRO_CF            UBANVAL_CT                      NULL,
+	CSMAMT_M             UAMT_M                          NULL,
+	SEGPOS_CF	         UBANVAL_CT                      NULL,
+	CRE_D                UUPD_D                          NOT NULL,
+	CREUSR_CF            UUPDUSR_CF                      NOT NULL,
+	LSTUPDUSR_CF         UUPDUSR_CF                      NOT NULL,
+	LSTUPD_D             UUPD_D                          NOT NULL
+)
+go
+IF OBJECT_ID('dbo.TSEGPROF') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.TSEGPROF >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.TSEGPROF >>>'
+go
+
+CREATE UNIQUE CLUSTERED INDEX ISEGPROF_00
+    ON dbo.TSEGPROF(IFRSSEG_CT,UWY_NF,NORME_CF,INIPRO_CF,CLODAT_D,PER_CF,BCHUSR_CF)
+go
+
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TSEGPROF') AND name='ISEGPROF_00')
+    PRINT '<<< CREATED INDEX dbo.TSEGPROF.ISEGPROF_00 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING INDEX dbo.TSEGPROF.ISEGPROF_00 >>>'
+go
+
+GRANT REFERENCES ON dbo.TSEGPROF TO GOMEGA
+go
+GRANT REFERENCES ON dbo.TSEGPROF TO GDBBATCH
+go
+GRANT SELECT ON dbo.TSEGPROF TO GCONSULT
+go
+GRANT SELECT ON dbo.TSEGPROF TO GOMEGA
+go
+GRANT SELECT ON dbo.TSEGPROF TO GDBBATCH
+go
+GRANT INSERT ON dbo.TSEGPROF TO GOMEGA
+go
+GRANT INSERT ON dbo.TSEGPROF TO GDBBATCH
+go
+GRANT DELETE ON dbo.TSEGPROF TO GOMEGA
+go
+GRANT DELETE ON dbo.TSEGPROF TO GDBBATCH
+go
+GRANT UPDATE ON dbo.TSEGPROF TO GOMEGA
+go
+GRANT UPDATE ON dbo.TSEGPROF TO GDBBATCH
+go
+GRANT DELETE STATISTICS ON dbo.TSEGPROF TO GOMEGA
+go
+GRANT DELETE STATISTICS ON dbo.TSEGPROF TO GDBBATCH
+go
+GRANT TRUNCATE TABLE ON dbo.TSEGPROF TO GOMEGA
+go
+GRANT TRUNCATE TABLE ON dbo.TSEGPROF TO GDBBATCH
+go
+GRANT UPDATE STATISTICS ON dbo.TSEGPROF TO GOMEGA
+go
+GRANT UPDATE STATISTICS ON dbo.TSEGPROF TO GDBBATCH
+go
+GRANT TRANSFER TABLE ON dbo.TSEGPROF TO GOMEGA
+go
+GRANT TRANSFER TABLE ON dbo.TSEGPROF TO GDBBATCH
+go

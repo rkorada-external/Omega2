@@ -1,0 +1,11 @@
+use best
+go
+if exists (select 1 from syscolumns where id = object_id("TUOASII") and name = "NORMCOD_CF")
+begin
+exec sp_rename "TUOASII.NORMCOD_CF", "NORME_CF", column
+PRINT '<<< COLUMN RANAMED ON TUOASII >>>'
+end
+else
+print '<<< COLUMN NAME DOES NOT EXIST >>>'
+go
+

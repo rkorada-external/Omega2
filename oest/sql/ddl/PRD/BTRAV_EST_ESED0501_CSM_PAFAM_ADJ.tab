@@ -1,0 +1,50 @@
+USE BTRAV
+go
+
+if exists (select 1 from sysobjects where id = object_id('EST_ESED0501_CSM_PAFAM_ADJ') and type = 'U') drop table EST_ESED0501_CSM_PAFAM_ADJ
+go
+
+CREATE TABLE EST_ESED0501_CSM_PAFAM_ADJ
+(
+    SSD_CF     USSD_CF       NOT NULL,
+	ESB_CF     UESB_CF       NOT NULL,
+	NAT_CF     char(1)       NOT NULL,
+    CTR_NF     UCTR_NF       NULL,
+    END_NT     UEND_NT       NULL,
+    SEC_NF     USEC_NF       NULL,
+	UWY_NF     UUWY_NF       NULL,
+	UW_NT      UUW_NT        NULL,
+    RETCTR_NF  UCTR_NF       NULL,
+    RETEND_NT  UEND_NT       NULL,
+    RETSEC_NF  USEC_NF       NULL,
+	RTY_NF     UUWY_NF       NULL,
+	RETUW_NT   UUW_NT        NULL,
+	AMT_M      UAMT_M        NOT NULL,
+	CUR_CF     UCUR_CF       NOT NULL,
+    SEG_NF     USEG_NF       NULL,
+    LOB_CF     ULOB_CF       NOT NULL,
+	ACCRET_CF  char(2)       NOT NULL,
+    NUMLINE_NT int           DEFAULT 0 NOT NULL,
+    CLODAT_D   datetime      NULL,
+    LNCH_D     datetime      NULL, 
+    CRE_D        UUPD_D     DEFAULT getdate() NOT NULL,
+    CREUSR_CF    UUPDUSR_CF DEFAULT user      NOT NULL,
+    LSTUPD_D     UUPD_D     DEFAULT getdate() NOT NULL,
+    LSTUPDUSR_CF UUPDUSR_CF DEFAULT user      NOT NULL,
+	ANO_CT     int   DEFAULT 0 NOT NULL,
+	ERRTYP_CT  UL16   NULL
+)
+
+go
+
+grant all on    EST_ESED0501_CSM_PAFAM_ADJ to GOMEGA
+grant all on    EST_ESED0501_CSM_PAFAM_ADJ to GDBBATCH
+grant select on EST_ESED0501_CSM_PAFAM_ADJ to GCONSULT
+go
+
+
+IF OBJECT_ID('dbo.BTRAV..EST_ESED0501_CSM_PAFAM_ADJ') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.[BTRAV..EST_ESED0501_CSM_PAFAM_ADJ] >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.[BTRAV..EST_ESED0501_CSM_PAFAM_ADJ] >>>'
+go

@@ -1,0 +1,73 @@
+USE BCTA
+go
+if object_id('PsTACCTRNFWH_01') is not null
+begin
+  drop procedure PsTACCTRNFWH_01
+  if object_id('PsTACCTRNFWH_01') is not null
+      print '<<< FAILED DROPPING procedure PsTACCTRNFWH_01 >>>'
+  else
+      print '<<< DROPPED procedure PsTACCTRNFWH_01 >>>'
+end
+go
+create procedure PsTACCTRNFWH_01
+with execute as caller as
+/*****
+Programme: PsTACCTRNFWH_01
+
+
+Domaine : (Estimation)
+Base principale : BTRT
+Version: 1
+Auteur: S.Behague
+Date de creation:14/01/2025
+Description du programme:
+
+      Proc appelee par le ESFD0560
+
+Parametres:
+Conditions d'execution:
+Commentaires:
+Auteur          | Date        | Description
+----------------|-------------|-----------------------------------------------------------------------------------------------------------------------
+S.Behague   		| 14/01/2026  | Creation
+----------------|-------------|-----------------------------------------------------------------------------------------------------------------------
+-- 14-01-2026 MOD[001] - S.Behague - US7172 - L&H- FWH accruals complement- Accounting extraction issue
+
+******************************************************************************************************/
+
+-- Extraction Table BCTA..TACCTRN
+
+select SSD_CF,ESB_CF, substring(convert(char(8),BLCSHT_D,112), 1,4) BALSHTYEA_NF, substring(convert(char(8),BLCSHT_D,112), 5,2) BALSHTMTH_NF, substring(convert(char(8),BLCSHT_D,112), 7,2) BALSHDAY_NF, TRNCOD_CF, CTRNCOD_CF, CTR_NF, END_NT, SEC_NF, UWY_NF, UW_NT, OCCYEA_NF, ACY_NF,
+SCOSTRMTH_NF, SCOENDMTH_NF, CLM_NF, CUR_CF, ORICURAMT_M, CED_NF, NULL BRK_NF, NULL PAY_NF, NULL KEY_NF, NULL RETCTR_NF, NULL RETEND_NT, NULL RETSEC_NF, NULL RTY_NF, NULL RETUW_NT, NULL RETOCCYEA_NF, NULL RETACY_NF, NULL RETSCOSTRMTH_NF, NULL RETSCOENDMTH_NF
+, NULL RCL_NF, NULL RETCUR_CF, NULL RETAMT_M, NULL PLC_NT, NULL RTO_NF, NULL INT_NF, NULL RETPAY_NF, NULL RETKEY_CF, NULL RETINTAMT_M, 
+NULL ESTCUR_CF, NULL ESTAMT_M, NAT_CF, NULL ACMTRS_NT, NULL ESTCTR_NF, NULL ESTSEC_NF, LOB_CF, NULL SCOEGP_M, NULL ESTCRB_CT, NULL LIFTRTTYP_CF, ACCTYP_CF ACCADMTYP_CT, NULL SECSTS_CT, NULL PRD_NF, NULL SEG_NF, NULL COMACC_B,
+NULL ADJCOD_CT, NULL ORICOD_CF, NULL DETTRS_CF, 'A' ACCRET_B, NULL ESTUWY_NF, NULL LSTENDMTH_NF, NULL PROPER_N, NULL RTOCTY_CF, NULL GAAP_NF, NULL BRKSCOEGP_M, GRP_CF, NULL PROPAGRES_B, NULL PostBpc_B, NULL SPIMOD_CT, NULL RETAUTGEN_B, ACCTYP_CF, 
+NULL ActivePlan_b, MTH_B, convert(char(8),MTH_D,112)
+from bcta..tacctrn where (LOB_CF = '30' OR LOB_CF = '31')
+
+UNION ALL
+
+select SSD_CF,ESB_CF, substring(convert(char(8),BLCSHT_D,112), 1,4) BALSHTYEA_NF, substring(convert(char(8),BLCSHT_D,112), 5,2) BALSHTMTH_NF, substring(convert(char(8),BLCSHT_D,112), 7,2) BALSHDAY_NF, TRNCOD_CF, NULL CTRNCOD_CF, RETCTR_NF, NULL END_NT, RETSEC_NF, RTY_NF, NULL UW_NT, NULL OCCYEA_NF, RETACCYER_NF, 
+SCOSTRMTH_NF, SCOENDMTH_NF, NULL CLM_NF, CUR_CF, TRN_M, NULL CED_NF, NULL BRK_NF, NULL PAY_NF, NULL KEY_NF, NULL RETCTR_NF, NULL RETEND_NT, NULL RETSEC_NF, NULL RTY_NF, NULL RETUW_NT, NULL RETOCCYEA_NF, NULL RETACY_NF, NULL RETSCOSTRMTH_NF, NULL RETSCOENDMTH_NF
+, NULL RCL_NF, NULL RETCUR_CF, NULL RETAMT_M, NULL PLC_NT, RTO_NF, NULL INT_NF, NULL RETPAY_NF, NULL RETKEY_CF, NULL RETINTAMT_M,
+NULL ESTCUR_CF, NULL ESTAMT_M, NULL NAT_CF, NULL ACMTRS_NT, NULL ESTCTR_NF, NULL ESTSEC_NF, LOB_CF, NULL SCOEGP_M, NULL ESTCRB_CT, NULL LIFTRTTYP_CF, NULL ACCADMTYP_CT, NULL SECSTS_CT, NULL PRD_NF, NULL SEG_NF, NULL COMACC_B,
+NULL ADJCOD_CT, NULL ORICOD_CF, NULL DETTRS_CF, 'R' ACCRET_B, NULL ESTUWY_NF, NULL LSTENDMTH_NF, NULL PROPER_N, NULL RTOCTY_CF, NULL GAAP_NF, NULL BRKSCOEGP_M, NULL GRP_CF, NULL PROPAGRES_B, NULL PostBpc_B, NULL SPIMOD_CT, NULL RETAUTGEN_B, NULL ACCTYP_CF, 
+NULL ActivePlan_b, 0, '19000101'
+from bret..TRACCTRN where (LOB_CF = '30' OR LOB_CF = '31')
+
+
+PRINT '-- FIN de la procedure best..PsTACCTRNFWH_01'
+ 
+go
+EXEC sp_procxmode 'PsTACCTRNFWH_01', 'unchained'
+go
+
+IF OBJECT_ID('PsTACCTRNFWH_01') IS NOT NULL
+    PRINT '<<< CREATED PROCEDURE PsTACCTRNFWH_01 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING PROCEDURE PsTACCTRNFWH_01 >>>'
+go
+GRANT EXECUTE ON PsTACCTRNFWH_01 TO GOMEGA
+go
+GRANT EXECUTE ON PsTACCTRNFWH_01 TO GDBBATCH
+go

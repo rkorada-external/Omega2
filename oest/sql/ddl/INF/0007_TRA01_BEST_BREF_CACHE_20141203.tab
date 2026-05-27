@@ -1,0 +1,180 @@
+use BSEG
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TCACHESEGTYPE')
+            and   type = 'U')
+   drop table TCACHESEGTYPE
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TCACHESEGMENTATION')
+            and   type = 'U')
+   drop table TCACHESEGMENTATION
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TCACHESEGMT')
+            and   type = 'U')
+   drop table TCACHESEGMT
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TCACHEBANTECL')
+            and   type = 'U')
+   drop table TCACHEBANTECL
+go
+
+
+/*==============================================================*/
+/* Table: TCACHESEGTYPE                                              */
+/*==============================================================*/
+create table TCACHESEGTYPE (
+   SGTTYP_NT            USGTTYP_NT                     not null,
+   SGTTYP_LM            UL32                           not null,
+   SGTMGTLVL_CT         UBANVAL_CT                     not null,
+   SGTSCOPE_CT          UBANVAL_CT                     not null,
+   SGTTYPSTS_CT         UBANVAL_CT                     not null,
+   UWABSTR_B            UBOOLEAN_B                     not null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ICACHESEGTYPE_00                                           */
+/*==============================================================*/
+create unique clustered index ICACHESEGTYPE_00 on TCACHESEGTYPE (
+SGTTYP_NT ASC
+)
+go
+
+grant all on  TCACHESEGTYPE to GOMEGA
+grant all on  TCACHESEGTYPE to GDBBATCH
+grant select on  TCACHESEGTYPE to GCONSULT
+go
+
+
+/*==============================================================*/
+/* Table: TCACHESEGMENTATION                                         */
+/*==============================================================*/
+create table TCACHESEGMENTATION (
+   SGT_NT               USGT_NT                        not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   SGTTYP_NT            USGTTYP_NT                     not null,
+   SGT_LM               UL32                           not null,
+   SGTVER_LL            UL64                           null,
+   PRDSIT_CF            char(4)                        null,
+   SSD_CF               USSD_CF                        null,
+   SGTSTS_CF            UBANVAL_CT                     not null,
+   SGTGRAN_CT           UBANVAL_CT                     not null,
+   BALAI_B              UBOOLEAN_B                     null,
+   PRIORITY_B           UBOOLEAN_B                     null,
+   LASTOPTION_B         UBOOLEAN_B                     null,
+   MAXLVL_NB            int                            not null,
+   RSPGRP_CF            UGRP_CF                        not null,
+   RSPUSR_CF            UUSR_CF                        not null,
+   ESBSCOPE_CT          UBANVAL_CT                     null,
+   CTRTYP_CT            UBANVAL_CT                     null,
+   ALLCTRSTS_B          UBOOLEAN_B                     null,
+   ALLCTRCAT_B          UBOOLEAN_B                     null,
+   ALLSECSTS_B          UBOOLEAN_B                     null,
+   ALLSECACCSTS_B       UBOOLEAN_B                     null,
+   FULFREQ_CT           UBANVAL_CT                     null,
+   DLTFREQ_CT           UBANVAL_CT                     null,
+   SNPFREQ_CT           UBANVAL_CT                     null,
+   ACTIV_D              datetime                       null,
+   ARCHIV_D             datetime                       null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ICACHESEGMENTATION_00                                      */
+/*==============================================================*/
+create unique clustered index ICACHESEGMENTATION_00 on TCACHESEGMENTATION (
+SGT_NT ASC,
+SGTVER_NT ASC
+)
+go
+
+grant all on  TCACHESEGMENTATION to GOMEGA
+grant all on  TCACHESEGMENTATION to GDBBATCH
+grant select on  TCACHESEGMENTATION to GCONSULT
+go
+
+
+/*==============================================================*/
+/* Table: TCACHESEGMT                                                */
+/*==============================================================*/
+create table TCACHESEGMT (
+   SGMT_NF              USGMT_NF                       not null,
+   SGT_NT               USGT_NT                        not null,
+   SGTVER_NT            USGTVER_NT                     not null,
+   SGMT_LS              UL16                           not null,
+   SGMT_LL              UL64                           null,
+   SGTLVL_NT            int                            not null,
+   PARSGMT_CF           USGMT_NF                       null,
+   BALAIMGT_CT          UBANVAL_CT                     null,
+   CRE_D                UUPD_D                         not null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   timestamp            timestamp                      null
+)
+go
+
+/*==============================================================*/
+/* Index: ICACHESEGMT_00                                             */
+/*==============================================================*/
+create unique clustered index ICACHESEGMT_00 on TCACHESEGMT (
+SGMT_NF ASC,
+SGT_NT ASC,
+SGTVER_NT ASC
+)
+go
+
+grant all on  TCACHESEGMT to GOMEGA
+grant all on  TCACHESEGMT to GDBBATCH
+grant select on  TCACHESEGMT to GCONSULT
+go
+
+
+/*==============================================================*/
+/* Table: TCACHEBANTECL                                         */
+/*==============================================================*/
+CREATE TABLE TCACHEBANTECL
+(
+    LAG_CF       ULAG_CF    NOT NULL,
+    COL_LS       UL16       NOT NULL,
+    COLVAL_CT    UBANVAL_CT NOT NULL,
+    COLVAL_LM    UL32       NOT NULL,
+    COLVAL_LS    UL16       NOT NULL,
+    CODVALSSD_CF USSD_CF    NULL,
+    LSTUPDUSR_CF UUPDUSR_CF DEFAULT user NOT NULL,
+    timestamp    timestamp  NULL
+)
+LOCK DATAROWS
+go
+
+/*==============================================================*/
+/* Index: ICACHEBANTECL_00                                             */
+/*==============================================================*/
+CREATE UNIQUE CLUSTERED INDEX ICACHEBANTECL_00 ON TCACHEBANTECL(LAG_CF,COL_LS,COLVAL_CT)
+go
+
+grant all on TCACHEBANTECL to GOMEGA
+grant all on TCACHEBANTECL to GDBBATCH
+grant select on TCACHEBANTECL to GCONSULT
+go

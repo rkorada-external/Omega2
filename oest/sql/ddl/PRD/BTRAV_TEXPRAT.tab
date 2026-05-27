@@ -1,0 +1,54 @@
+USE BTRAV
+go
+
+/* UBGL_ON */
+
+IF OBJECT_ID('TEXPRAT') IS NOT NULL
+BEGIN
+    DROP TABLE TEXPRAT
+    PRINT '<<< DROPPED TABLE TEXPRAT >>>'
+END
+go
+
+create table TEXPRAT 
+(
+    LINE_NF	            INT,	
+    USR_CF		        UUSR_CF                     NOT NULL,						
+    SSD_CF              USSD_CF                     NOT NULL,
+    ESB_CF              UESB_CF                     NOT NULL,
+    SEG_NF              INT                         NOT NULL,
+    CTRNAT_CT           CHAR(1)                     NULL,
+    NORME_CF 	        CHAR(5)                     NOT NULL,
+    ACQRAT_R            USHA_R                      NULL,
+    MAINTRAT_R          USHA_R                      NULL,
+    MAINTRATINI_R       USHA_R      DEFAULT 0       NOT NULL,
+    UWY_NF              UUWY_NF     DEFAULT 8888    NOT NULL
+)
+
+go
+GRANT REFERENCES ON TEXPRAT TO GCONSULT
+go
+GRANT REFERENCES ON TEXPRAT TO GOMEGA
+go
+GRANT SELECT ON TEXPRAT TO GCONSULT
+go
+GRANT SELECT ON TEXPRAT TO GOMEGA
+go
+GRANT INSERT ON TEXPRAT TO GCONSULT
+go
+GRANT INSERT ON TEXPRAT TO GOMEGA
+go
+GRANT DELETE ON TEXPRAT TO GCONSULT
+go
+GRANT DELETE ON TEXPRAT TO GOMEGA
+go
+GRANT UPDATE ON TEXPRAT TO GCONSULT
+go
+GRANT UPDATE ON TEXPRAT TO GOMEGA
+go
+
+IF OBJECT_ID('TEXPRAT') IS NOT NULL
+    PRINT '<<< CREATED TABLE TEXPRAT >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE TEXPRAT >>>'
+go

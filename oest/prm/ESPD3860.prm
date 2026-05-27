@@ -1,0 +1,5 @@
+# Parameters List  19/01/2022  R. Cassis   :spira:96729 Add prm option to indicate to take or not file from SAP
+
+# SAP_IN  Take or not file from SAP (0=NO/1=YES)
+
+SAP_IN 0

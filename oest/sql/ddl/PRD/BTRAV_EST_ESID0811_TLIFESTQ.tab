@@ -1,0 +1,112 @@
+USE BTRAV
+go
+IF OBJECT_ID('dbo.EST_ESID0811_TLIFESTQ') IS NOT NULL
+BEGIN
+    -- Backup when there are data in TLIFESTD
+    CREATE TABLE #backupEST_ESID0811_TLIFESTQ (
+        CTR_NF        UCTR_NF    NOT NULL,
+        END_NT        UEND_NT    NOT NULL,
+        SEC_NF        USEC_NF    NOT NULL,
+        UWY_NF        UUWY_NF    NOT NULL,
+        UW_NT         UUW_NT     NOT NULL,
+        CRE_D         UUPD_D     NULL,
+        BALSHEY_NF    smallint   NULL,
+        BALSHTMTH_NF  tinyint    NULL,
+        ACY_NF        smallint   NULL,
+        GAAP_NT       tinyint    NULL,
+        DETTRNCOD_CF  char(5)    NULL,
+        ACM_NF        tinyint    NULL,
+        PRS_CF        smallint   NULL,
+        ACMTRS_NT     smallint   NULL,
+        SSD_CF        USSD_CF    NULL,
+        CUR_CF        UCUR_CF    NULL,
+        ESTMNT_M      UAMT_M     NULL,
+        INDSUP_B      bit        DEFAULT 0  NOT NULL,
+        ORICOD_LS     UL16       NULL,
+        CREUSR_CF     UUPDUSR_CF NULL,
+        LSTUPD_D      UUPD_D     NULL,
+        LSTUPDUSR_CF  UUPDUSR_CF NULL,
+        ORICTR_NF     UCTR_NF    NULL,
+        ORISEC_NF     USEC_NF    NULL,
+        ORIUWY_NF     UUWY_NF    NULL,
+        DIFF_M        UAMT_M     NULL,
+        PROPAGATION_B bit        DEFAULT 0  NOT NULL,
+        CALCULATED_B  bit        DEFAULT 0  NOT NULL,
+        BATCH_B       bit        DEFAULT 0  NOT NULL
+    )
+    IF OBJECT_ID('#backupEST_ESID0811_TLIFESTQ') IS NOT NULL
+        PRINT '<<< CREATED TABLE #backupEST_ESID0811_TLIFESTQ >>>'
+    ELSE
+        PRINT '<<< FAILED CREATING TABLE #backupEST_ESID0811_TLIFESTQ >>>'
+
+    INSERT INTO 
+        #backupEST_ESID0811_TLIFESTQ
+    SELECT
+        CTR_NF, END_NT, SEC_NF, UWY_NF, UW_NT, CRE_D, BALSHEY_NF, 
+        BALSHTMTH_NF, ACY_NF, GAAP_NT, DETTRNCOD_CF, ACM_NF, PRS_CF, 
+        ACMTRS_NT, SSD_CF, CUR_CF, ESTMNT_M, INDSUP_B, ORICOD_LS, 
+        CREUSR_CF, LSTUPD_D, LSTUPDUSR_CF, ORICTR_NF, ORISEC_NF, 
+        ORIUWY_NF, DIFF_M, PROPAGATION_B, CALCULATED_B, BATCH_B 
+    FROM 
+        EST_ESID0811_TLIFESTQ
+
+    DROP TABLE dbo.EST_ESID0811_TLIFESTQ
+    IF OBJECT_ID('EST_ESID0811_TLIFESTQ') IS NOT NULL
+        PRINT '<<< FAILED DROPPING TABLE EST_ESID0811_TLIFESTQ >>>'
+    ELSE
+        PRINT '<<< DROPPED TABLE EST_ESID0811_TLIFESTQ >>>'
+END
+go
+CREATE TABLE dbo.EST_ESID0811_TLIFESTQ
+(
+    CTR_NF        UCTR_NF    NOT NULL,
+    END_NT        UEND_NT    NOT NULL,
+    SEC_NF        USEC_NF    NOT NULL,
+    UWY_NF        UUWY_NF    NOT NULL,
+    UW_NT         UUW_NT     NOT NULL,
+    CRE_D         UUPD_D     NULL,
+    BALSHEY_NF    smallint   NULL,
+    BALSHTMTH_NF  tinyint    NULL,
+    ACY_NF        smallint   NULL,
+    GAAP_NT       tinyint    NULL,
+    DETTRNCOD_CF  char(5)    NULL,
+    ACM_NF        tinyint    NULL,
+    PRS_CF        smallint   NULL,
+    ACMTRS_NT     smallint   NULL,
+    SSD_CF        USSD_CF    NULL,
+    CUR_CF        UCUR_CF    NULL,
+    ESTMNT_M      UAMT_M     NULL,
+    INDSUP_B      bit        DEFAULT 0  NOT NULL,
+    ORICOD_LS     UL16       NULL,
+    CREUSR_CF     UUPDUSR_CF NULL,
+    LSTUPD_D      UUPD_D     NULL,
+    LSTUPDUSR_CF  UUPDUSR_CF NULL,
+    ORICTR_NF     UCTR_NF    NULL,
+    ORISEC_NF     USEC_NF    NULL,
+    ORIUWY_NF     UUWY_NF    NULL,
+    DIFF_M        UAMT_M     NULL,
+    PROPAGATION_B bit        DEFAULT 0  NOT NULL,
+    CALCULATED_B  bit        DEFAULT 0  NOT NULL,
+    BATCH_B       bit        DEFAULT 0  NOT NULL
+)
+LOCK DATAROWS
+go
+IF OBJECT_ID('dbo.EST_ESID0811_TLIFESTQ') IS NOT NULL
+    PRINT '<<< CREATED TABLE EST_ESID0811_TLIFESTQ >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE EST_ESID0811_TLIFESTQ >>>'
+go
+IF OBJECT_ID('#backupEST_ESID0811_TLIFESTQ') IS NOT NULL 
+BEGIN
+    INSERT INTO dbo.EST_ESID0811_TLIFESTQ
+    SELECT * FROM #backupEST_ESID0811_TLIFESTQ
+    PRINT '<<< INSERTING DATA in EST_ESID0811_TLIFESTQ >>>'
+    DROP TABLE #backupEST_ESID0811_TLIFESTQ
+END
+go
+GRANT ALL ON dbo.EST_ESID0811_TLIFESTQ TO GOMEGA 
+go
+GRANT ALL ON dbo.EST_ESID0811_TLIFESTQ TO GDBBATCH
+go
+GRANT SELECT ON dbo.EST_ESID0811_TLIFESTQ TO GCONSULT
+go

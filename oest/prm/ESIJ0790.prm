@@ -1,0 +1,9 @@
+# spira 82196 - S. Behague
+# Chaine parameter file
+# 1 parameter
+# - mail address
+
+ADRESSE SGLA_OnGoing@scor.com
+
+# be retained in ${DTRANSFER}/${REMOTE_SITE}/to
+DEL_REP_DAYS 7

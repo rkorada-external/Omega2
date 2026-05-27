@@ -1,0 +1,91 @@
+USE BTRAVI
+go
+/*
+ * Drop TABLE EST_ESID7100_ETATCACR
+ */
+
+-- ============================================================================================================
+-- 03/10/2008    JFVDV  [SPOT16159] Ajout de la colonne établissement (ESB_CF) après la colonne filiale (SSD_CF)
+-- _________________
+-- MODIFICATION    [002]
+-- Auteur:         D.GATIBELZA
+-- Date:           01/04/2009
+-- Version:        9.1
+-- Description:    ESTDOM17162 Etats CAC  inclure le témoin IFRS
+-- _________________
+-- MODIFICATION    [003]
+-- Auteur:         Ph. VESSIERE
+-- Date:           29/06/2009
+-- Version:        9.1
+-- Description:    [SPOT17610] - ESTDOM - EVOLUTIONS SUR FICHIER CAC 2Q2009
+-- ============================================================================================================
+
+
+IF OBJECT_ID('dbo.EST_ESID7100_ETATCACR') IS NOT NULL
+BEGIN
+    DROP TABLE dbo.EST_ESID7100_ETATCACR
+    PRINT '<<< DROPPED TABLE dbo.EST_ESID7100_ETATCACR >>>'
+END
+go
+CREATE TABLE dbo.EST_ESID7100_ETATCACR
+(
+    ctr_nf      UCTR_NF     NULL ,
+    sec_nf      USEC_NF     NULL ,
+    uwy_nf      UUWY_NF     NULL ,
+    ctrnat_ct   char        NULL ,
+    lobacc_cf   ULOB_CF     NULL ,
+    ssd_cf      USSD_CF     NOT NULL ,
+    esb_cf      UESB_CF     NOT NULL,        -- [SPOT16159] vde le 03/10/2008
+    TYPE        int         default 0,
+    seg_nf      USEG_NF     NULL,
+    CHARGES     UAMT_M      default 0,
+    COURTAGE    UAMT_M      default 0,
+    FAR         UAMT_M      default 0,
+    IBNR2       UAMT_M      default 0 ,
+    PB          UAMT_M      default 0 ,
+    PNA         UAMT_M      default 0 ,
+    PRIMES      UAMT_M      default 0 ,
+    PROVSIN     UAMT_M      default 0 ,
+    PVEQ        UAMT_M      default 0 ,
+    RFAR        UAMT_M      default 0 ,
+    RIBNR2      UAMT_M      default 0 ,
+    RPNA        UAMT_M      default 0 ,
+    RPROVSIN    UAMT_M      default 0 ,
+    RPVEQ       UAMT_M      default 0 ,
+    RSNEM       UAMT_M      default 0 ,
+    SINP        UAMT_M      default 0 ,
+    SNEM        UAMT_M      default 0 ,
+    RFRAGES     UAMT_M      default 0 ,
+    PBSURRET    UAMT_M      default 0 ,
+    FGESCLO     UAMT_M      default 0,
+    TRNTYP_CT   tinyint     NULL,        -- [002]
+    COLVAL_LM   UL32        NULL         -- [003]
+)
+go
+IF OBJECT_ID('dbo.EST_ESID7100_ETATCACR') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.EST_ESID7100_ETATCACR >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.EST_ESID7100_ETATCACR >>>'
+go
+
+CREATE NONCLUSTERED INDEX IESID71_00
+    ON dbo.EST_ESID7100_ETATCACR(CTR_NF, SEC_NF, UWY_NF)
+go
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.EST_ESID7100_ETATCACR') AND name='IESID71_00')
+    PRINT '<<< CREATED INDEX dbo.EST_ESID7100_ETATCACR.IESID71_00 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING INDEX dbo.EST_ESID7100_ETATCACR.IESID71_00 >>>'
+go
+
+GRANT REFERENCES ON dbo.EST_ESID7100_ETATCACR TO GOMEGA
+go
+GRANT SELECT ON dbo.EST_ESID7100_ETATCACR TO GCONSULT
+go
+GRANT SELECT ON dbo.EST_ESID7100_ETATCACR TO GOMEGA
+go
+GRANT INSERT ON dbo.EST_ESID7100_ETATCACR TO GOMEGA
+go
+GRANT DELETE ON dbo.EST_ESID7100_ETATCACR TO GOMEGA
+go
+GRANT UPDATE ON dbo.EST_ESID7100_ETATCACR TO GOMEGA
+go

@@ -1,0 +1,11 @@
+USE BEST 
+Go
+
+--
+-- TABLE INSERT STATEMENTS
+--
+-- Sequential mode ON
+IF NOT  EXISTS(SELECT 1 FROM BEST..TI17REQ WHERE REQCOD_CT = 'SequentialRun'	)  
+INSERT INTO BEST..TI17REQ ( REQCOD_CT, REQCOD_LL ) VALUES ( 'SequentialRun', '1' )
+
+Go

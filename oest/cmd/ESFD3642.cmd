@@ -1,0 +1,2821 @@
+#!/bin/ksh
+#============================================================================================
+# APPLICATION NAME                  : ACF/PCA: RATIO CALCULATION
+# JOB NAME                          : ESFD3642.cmd
+# REVISION                          : 1
+# CREATION DATE                     : 12/08/2021
+# AUTHOR                            : L.ELFAHIM
+#============================================================================================
+#--------------------------------------------------------------------------------------------
+# DESCRIPTION - SPIRA 97373 - ACF/PCA: RATIO CALCULATION :
+#--------------------------------------------------------------------------------------------
+# CHANGES HISTORY :
+#============================================================================================
+#   09/08/2021      LEL     97373       DEVELOPMENT OF INITIAL VERSION
+#	25/10/2021    	LEL   	98214		IFRS17 LOCAL- ACCRET_CF (R/RI) INCORRECT
+#	18/11/2021    	MiS   	99013		DAC Var Missing
+#[004] 10/01/2022 MZM  	SPIRA : 91532  	Bug Fix : Taille Syncsort de 1000 ==> 2000
+#[005] 25/01/2022 HR    SPIRA : 100977 I17 - Criteria to compute Revenue / EXP / CSM
+#[006] 26/01/2022 DaD   SPIRA : 100384 	Bug Fix : Contract LKI previous quarter in FWD position at current quarter
+#[007] 04/04/2022 : Spira:101057 Manual overwrite of IFRS 17 parameters - Impact on revenue and LO factor
+#[008] 22/04/2022 MZM : Spira:101057 Fix Bug Manual overwrite of IFRS 17 parameters - Impact on revenue and LO factor
+#[009] 27/04/2022 DAD     102857		fix bug change prev_CloDat to cloDat for DAC/FWD creation
+#[010] 11/05/2022 DAD     104149		first closing, use the assumed contract data for retro P
+#[011] 02/06/2022 HR      102733     REQ 11.02 - IFRS17 - No future maintenance expenses calculated at subsequent measurement
+#[012] 23/06/2022 HR      102519     IFRS17 revenue- Endorsement management
+#[013] 03/08/2022 JYP     106087     bugfix IN2 KO with DIP file (old spira 101057)
+#[014] 16/11/2022 HR      107772     IFRS17 ratio - format issue
+#[015] 29/11/2022 HR      107982     INT - Regression on I17
+#[016] 30/11/2022 HR      107585     Manual Adj - Earned / EGPI gross up independent from retro contract
+#============================================================================================
+#set -x
+
+# CALL GENERIC FUNCTIONS
+. ${DUTI}/fctgen.cmd
+#============================================================================================
+
+# Job Initialisation
+JOBINIT
+
+ECHO_LOG ""                                                                                  
+ECHO_LOG "#===================================================================="                           
+ECHO_LOG "#===> NORME.........................: ${NORME}" 
+ECHO_LOG "#===> TYPEINV.......................: ${TYPEINV}"                                
+ECHO_LOG "#===> TYPEINV0......................: ${TYPEINV0}"                                         
+ECHO_LOG "#===> NORME_CF......................: ${NORME_CF}"                                                       
+ECHO_LOG "#===> PARM_CRE_D....................: $PARM_CRE_D"
+ECHO_LOG "#===> PARM_ICLODAT_D................: $PARM_ICLODAT_D"
+ECHO_LOG "#===> PARM_PREV_ICLODAT_D...........: $PARM_PREV_ICLODAT_D"
+ECHO_LOG "#===> PARM_BLCSHTYEA_NF.............: $PARM_BLCSHTYEA_NF"
+ECHO_LOG "#....................... INPUT .................................." 
+ECHO_LOG "#===> EST_FCURQUOT..................: ${EST_FCURQUOT}"
+ECHO_LOG "#===> EST_FSSDACTR..................: ${EST_FSSDACTR}"
+ECHO_LOG "#===> EST_FPLACEMT22................: ${EST_FPLACEMT22}"                
+ECHO_LOG "#===> EST_IADPERICASE...............: ${EST_IADPERICASE}" 
+ECHO_LOG "#===> EST_IRDPERICASE...............: ${EST_IRDPERICASE}"         
+ECHO_LOG "#===> EST_DLCUMGTAAR_MVT............: ${EST_DLCUMGTAAR_MVT}"
+ECHO_LOG "#===> EST_DLCUMGTAAR_ITD............: ${EST_DLCUMGTAAR_ITD}" 
+ECHO_LOG "#===> ESF_GTSII_DAC_LKI_PREV........: ${ESF_GTSII_DAC_LKI_PREV}" 
+ECHO_LOG "#===> EST_DLCUMGTAAR_ITD_PREV.......: ${EST_DLCUMGTAAR_ITD_PREV}"
+ECHO_LOG "#===> ESF_CSM_LC_AMORT_PATTERN......: ${ESF_CSM_LC_AMORT_PATTERN}"
+ECHO_LOG "#===> ESF_CSM_LC_AMORT_PATTERN_PREV.: ${ESF_CSM_LC_AMORT_PATTERN_PREV}"                                                 
+ECHO_LOG "#....................... OUTPUT .................................." 
+ECHO_LOG "#===> ESF_RATIO_RET_P...............: ${ESF_RATIO_RET_P}"
+ECHO_LOG "#===> ESF_RATIO_RET_NP..............: ${ESF_RATIO_RET_NP}"
+ECHO_LOG "#===> ESF_RATIO_ASSUMED.............: ${ESF_RATIO_ASSUMED}"
+ECHO_LOG "#===> ESF_GTSII_DAC_LKI.............: ${ESF_GTSII_DAC_LKI}"
+ECHO_LOG "#===> ESF_GTSII_DAC_FWD.............: ${ESF_GTSII_DAC_FWD}"
+ECHO_LOG "#===> DIP_CSM_BU....................: ${DIP_CSM_BU}"
+ECHO_LOG "#===================================================================="
+
+if [  ! -f "${ESF_GTSII_DAC_LKI_PREV}"  ]
+then
+	ECHO_LOG "ESF_GTSII_DAC_LKI_PREV=${ESF_GTSII_DAC_LKI_PREV} does not exist, create an empty file"  
+	EXECKSH "touch ${ESF_GTSII_DAC_LKI_PREV}"	
+fi
+
+if [  ! -f "${EST_DLCUMGTAAR_ITD_PREV}"  ]
+then
+	ECHO_LOG "EST_DLCUMGTAAR_ITD_PREV=${EST_DLCUMGTAAR_ITD_PREV} does not exist, create an empty file"
+	EXECKSH "touch ${EST_DLCUMGTAAR_ITD_PREV}"	
+fi
+
+if [  ! -f "${ESF_CSM_LC_AMORT_PATTERN_PREV}"  ]
+then
+	ECHO_LOG "ESF_CSM_LC_AMORT_PATTERN_PREV=${ESF_CSM_LC_AMORT_PATTERN_PREV} does not exist, create an empty file"
+	EXECKSH "touch ${ESF_CSM_LC_AMORT_PATTERN_PREV}"	
+fi
+
+#==================================================================
+# 	 	ITD PREMIUM, UPR and QUATERLY FIXED CHARGES PREPARATION 
+#		for ASSUMED && RETRO CONTRACTS
+#==================================================================
+PARALLEL_INIT 3
+NSTEP=${NJOB}_10
+LIBEL="FILTER EST_DLCUMGTAAR_MVT : ITD PREM TRNCODs RETRO && ASSUMED CONTRACTS ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${EST_DLCUMGTAAR_MVT} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RETRO_ITDPREM.dat 2000 1"
+SORT_O1="${DFILT}/${NSTEP}_${IB}_ASSUMED_ITDPREM.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CLOSTYP_NF		17:1 	- 17:,
+	TYP_CT			49:1 	- 49:,
+	ACMTRSL3		52:1 	- 52:,
+	FILLER         	1:1  	- 77:	
+/CONDITION RITD_PREM  	TYP_CT = 'R' AND CLOSTYP_NF = 'I' AND 
+						(ACMTRSL3 = "1010" OR ACMTRSL3 = "2010" OR ACMTRSL3 = "2013" OR ACMTRSL3 = "2019")
+/CONDITION ITD_PREM  	TYP_CT = 'A' AND CLOSTYP_NF = 'I' AND 
+						(ACMTRSL3 = "1010" OR ACMTRSL3 = "2010" OR ACMTRSL3 = "2013" OR ACMTRSL3 = "2019")									
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE RITD_PREM
+/OUTFILE ${SORT_O1} OVERWRITE
+/INCLUDE ITD_PREM
+/COPY      
+exit
+EOF
+PARALLEL SORT
+
+NSTEP=${NJOB}_20
+LIBEL="FILTER EST_DLCUMGTAAR_ITD : EXTRACT UPR and DAC VARIABLES ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${EST_DLCUMGTAAR_ITD} 2000 1"
+SORT_O="${ESF_RETRO_UPR} 2000 1"
+SORT_O1="${DFILT}/${NSTEP}_${IB}_RETRO_DAC_VARIABLES.dat 2000 1"
+SORT_O2="${DFILT}/${NSTEP}_${IB}_ASSUMED_UPR_Q.dat 2000 1"
+SORT_O3="${DFILT}/${NSTEP}_${IB}_ASSUMED_DAC_VARIABLES.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	BALSHEY_NF      3:1 	- 3:EN,
+	BALSHRMTH_NF    4:1 	- 4:EN,
+	CTR_NF          8:1 	- 8:,
+	END_NT          9:1 	- 9:EN,
+	SEC_NF          10:1 	- 10:EN,
+	UWY_NF          11:1 	- 11:,
+	UW_NT           12:1 	- 12:EN,
+	CLOSTYP_NF		17:1 	- 17:,
+	TYP_CT			49:1 	- 49:,
+	ACMTRSL3		52:1 	- 52:,
+	TRNTYP_CT	53:1	- 53:EN,
+	FILLER         	1:1  	- 77:	
+/CONDITION RETRO_UPRQ 	TYP_CT = 'R' AND CLOSTYP_NF = 'I' AND ( ACMTRSL3 = "1030" OR ACMTRSL3 = "1020" )
+/CONDITION RETRO_DAC 	TYP_CT = 'R' AND ( ( ACMTRSL3 = "2031" AND TRNTYP_CT LT 100 ) OR ( ACMTRSL3 = "2032" AND TRNTYP_CT LT 100 ) OR ACMTRSL3 = "2035" )
+/CONDITION ASSUMED_UPRQ TYP_CT = 'A' AND CLOSTYP_NF = 'I' AND ( ACMTRSL3 = "1030" OR ACMTRSL3 = "1020" )
+/CONDITION ASSUMED_DAC 	TYP_CT = 'A' AND ( ( ACMTRSL3 = "2031" AND TRNTYP_CT LT 100 ) OR ( ACMTRSL3 = "2032" AND TRNTYP_CT LT 100 ) OR ACMTRSL3 = "2035" )
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE RETRO_UPRQ
+/OUTFILE ${SORT_O1} OVERWRITE
+/INCLUDE RETRO_DAC
+/OUTFILE ${SORT_O2} OVERWRITE
+/INCLUDE ASSUMED_UPRQ
+/OUTFILE ${SORT_O3} OVERWRITE
+/INCLUDE ASSUMED_DAC
+/COPY      
+exit
+EOF
+PARALLEL SORT
+
+NSTEP=${NJOB}_25
+LIBEL="FILTER EST_DLCUMGTAAR_ITD : EXTRACT UPR PREVIOUS ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${EST_DLCUMGTAAR_ITD_PREV} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RETRO_UPR_PREVQ.dat 2000 1"
+SORT_O1="${DFILT}/${NSTEP}_${IB}_ASSUMED_UPR_PREVQ.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	BALSHEY_NF      3:1 	- 3:EN,
+	BALSHRMTH_NF    4:1 	- 4:EN,
+	CTR_NF          8:1 	- 8:,
+	END_NT          9:1 	- 9:EN,
+	SEC_NF          10:1 	- 10:EN,
+	UWY_NF          11:1 	- 11:,
+	UW_NT           12:1 	- 12:EN,
+	CLOSTYP_NF		17:1 	- 17:,
+	TYP_CT			49:1 	- 49:,
+	ACMTRSL3		52:1 	- 52:,
+	FILLER         	1:1  	- 77:															
+/CONDITION RETRO_UPR_PREVQ 		TYP_CT = 'R' AND CLOSTYP_NF = 'I' AND ACMTRSL3 = "1030"
+/CONDITION ASSUMED_UPR_PREVQ 	TYP_CT = 'A' AND CLOSTYP_NF = 'I' AND ACMTRSL3 = "1030"
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE RETRO_UPR_PREVQ
+/OUTFILE ${SORT_O1} OVERWRITE
+/INCLUDE ASSUMED_UPR_PREVQ
+/COPY      
+exit
+EOF
+PARALLEL SORT
+PARALLEL_END
+
+#--------------------------
+#	SORT RETRO NP FILES 
+#--------------------------
+NSTEP=${NJOB}_30
+LIBEL="FILTER AND SORT RETRO RETRO_ITDPREM : EXTRACT ITD PREMIUM..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_10_${IB}_RETRO_ITDPREM.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_RETRO_NP_ITDPREM.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	RETCTR_NF 		24:1 	- 24:,
+	RETEND_NT 		25:1 	- 25:EN,
+	RETSEC_NF 		26:1 	- 26:EN,
+	RTY_NF 			27:1 	- 27:,
+	RETUW_NT 		28:1 	- 28:EN,
+	PLC_NT			36:1 	- 36:EN,
+	NAT_CF			48:1 	- 48:,
+	FILLER         	1:1  	- 77:		
+/KEYS          
+	RETCTR_NF,
+	RETEND_NT,
+	RETSEC_NF,
+	RTY_NF, 	
+	RETUW_NT, 
+	PLC_NT
+/CONDITION RET_NP_ITDPREM NAT_CF = "30" OR NAT_CF = "31" OR NAT_CF = "32" OR NAT_CF = "40" OR NAT_CF = "41" 
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE RET_NP_ITDPREM
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_35
+LIBEL="FILTER AND SORT RETRO_UPR_Q : EXTRACT NP RETRO UPR ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${ESF_RETRO_UPR} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_RETRO_NP_UPRQ.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	RETCTR_NF 		24:1 	- 24:,
+	RETEND_NT 		25:1 	- 25:EN,
+	RETSEC_NF 		26:1 	- 26:EN,
+	RTY_NF 			27:1 	- 27:,
+	RETUW_NT 		28:1 	- 28:EN,
+	PLC_NT			36:1 	- 36:EN,
+	NAT_CF			48:1 	- 48:,
+	FILLER         	1:1  	- 77:       
+/KEYS   
+	RETCTR_NF,
+	RETEND_NT,
+	RETSEC_NF,
+	RTY_NF, 	
+	RETUW_NT, 
+	PLC_NT
+/CONDITION RET_NP_UPR NAT_CF = "30" OR NAT_CF = "31" OR NAT_CF = "32" OR NAT_CF = "40" OR NAT_CF = "41" 
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE RET_NP_UPR
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_40
+LIBEL="FILTER AND SORT RUPR_PREVQ : EXTRACT RETRO NP UPR PREVIOUS..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_25_${IB}_RETRO_UPR_PREVQ.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_RETRO_NP_UPR_PREVQ.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	RETCTR_NF 		24:1 	- 24:,
+	RETEND_NT 		25:1 	- 25:EN,
+	RETSEC_NF 		26:1 	- 26:EN,
+	RTY_NF 			27:1 	- 27:,
+	RETUW_NT 		28:1 	- 28:EN,
+	PLC_NT			36:1 	- 36:EN,
+	NAT_CF			48:1 	- 48:,
+	FILLER         	1:1  	- 77:       
+/KEYS   
+	RETCTR_NF,
+	RETEND_NT,
+	RETSEC_NF,
+	RTY_NF, 	
+	RETUW_NT, 
+	PLC_NT
+/CONDITION RET_UPR_PREVQ NAT_CF = "30" OR NAT_CF = "31" OR NAT_CF = "32" OR NAT_CF = "40" OR NAT_CF = "41" 
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE RET_UPR_PREVQ
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+#-------------------------
+#	SORT RETRO P FILES 
+#-------------------------
+NSTEP=${NJOB}_45
+LIBEL="SORT ITD PREMIUM RETRO P..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_10_${IB}_RETRO_ITDPREM.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_RETRO_P_ITDPREM.dat"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF          8:1 	- 8:,
+	END_NT          9:1 	- 9:EN,
+	SEC_NF          10:1 	- 10:EN,
+	UWY_NF          11:1 	- 11:,
+	UW_NT           12:1 	- 12:EN,
+	RETCTR_NF 		24:1 	- 24:,
+	RETEND_NT 		25:1 	- 25:EN,
+	RETSEC_NF 		26:1 	- 26:EN,
+	RTY_NF 			27:1 	- 27:,
+	RETUW_NT 		28:1 	- 28:EN,
+	PLC_NT			36:1 	- 36:EN,
+	NAT_CF			48:1 	- 48:,
+	FILLER         	1:1  	- 77:		
+/KEYS
+	CTR_NF, 
+	END_NT, 
+	SEC_NF, 
+	UWY_NF, 
+	UW_NT,  
+	RETCTR_NF,
+	RETEND_NT,
+	RETSEC_NF,
+	RTY_NF, 	
+	RETUW_NT, 
+	PLC_NT
+/CONDITION RETP_ITDPREM NAT_CF = "10" OR NAT_CF = "11" OR NAT_CF = "12" OR NAT_CF = "20" OR
+						NAT_CF = "21" OR NAT_CF = "22" OR NAT_CF = "23"
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE RETP_ITDPREM
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_50
+LIBEL="SORT UPR Q RETRO P..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${ESF_RETRO_UPR} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_RETRO_P_UPRQ.dat"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF          8:1 	- 8:,
+	END_NT          9:1 	- 9:EN,
+	SEC_NF          10:1 	- 10:EN,
+	UWY_NF          11:1 	- 11:,
+	UW_NT           12:1 	- 12:EN,
+	RETCTR_NF 		24:1 	- 24:,
+	RETEND_NT 		25:1 	- 25:EN,
+	RETSEC_NF 		26:1 	- 26:EN,
+	RTY_NF 			27:1 	- 27:,
+	RETUW_NT 		28:1 	- 28:EN,
+	PLC_NT			36:1 	- 36:EN,
+	NAT_CF			48:1 	- 48:,
+	FILLER         	1:1  	- 77:		
+/KEYS
+	CTR_NF, 
+	END_NT, 
+	SEC_NF, 
+	UWY_NF, 
+	UW_NT,  
+	RETCTR_NF,
+	RETEND_NT,
+	RETSEC_NF,
+	RTY_NF, 	
+	RETUW_NT, 
+	PLC_NT
+/CONDITION RET_P_UPRQ 	NAT_CF = "10" OR NAT_CF = "11" OR NAT_CF = "12" OR NAT_CF = "20" OR
+						NAT_CF = "21" OR NAT_CF = "22" OR NAT_CF = "23" 
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE RET_P_UPRQ
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_55
+LIBEL="SORT UPR PREVQ RETRO P..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_25_${IB}_RETRO_UPR_PREVQ.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_RETRO_P_UPR_PREVQ.dat"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF          8:1 	- 8:,
+	END_NT          9:1 	- 9:EN,
+	SEC_NF          10:1 	- 10:EN,
+	UWY_NF          11:1 	- 11:,
+	UW_NT           12:1 	- 12:EN,
+	RETCTR_NF 		24:1 	- 24:,
+	RETEND_NT 		25:1 	- 25:EN,
+	RETSEC_NF 		26:1 	- 26:EN,
+	RTY_NF 			27:1 	- 27:,
+	RETUW_NT 		28:1 	- 28:EN,
+	PLC_NT			36:1 	- 36:EN,
+	NAT_CF			48:1 	- 48:,
+	FILLER         	1:1  	- 77:		
+/KEYS
+	CTR_NF, 
+	END_NT, 
+	SEC_NF, 
+	UWY_NF, 
+	UW_NT,  
+	RETCTR_NF,
+	RETEND_NT,
+	RETSEC_NF,
+	RTY_NF, 	
+	RETUW_NT, 
+	PLC_NT
+/CONDITION RETRO_UPR_PREVQ 	NAT_CF = "10" OR NAT_CF = "11" OR NAT_CF = "12" OR NAT_CF = "20" OR
+							NAT_CF = "21" OR NAT_CF = "22" OR NAT_CF = "23" 
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE RETRO_UPR_PREVQ
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+#------------------------
+#	SORT ASSUMED FILES 
+#------------------------
+NSTEP=${NJOB}_60
+LIBEL="SORT ASSUMED_ITDPREM ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_10_${IB}_ASSUMED_ITDPREM.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_ASSUMED_ITDPREM.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF          8:1 	- 8:,
+	END_NT          9:1 	- 9:EN,
+	SEC_NF          10:1 	- 10:EN,
+	UWY_NF          11:1 	- 11:,
+	UW_NT           12:1 	- 12:EN,
+	FILLER         	1:1  	- 77:		
+/KEYS          
+	CTR_NF,  
+	END_NT,  
+	SEC_NF,  
+	UWY_NF,  
+	UW_NT   
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_65
+LIBEL="SORT ASSUMED_UPR_Q ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_20_${IB}_ASSUMED_UPR_Q.dat 2000 1"
+SORT_O="${ESF_UPR} 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF          8:1 	- 8:,
+	END_NT          9:1 	- 9:EN,
+	SEC_NF          10:1 	- 10:EN,
+	UWY_NF          11:1 	- 11:,
+	UW_NT           12:1 	- 12:EN,
+	FILLER         	1:1  	- 77:		
+/KEYS          
+	CTR_NF,  
+	END_NT,  
+	SEC_NF,  
+	UWY_NF,  
+	UW_NT   
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_70
+LIBEL="SORT ASSUMED_UPR_PREVQ ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_25_${IB}_ASSUMED_UPR_PREVQ.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_ASSUMED_UPR_PREVQ.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF          8:1 	- 8:,
+	END_NT          9:1 	- 9:EN,
+	SEC_NF          10:1 	- 10:EN,
+	UWY_NF          11:1 	- 11:,
+	UW_NT           12:1 	- 12:EN,
+	FILLER         	1:1  	- 77:		
+/KEYS          
+	CTR_NF,  
+	END_NT,  
+	SEC_NF,  
+	UWY_NF,  
+	UW_NT    
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+#===================================================================
+#	DAC MANAGMENT : CREATION of BOTH FICTIFIOUS DSC/LKI & DSC/FWD	
+#	for GROUPING 2031 & 2032 & 2035 ASSUMED & RETRO				
+#===================================================================
+NSTEP=${NJOB}_80
+LIBEL="JOIN IADPERICASE AND ASSUMED DAC_VARIABLES FILE ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_20_${IB}_ASSUMED_DAC_VARIABLES.dat 2000 1 "
+SORT_O="${DFILT}/${NSTEP}_${IB}_JOINED_ASSUMED_DAC.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	GT_CTR_NF 		8:1 	- 8:,
+	GT_END_NT		9:1 	- 9:,
+	GT_SEC_NF 		10:1 	- 10:,
+	GT_UWY_NF 		11:1 	- 11:,
+	GT_UW_NT 		12:1 	- 12:,
+	CTR_NF   		3:1 	- 3:,
+	END_NT   		4:1 	- 4:,
+	SEC_NF  		5:1 	- 5:,
+	UWY_NF   		6:1 	- 6:,
+	UW_NT    		7:1 	- 7:,
+	PER_CTRRET_B	20:1	- 20:,
+	PER_EGPCUR_CF	23:1	- 23:,
+	FILLER			1:1		- 77:	
+/JOINKEYS
+	GT_CTR_NF,    
+	GT_END_NT,    
+	GT_SEC_NF,    
+	GT_UWY_NF,    
+	GT_UW_NT		
+/INFILE ${EST_IADPERICASE} 2000 1"~" 
+/JOINKEYS
+	CTR_NF,     
+	END_NT,     
+	SEC_NF,     
+	UWY_NF,     
+	UW_NT
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:PER_EGPCUR_CF,PER_CTRRET_B
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_85
+LIBEL="JOIN IRDPERICASE AND RETRO DAC_VARIABLES FILE ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_20_${IB}_RETRO_DAC_VARIABLES.dat 2000 1 "
+SORT_O="${DFILT}/${NSTEP}_${IB}_JOUNED_RETRO_DAC.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	RETCTR_NF 		24:1 	- 24:,
+	RETEND_NT 		25:1 	- 25:,
+	RETSEC_NF 		26:1 	- 26:,
+	RTY_NF 			27:1 	- 27:,
+	RETUW_NT 		28:1 	- 28:,
+	CTR_NF          3:1 	- 3:,
+	END_NT          4:1 	- 4:,
+	SEC_NF          5:1 	- 5:,
+	UWY_NF          6:1 	- 6:,
+	UW_NT           7:1 	- 7:,
+	PER_EGPCUR_CF	51:1	- 51:,
+	FILLER			1:1		- 77:
+/JOINKEYS
+	RETCTR_NF,    
+	RETEND_NT,    
+	RETSEC_NF,    
+	RTY_NF,    
+	RETUW_NT		
+/INFILE ${EST_IRDPERICASE} 2000 1"~" 
+/JOINKEYS
+	CTR_NF,     
+	END_NT,     
+	SEC_NF,     
+	UWY_NF,     
+	UW_NT
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:PER_EGPCUR_CF
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_86
+LIBEL="ENRICHMENT of RETRO DAC FILE by ESF_FPLACEMT2..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_85_${IB}_JOUNED_RETRO_DAC.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_JOINED_RETRO_DAC_PL.dat 2000 1"
+INPUT_TEXT $SORT_CMD <<EOF
+/FIELDS
+    RETCTR_NF 		24:1 	- 24:,
+	RETEND_NT 		25:1 	- 25:,
+	RETSEC_NF 		26:1 	- 26:,
+	RTY_NF 			27:1 	- 27:,
+	RETUW_NT 		28:1 	- 28:,
+	PLC_NT       	36:1    - 36:,
+    PL_CTR_NF       3:1     - 3:,
+    PL_END_NT       4:1     - 4:,
+    PL_SEC_NF       5:1     - 5:,
+    PL_UWY_NF       6:1     - 6:,
+    PL_UW_NT        7:1     - 7:,
+    PL_PLC_NT       8:1     - 8:,
+	PL_SSDRTO_B		16:1    - 16:,
+    FILLER          1:1     - 78:
+/JOINKEYS
+    RETCTR_NF,
+    RETEND_NT,
+    RETSEC_NF,
+    RTY_NF,
+    RETUW_NT,
+	PLC_NT
+/INFILE ${EST_FPLACEMT22} 2000 1 "~"
+/JOINKEYS
+    PL_CTR_NF,
+    PL_END_NT,
+    PL_SEC_NF,
+    PL_UWY_NF,
+    PL_UW_NT,
+	PL_PLC_NT
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+    LEFTSIDE:FILLER,
+    RIGHTSIDE:PL_SSDRTO_B
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_90
+LIBEL="MERGE ASSUMED AND RETRO NP DAC FILES ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_86_${IB}_JOINED_RETRO_DAC_PL.dat 2000 1"
+SORT_I2="${DFILT}/${NJOB}_80_${IB}_JOINED_ASSUMED_DAC.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_DAC_ASSUMED_RETRO.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF     	8:1 	- 8:,
+	END_NT     	9:1 	- 9:EN,
+	SEC_NF    	10:1 	- 10:EN,
+	UWY_NF     	11:1 	- 11:,
+	UW_NT       12:1 	- 12:EN,
+	RETCTR_NF 	24:1 	- 24:,
+	RETEND_NT 	25:1 	- 25:EN,
+	RETSEC_NF 	26:1 	- 26:EN,
+	RTY_NF 		27:1 	- 27:,
+	RETUW_NT 	28:1 	- 28:EN,
+	PLC_NT		36:1 	- 36:EN,
+	ACMTRS3		52:1 	- 52:,
+	FILLER      1:1  	- 79:	       	
+/KEYS   
+	CTR_NF,
+	END_NT,
+	SEC_NF,
+	UWY_NF,
+	UW_NT,
+	RETCTR_NF,	
+	RETEND_NT, 	
+	RETSEC_NF, 	
+	RTY_NF, 		
+	RETUW_NT, 	
+	PLC_NT,
+	ACMTRS3
+/OUTFILE ${SORT_O}
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+#------------------------------------------
+# 	Call C PROGRAM for DAC LKI CREATION 
+#------------------------------------------
+NSTEP=${NJOB}_100
+#LIBEL="DAC AT LOCK IN RATE FICTIFIOUS CREATION ..."
+PRG=ESFC3693
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+NORME_CF ${NORME_CF}
+ICLODAT_D ${PARM_ICLODAT_D}
+BLCSHTYEA_NF ${PARM_BLCSHTYEA_NF}
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1="${DFILT}/${NJOB}_90_${IB}_DAC_ASSUMED_RETRO.dat"
+export ${PRG}_I2="${EST_FCURQUOT}" 
+export ${PRG}_I3="${EST_FSSDACTR}"
+export ${PRG}_O1="${ESF_GTSII_DAC_LKI}"
+EXECPRG
+
+NSTEP=${NJOB}_105
+LIBEL="FILTER AND EXTRACT RETRO from ASSUMED DAC/LKI..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${ESF_GTSII_DAC_LKI} 2000 1"
+SORT_O="$DFILT/${NSTEP}_${IB}_DAC_LKI_ASSUMED.dat"
+SORT_O1="$DFILT/${NSTEP}_${IB}_DAC_LKI_RETRO.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	TRNCOD1_CF	6:1 	- 6:1,
+	CTR_NF     	8:1 	- 8:,
+	END_NT      9:1 	- 9:,
+	SEC_NF      10:1 	- 10:,
+	UWY_NF      11:1 	- 11:,
+	UW_NT       12:1 	- 12:,
+	RETCTR_NF	24:1 	- 24:,
+	NAT_CF		48:1 	- 48:,
+	TYP_CT		49:1 	- 49:,
+	FILLER    	1:1  	- 124:
+/CONDITION COND_RETRO ( TRNCOD1_CF EQ "2" OR TYP_CT = 'R' )
+/CONDITION COND_ACCEPT ( TRNCOD1_CF EQ "1" OR TYP_CT = 'A' ) 
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE COND_ACCEPT
+/REFORMAT FILLER
+/OUTFILE ${SORT_O1} OVERWRITE
+/INCLUDE COND_RETRO
+/REFORMAT FILLER
+/COPY 
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_110
+LIBEL="JOIN DSC/LKI DAC ASSUMED FILE && ESF_TRERETFACCTR ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_105_${IB}_DAC_LKI_ASSUMED.dat 2000 1 "
+SORT_O="${DFILT}/${NSTEP}_${IB}_JOINED_DAC_LKI_ASSUMED.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	GT_CTR_NF 		8:1 	- 8:,
+	GT_END_NT		9:1 	- 9:,
+	GT_SEC_NF 		10:1 	- 10:,
+	GT_UWY_NF 		11:1 	- 11:,
+	GT_UW_NT 		12:1 	- 12:,
+	CTR_NF   		1:1 	- 1:,
+	END_NT   		2:1 	- 2:,
+	SEC_NF  		3:1 	- 3:,
+	UWY_NF   		4:1 	- 4:,
+	UW_NT    		5:1 	- 5:,
+	INI_STATUS		12:1 	- 12:,
+	FIRST_CLODAT_D	15:1 	- 15:,
+	FILLER			1:1		- 126:	
+/JOINKEYS
+	GT_CTR_NF,    
+	GT_END_NT,    
+	GT_SEC_NF,    
+	GT_UWY_NF,    
+	GT_UW_NT		
+/INFILE ${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3641_00_${IB}_TRERETFACCTR.dat 2000 1"~"   
+/JOINKEYS
+	CTR_NF,     
+	END_NT,     
+	SEC_NF,     
+	UWY_NF,     
+	UW_NT
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:INI_STATUS,FIRST_CLODAT_D
+exit
+EOF
+SORT
+
+# [010]
+NSTEP=${NJOB}_115
+LIBEL="DSC/LKI DAC RETRO FILE && ESF_TRERETFACCTR ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_105_${IB}_DAC_LKI_RETRO.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_JOINED_DAC_LKI_RETRO.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	GT_CTR_NF 		8:1 	- 8:,
+	GT_END_NT		9:1 	- 9:,
+	GT_SEC_NF 		10:1 	- 10:,
+	GT_UWY_NF 		11:1 	- 11:,
+	GT_UW_NT 		12:1 	- 12:,
+	RETCTR_NF 		24:1 	- 24:,
+	RETEND_NT 		25:1 	- 25:,
+	RETSEC_NF 		26:1 	- 26:,
+	RTY_NF 			27:1 	- 27:,
+	RETUW_NT 		28:1 	- 28:,
+	CTR_NF          1:1 	- 1:,
+	END_NT          2:1 	- 2:,
+	SEC_NF          3:1 	- 3:,
+	UWY_NF          4:1 	- 4:,
+	UW_NT           5:1 	- 5:,
+	INI_STATUS		12:1 	- 12:,
+	FIRST_CLODAT_D	15:1 	- 15:,
+	FILLER			1:1		- 126:	
+/JOINKEYS
+	GT_CTR_NF,    
+	GT_END_NT,    
+	GT_SEC_NF,    
+	GT_UWY_NF,
+	GT_UW_NT
+/INFILE ${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3641_00_${IB}_TRERETFACCTR.dat 2000 1 "~"
+/JOINKEYS
+	CTR_NF,     
+	END_NT,     
+	SEC_NF,     
+	UWY_NF,
+	UW_NT
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:INI_STATUS,FIRST_CLODAT_D
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_120
+LIBEL="SORT DSC/LKI DAC PREVIOUS PERIOD if Exist ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_110_${IB}_JOINED_DAC_LKI_ASSUMED.dat 2000 1"
+SORT_I2="${DFILT}/${NJOB}_115_${IB}_JOINED_DAC_LKI_RETRO.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_MERGE_ESCOMPTE_LKI.dat"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF     	8:1 	- 8:,
+	END_NT     	9:1 	- 9:EN,
+	SEC_NF    	10:1 	- 10:EN,
+	UWY_NF     	11:1 	- 11:,
+	UW_NT       12:1 	- 12:EN,
+	RETCTR_NF 	24:1 	- 24:,
+	RETEND_NT 	25:1 	- 25:EN,
+	RETSEC_NF 	26:1 	- 26:EN,
+	RTY_NF 		27:1 	- 27:,
+	RETUW_NT 	28:1 	- 28:EN,
+	PLC_NT		36:1 	- 36:EN,
+	ACMTRS3		124:1 	- 124:,
+	FILLER      1:1  	- 128:	       	
+/OUTFILE ${SORT_O}
+/REFORMAT FILLER
+/COPY
+exit
+EOF
+SORT
+
+# [006]
+NSTEP=${NJOB}_125A
+LIBEL="ENRICHMENT OF ESF_GTSII_DAC_LKI..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_120_${IB}_MERGE_ESCOMPTE_LKI.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_ENRICHED_ESCOMPTE_LKI.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF     		8:1 	- 8:,
+	END_NT     		9:1 	- 9:,
+	SEC_NF    		10:1 	- 10:,
+	UWY_NF     		11:1 	- 11:,
+	UW_NT       	12:1 	- 12:,
+	RETCTR_NF 		24:1 	- 24:,
+	RETEND_NT 		25:1 	- 25:,
+	RETSEC_NF 		26:1 	- 26:,
+	RTY_NF 			27:1 	- 27:,
+	RETUW_NT 		28:1 	- 28:,
+	PLC_NT			36:1 	- 36:,
+	ACMTRS3			124:1 	- 124:,
+	CML_CTR_NF     	8:1 	- 8:,
+	CML_END_NT     	9:1 	- 9:,
+	CML_SEC_NF    	10:1 	- 10:,
+	CML_UWY_NF     	11:1 	- 11:,
+	CML_UW_NT       12:1 	- 12:,
+	CML_RETCTR_NF 	24:1 	- 24:,
+	CML_RETEND_NT 	25:1 	- 25:,
+	CML_RETSEC_NF 	26:1 	- 26:,
+	CML_RTY_NF 		27:1 	- 27:,
+	CML_RETUW_NT 	28:1 	- 28:,
+	CML_PLC_NT		36:1 	- 36:,
+	CML_ACMAMT_MC	43:1 	- 43:,
+	CML_ACMTRS3		124:1 	- 124:,
+	FILLER			1:1		- 128:	
+/JOINKEYS
+	CTR_NF,     	
+	END_NT,     	
+	SEC_NF,    	
+	UWY_NF,     	
+	UW_NT,       
+	RETCTR_NF, 	
+	RETEND_NT, 	
+	RETSEC_NF, 	
+	RTY_NF, 		
+	RETUW_NT, 	
+	PLC_NT,		
+	ACMTRS3		
+/INFILE ${ESF_GTSII_DAC_LKI_PREV} 2000 1 "~"
+/JOINKEYS
+	CML_CTR_NF,     	
+	CML_END_NT,     	
+	CML_SEC_NF,    	
+	CML_UWY_NF,     	
+	CML_UW_NT,       
+	CML_RETCTR_NF, 	
+	CML_RETEND_NT, 	
+	CML_RETSEC_NF, 	
+	CML_RTY_NF,		
+	CML_RETUW_NT, 	
+	CML_PLC_NT,		
+	CML_ACMTRS3		
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT 
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:CML_ACMAMT_MC
+exit
+EOF
+SORT
+
+# [006]
+NSTEP=${NJOB}_125B
+LIBEL="ENRICHMENT OF ESF_GTSII_DAC_LKI... PREV"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_125A_${IB}_SORT_ENRICHED_ESCOMPTE_LKI.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_ENRICHED_ESCOMPTE_LKI_PREV.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF     		8:1 	- 8:,
+	END_NT     		9:1 	- 9:,
+	SEC_NF    		10:1 	- 10:,
+	UWY_NF     		11:1 	- 11:,
+	UW_NT       	12:1 	- 12:,
+	RETCTR_NF 		24:1 	- 24:,
+	RETEND_NT 		25:1 	- 25:,
+	RETSEC_NF 		26:1 	- 26:,
+	RTY_NF 			27:1 	- 27:,
+	RETUW_NT 		28:1 	- 28:,
+	PLC_NT			36:1 	- 36:,
+	ACMTRS3			124:1 	- 124:,
+	CML_CTR_NF     	8:1 	- 8:,
+	CML_END_NT     	9:1 	- 9:,
+	CML_SEC_NF    	10:1 	- 10:,
+	CML_UWY_NF     	11:1 	- 11:,
+	CML_UW_NT       12:1 	- 12:,
+	CML_RETCTR_NF 	24:1 	- 24:,
+	CML_RETEND_NT 	25:1 	- 25:,
+	CML_RETSEC_NF 	26:1 	- 26:,
+	CML_RTY_NF 		27:1 	- 27:,
+	CML_RETUW_NT 	28:1 	- 28:,
+	CML_PLC_NT		36:1 	- 36:,
+	CML_ACMAMT_MC	43:1 	- 43:,
+	CML_ACMTRS3		124:1 	- 124:,
+	FILLER			1:1		- 129:	
+/JOINKEYS
+	CTR_NF,     	
+	END_NT,     	
+	SEC_NF,    	
+	UWY_NF,     	
+	UW_NT,       
+	RETCTR_NF, 	
+	RETEND_NT, 	
+	RETSEC_NF, 	
+	RTY_NF, 		
+	RETUW_NT, 	
+	PLC_NT,		
+	ACMTRS3		
+/INFILE ${ESF_GTSII_DAC_LKI_PREV} 2000 1 "~"
+/JOINKEYS
+	CML_CTR_NF,     	
+	CML_END_NT,     	
+	CML_SEC_NF,    	
+	CML_UWY_NF,     	
+	CML_UW_NT,       
+	CML_RETCTR_NF, 	
+	CML_RETEND_NT, 	
+	CML_RETSEC_NF, 	
+	CML_RTY_NF,		
+	CML_RETUW_NT, 	
+	CML_PLC_NT,		
+	CML_ACMTRS3		
+/JOIN UNPAIRED RIGHTSIDE ONLY
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT 
+	RIGHTSIDE:FILLER
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_125C
+LIBEL="DSC/LKI PREV FILE && ESF_TRERETFACCTR ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_125B_${IB}_SORT_ENRICHED_ESCOMPTE_LKI_PREV.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_ENRICHED_ESCOMPTE_LKI_PREV.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	GT_CTR_NF 		8:1 	- 8:,
+	GT_END_NT		9:1 	- 9:,
+	GT_SEC_NF 		10:1 	- 10:,
+	GT_UWY_NF 		11:1 	- 11:,
+	GT_UW_NT 		12:1 	- 12:,
+	CTR_NF   		1:1 	- 1:,
+	END_NT   		2:1 	- 2:,
+	SEC_NF  		3:1 	- 3:,
+	UWY_NF   		4:1 	- 4:,
+	UW_NT    		5:1 	- 5:,
+	INI_STATUS		12:1 	- 12:,
+	FIRST_CLODAT_D	15:1 	- 15:,
+    ACMAMT_MC	    43:1 	- 43:,
+	FILLER			1:1		- 126:	
+/JOINKEYS
+	GT_CTR_NF,    
+	GT_END_NT,    
+	GT_SEC_NF,    
+	GT_UWY_NF,    
+	GT_UW_NT		
+/INFILE ${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3641_00_${IB}_TRERETFACCTR.dat 2000 1"~"   
+/JOINKEYS
+	CTR_NF,     
+	END_NT,     
+	SEC_NF,     
+	UWY_NF,     
+	UW_NT
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:INI_STATUS,FIRST_CLODAT_D,
+    LEFTSIDE:ACMAMT_MC
+exit
+EOF
+SORT
+
+# [006]
+NSTEP=${NJOB}_125
+LIBEL="MERGE ENRICHED DSC/LKI DAC PREVIOUS AND CURRENT"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_125A_${IB}_SORT_ENRICHED_ESCOMPTE_LKI.dat 2000 1"
+SORT_I2="${DFILT}/${NJOB}_125B_${IB}_SORT_ENRICHED_ESCOMPTE_LKI_PREV.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_ENRICHED_ESCOMPTE_LKI.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF     		8:1 	- 8:,
+	END_NT     		9:1 	- 9:,
+	SEC_NF    		10:1 	- 10:,
+	UWY_NF     		11:1 	- 11:,
+	UW_NT       	12:1 	- 12:,
+	RETCTR_NF 		24:1 	- 24:,
+	RETEND_NT 		25:1 	- 25:,
+	RETSEC_NF 		26:1 	- 26:,
+	RTY_NF 			27:1 	- 27:,
+	RETUW_NT 		28:1 	- 28:,
+	PLC_NT			36:1 	- 36:,
+	ACMTRS3			124:1 	- 124:
+/KEYS 
+    CTR_NF,
+	END_NT,
+	SEC_NF,
+	UWY_NF,
+	UW_NT,
+	RETCTR_NF,
+	RETEND_NT,
+	RETSEC_NF,
+	RTY_NF,
+	RETUW_NT,
+	PLC_NT,
+	ACMTRS3
+exit
+EOF
+SORT
+
+#[009]
+NSTEP=${NJOB}_130
+#LIBEL="DAC FORWARD FICTIFIOUS CREATION ..."
+PRG=ESFC3697
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+PREV_ICLODAT_D ${PARM_PREV_ICLODAT_D}
+ICLODAT_D ${PARM_ICLODAT_D}
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1="${DFILT}/${NJOB}_125_${IB}_SORT_ENRICHED_ESCOMPTE_LKI.dat"
+export ${PRG}_O1="${ESF_GTSII_DAC_FWD}"
+EXECPRG
+
+#---------------------------------------------------------------#
+#	Call following C programs for ACF/PCA: Ratio calculation	 		
+# 	ESFC3640 for ASSUMED										
+#	ESFC3641 for RETRO P																						
+#	ESFC3642 for RETRO NP										
+# 	For both Closing STD & TRANSITION							
+#---------------------------------------------------------------#
+if [ ${PARM_IS_TRN} = "YES" ]
+then
+#[011]
+NSTEP=${NJOB}_140
+LIBEL="ACF/PCA: RATIO CALCULATION ASSUMED for TRANSITION..."
+PRG=ESFC3640
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+CLODAT_D ${PARM_ICLODAT_D}
+BLCSHTYEA_NF ${PARM_BLCSHTYEA_NF}
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3641_35_${IB}_SORT_TRERETFACCTR_ASSUMED.dat
+export ${PRG}_I2=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3643_40_${IB}_SORT_CASHFLOW_ASSUMED_Q.dat
+export ${PRG}_I3=${DFILP}/empty.dat
+export ${PRG}_I4=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFT0005_20_${IB}_SORT_ASSUMED_ITD_TRANSITION.dat
+export ${PRG}_I5=${ESF_UPR}
+export ${PRG}_I6=${DFILP}/empty.dat
+export ${PRG}_I7=${EST_FCURQUOT}
+export ${PRG}_I8=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3643_100_${IB}_SORT_CASHFLOW_ASSUMED_INI.dat   
+export ${PRG}_O1=${DFILT}/${NSTEP}_${IB}_RATIO_ASSUMED.dat
+EXECPRG
+
+NSTEP=${NJOB}_150
+LIBEL="ACF/PCA: RATIO CALCULATION RETRO NP for TRANSITION..."
+PRG=ESFC3642
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+CLODAT_D ${PARM_ICLODAT_D}
+BLCSHTYEA_NF ${PARM_BLCSHTYEA_NF}
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3641_90_${IB}_SORT_TRERETFACCTR_RETRO_NP.dat
+export ${PRG}_I2=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3643_70_${IB}_SORT_CASHFLOW_RET_NP_Q.dat
+export ${PRG}_I3=${DFILP}/empty.dat
+export ${PRG}_I4=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFT0005_30_${IB}_SORT_RETNP_ITD_TRANSITION.dat
+export ${PRG}_I5=${DFILT}/${NJOB}_35_${IB}_SORT_RETRO_NP_UPRQ.dat
+export ${PRG}_I6=${DFILP}/empty.dat
+export ${PRG}_I7=${EST_FCURQUOT}
+export ${PRG}_I8=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3643_120_${IB}_SORT_CASHFLOW_RETRO_NP_INI.dat   
+export ${PRG}_O1=${DFILT}/${NSTEP}_${IB}_RATIO_RET_NP.dat
+EXECPRG
+
+NSTEP=${NJOB}_160
+LIBEL="ACF/PCA: RATIO CALCULATION RETRO P for TRANSITION..."
+PRG=ESFC3641
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+CLODAT_D ${PARM_ICLODAT_D}
+BLCSHTYEA_NF ${PARM_BLCSHTYEA_NF}
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3641_55_${IB}_SORT_TRERETFACCTR_RETRO_P.dat
+export ${PRG}_I2=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3643_60_${IB}_SORT_CASHFLOW_RET_P_Q.dat
+export ${PRG}_I3=${DFILP}/empty.dat
+export ${PRG}_I4=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFT0005_40_${IB}_SORT_RETP_ITD_TRANSITION.dat
+export ${PRG}_I5=${DFILT}/${NJOB}_50_${IB}_SORT_RETRO_P_UPRQ.dat
+export ${PRG}_I6=${DFILP}/empty.dat
+export ${PRG}_I7=${EST_FCURQUOT}
+export ${PRG}_I8=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3643_110_${IB}_SORT_CASHFLOW_RETRO_P_INI.dat   
+export ${PRG}_O1=${DFILT}/${NSTEP}_${IB}_RATIO_RET_P.dat
+EXECPRG
+else																							
+NSTEP=${NJOB}_140
+LIBEL="ACF/PCA: RATIO CALCULATION for ASSUMED..."
+PRG=ESFC3640
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+CLODAT_D ${PARM_ICLODAT_D}
+BLCSHTYEA_NF ${PARM_BLCSHTYEA_NF}
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3641_35_${IB}_SORT_TRERETFACCTR_ASSUMED.dat
+export ${PRG}_I2=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3643_40_${IB}_SORT_CASHFLOW_ASSUMED_Q.dat
+export ${PRG}_I3=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3643_50_${IB}_SORT_CASHFLOW_ASSUMED_PREVQ.dat
+export ${PRG}_I4=${DFILT}/${NJOB}_60_${IB}_SORT_ASSUMED_ITDPREM.dat
+export ${PRG}_I5=${ESF_UPR}
+export ${PRG}_I6=${DFILT}/${NJOB}_70_${IB}_SORT_ASSUMED_UPR_PREVQ.dat
+export ${PRG}_I7=${EST_FCURQUOT}
+export ${PRG}_I8=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3643_100_${IB}_SORT_CASHFLOW_ASSUMED_INI.dat   
+export ${PRG}_O1=${DFILT}/${NSTEP}_${IB}_RATIO_ASSUMED.dat  
+EXECPRG
+
+NSTEP=${NJOB}_150
+LIBEL="ACF/PCA: RATIO CALCULATION for RETRO NP..."
+PRG=ESFC3642
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+CLODAT_D ${PARM_ICLODAT_D}
+BLCSHTYEA_NF ${PARM_BLCSHTYEA_NF}
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3641_90_${IB}_SORT_TRERETFACCTR_RETRO_NP.dat
+export ${PRG}_I2=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3643_70_${IB}_SORT_CASHFLOW_RET_NP_Q.dat
+export ${PRG}_I3=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3643_90_${IB}_SORT_CASHFLOW_RET_NP_PREVQ.dat
+export ${PRG}_I4=${DFILT}/${NJOB}_30_${IB}_SORT_RETRO_NP_ITDPREM.dat
+export ${PRG}_I5=${DFILT}/${NJOB}_35_${IB}_SORT_RETRO_NP_UPRQ.dat
+export ${PRG}_I6=${DFILT}/${NJOB}_40_${IB}_SORT_RETRO_NP_UPR_PREVQ.dat
+export ${PRG}_I7=${EST_FCURQUOT}
+export ${PRG}_I8=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3643_120_${IB}_SORT_CASHFLOW_RETRO_NP_INI.dat   
+export ${PRG}_O1=${DFILT}/${NSTEP}_${IB}_RATIO_RET_NP.dat
+EXECPRG
+
+NSTEP=${NJOB}_160
+LIBEL="ACF/PCA: RATIO CALCULATION for RETRO P..."
+PRG=ESFC3641
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+CLODAT_D ${PARM_ICLODAT_D}
+BLCSHTYEA_NF ${PARM_BLCSHTYEA_NF}
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3641_55_${IB}_SORT_TRERETFACCTR_RETRO_P.dat
+export ${PRG}_I2=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3643_60_${IB}_SORT_CASHFLOW_RET_P_Q.dat
+export ${PRG}_I3=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3643_80_${IB}_SORT_CASHFLOW_RET_P_PREVQ.dat
+export ${PRG}_I4=${DFILT}/${NJOB}_45_${IB}_SORT_RETRO_P_ITDPREM.dat
+export ${PRG}_I5=${DFILT}/${NJOB}_50_${IB}_SORT_RETRO_P_UPRQ.dat
+export ${PRG}_I6=${DFILT}/${NJOB}_55_${IB}_SORT_RETRO_P_UPR_PREVQ.dat
+export ${PRG}_I7=${EST_FCURQUOT}
+export ${PRG}_I8=${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3643_110_${IB}_SORT_CASHFLOW_RETRO_P_INI.dat   
+export ${PRG}_O1=${DFILT}/${NSTEP}_${IB}_RATIO_RET_P.dat
+EXECPRG
+fi
+
+#--------------------------------------------------
+# 		CSM AMORTIZATION RATIO CALCULATION
+#--------------------------------------------------
+#[005] LC PATTERN
+NSTEP=${NJOB}_170
+LIBEL="JOIN ESF_CSM_LC_AMORT_PATTERN Q & Q-1..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${ESF_CSM_LC_AMORT_PATTERN} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_CSM_LC_AMORT_PATTERN_ENRICHED.dat "
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CSM_CTR_NF     	1:1 	- 1:,
+	CSM_SEC_NF      2:1 	- 2:,
+	CSM_UWY_NF      3:1 	- 3:,
+	CSM_UW_NT       4:1 	- 4:,
+	CTR_NF    	1:1 	- 1:,
+	SEC_NF     	2:1 	- 2:,
+	UWY_NF     	3:1 	- 3:,
+	UW_NT       	4:1 	- 4:,
+	FILLER		1:1	- 9:,
+        LC_PAT		7:1     - 7:,
+	CSM_PAT		8:1	- 8:
+/JOINKEYS
+	CSM_CTR_NF,  
+	CSM_SEC_NF,  
+	CSM_UWY_NF,  
+	CSM_UW_NT   
+/INFILE ${ESF_CSM_LC_AMORT_PATTERN_PREV} 2000 1 "~"
+/JOINKEYS
+	CTR_NF,     
+	SEC_NF,     
+	UWY_NF,     
+	UW_NT
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:CSM_PAT, LC_PAT
+exit
+EOF
+SORT
+
+#[005] LC PATTERN
+NSTEP=${NJOB}_180
+LIBEL="SPLIT RETRO ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="$DFILT/${NJOB}_170_${IB}_CSM_LC_AMORT_PATTERN_ENRICHED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_CSM_LC_AMORT_PAT_RETRO.dat"
+SORT_O1="${DFILT}/${NSTEP}_${IB}_CSM_LC_AMORT_PAT_ASSUMED.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	TYP_CT		5:1 	- 5:,
+	FILLER		1:1		- 11:
+/CONDITION RETRO TYP_CT CT 'R'
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE RETRO
+/OUTFILE ${SORT_O1} OVERWRITE
+/OMIT RETRO
+/COPY
+exit
+EOF
+SORT
+
+
+#[007] [008
+
+if [ "${DIP_CSM_BU}" != "" ] && [ -s "${DIP_CSM_BU}" ]
+then
+
+FILEFOUND=1
+
+NSTEP=${NJOB}_00A
+#------------------------------------------------------------------------------
+LIBEL=" Move file from FTP location to temporary location(DFILT)"
+EXECKSH "cp ${DIP_CSM_BU} ${DFILT}/${NSTEP}_${IB}_BU.dat"
+
+NSTEP=${NJOB}_00B
+#------------------------------------------------------------------------------
+LIBEL="Convert carriage-returns to Unix"
+EXECKSH "dos2unix ${DFILT}/${NJOB}_00A_${IB}_BU.dat"
+
+NSTEP=${NJOB}_00C
+#------------------------------------------------------------------------------
+LIBEL="Change sep and remove headers"
+awk -F "\t" 'OFS="~"  {if (NR != 1 ) print $1,$5,$2,$3,$4,$6,$10,$7,$8,$9,$11,$12,$13,$14,$15,$16,$17,$18}' ${DFILT}/${NJOB}_00A_${IB}_BU.dat > ${DFILT}/${NSTEP}_${IB}_BU_AWK.dat
+
+NSTEP=${NJOB}_00D
+# [015]
+# split mvt yearly / quarterly
+#-----------------------------------------------------------------------------
+LIBEL="SORT CPLIFEST_MVT"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_00C_${IB}_BU_AWK.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_BU_AWK_ASSUMED.dat 2000 1"
+SORT_O1="${DFILT}/${NSTEP}_${IB}_BU_AWK_RETRO_NP.dat 2000 1"
+SORT_O2="${DFILT}/${NSTEP}_${IB}_BU_AWK_RETRO_P.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS	CTR_NF   	1:1 - 1:,
+        RETCTR_NF       6:1 - 6:
+/CONDITION COND1 ( RETCTR_NF EQ "" )
+/CONDITION COND2 ( CTR_NF EQ "" )
+/CONDITION COND3 ( CTR_NF NE "" AND RETCTR_NF NE "")
+/OUTFILE ${SORT_O}
+/INCLUDE COND1
+/OUTFILE ${SORT_O1}
+/INCLUDE COND2
+/OUTFILE ${SORT_O2}
+/INCLUDE COND3
+exit
+EOF
+SORT
+
+fi
+
+NSTEP=${NJOB}_00
+#------------------------------------------------------------------------------
+LIBEL="Check if BU file exists at FTP location"
+if [ "${FILEFOUND}" = 1 ]
+then
+
+#[005] LC PATTERN
+NSTEP=${NJOB}_190
+LIBEL="JOIN CSM_LC_AMORT_PATTERN with RETRO NP RATIO file..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="$DFILT/${NJOB}_150_${IB}_RATIO_RET_NP.dat 2000 1"
+SORT_O="$DFILT/${NSTEP}_${IB}_RATIO_RET_NP.dat 2000 1"
+#SORT_O="${ESF_RATIO_RET_NP} 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	SEC_NF     		3:1 	- 3:,
+	UWY_NF     		4:1 	- 4:,
+	CSM_CTR_NF     	1:1 	- 1:,
+	CSM_SEC_NF      2:1 	- 2:,
+	CSM_UWY_NF      3:1 	- 3:,
+	FILLER			1:1		- 21:,
+	CSM_PAT			8:1		- 8:,
+	CSM_PAT_PREV	10:1	- 10:,
+	LC_PAT			7:1		- 7:,
+	LC_PAT_PREV	   11:1	    - 11:
+/JOINKEYS
+	CTR_NF,          
+	SEC_NF,     
+	UWY_NF    
+/INFILE $DFILT/${NJOB}_180_${IB}_CSM_LC_AMORT_PAT_RETRO.dat  2000 1 "~"
+/JOINKEYS
+	CSM_CTR_NF, 
+	CSM_SEC_NF, 
+	CSM_UWY_NF 
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:CSM_PAT,CSM_PAT_PREV,LC_PAT,LC_PAT_PREV
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_190A
+LIBEL="JOIN RATIO RET NP WITH BU FILE"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="$DFILT/${NJOB}_190_${IB}_RATIO_RET_NP.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_RET_NP.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+        CTR_NF           1:1     - 1:,
+        END_NT           2:1     - 2:,
+        SEC_NF           3:1     - 3:,
+        UWY_NF           4:1     - 4:,
+        UW_NT            5:1     - 5:,
+        FILLER1          1:1     - 9:,
+        FILLER2          10:1    - 25:,
+        RCTR_NF          6:1     - 6:,
+        REND_NT          7:1     - 7:,
+        RSEC_NF          8:1     - 8:,
+        RUWY_NF          9:1     - 9:,
+        RUW_NT           10:1     - 10:,
+        EGPI_R1	        15:1     - 15:,
+		EGPI_R2	        16:1     - 16:,
+		EARP_R1         17:1     - 17:
+/JOINKEYS
+        CTR_NF,
+		END_NT,
+        SEC_NF,
+        UWY_NF,
+        UW_NT
+/INFILE ${DFILT}/${NJOB}_00D_${IB}_BU_AWK_RETRO_NP.dat 2000 1 "~"
+/JOINKEYS
+        RCTR_NF,
+		REND_NT,
+        RSEC_NF,
+        RUWY_NF,
+        RUW_NT
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+        LEFTSIDE:FILLER1, RIGHTSIDE:EGPI_R1, EGPI_R2, EARP_R1, LEFTSIDE:FILLER2
+exit
+EOF
+SORT
+
+
+NSTEP=${NJOB}_190B
+LIBEL="Reformat RATIO RET NP"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="$DFILT/${NJOB}_190A_${IB}_RATIO_RET_NP.dat 2000 1"
+SORT_O="$DFILT/${NSTEP}_${IB}_RATIO_RET_NP_1.dat OVERWRITE 2000 1"
+SORT_O2="$DFILT/${NSTEP}_${IB}_RATIO_RET_NP_2.dat OVERWRITE 2000 1"
+SORT_O3="$DFILT/${NSTEP}_${IB}_RATIO_RET_NP_3.dat OVERWRITE 2000 1"
+SORT_O4="$DFILT/${NSTEP}_${IB}_RATIO_RET_NP_4.dat OVERWRITE 2000 1"
+SORT_O5="$DFILT/${NSTEP}_${IB}_RATIO_RET_NP_5.dat OVERWRITE 2000 1"
+SORT_O6="$DFILT/${NSTEP}_${IB}_RATIO_RET_NP_6.dat OVERWRITE 2000 1"
+SORT_O7="$DFILT/${NSTEP}_${IB}_RATIO_RET_NP_7.dat OVERWRITE 2000 1"
+SORT_O8="$DFILT/${NSTEP}_${IB}_RATIO_RET_NP_8.dat OVERWRITE 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+        CTR_NF           1:1     - 1:,
+        END_NT           2:1     - 2:,
+        SEC_NF           3:1     - 3:,
+        UWY_NF           4:1     - 4:,
+        UW_NT            5:1     - 5:,
+        EGPI_R1          7:1     - 7:,
+        EGPI_R2          8:1     - 8:,
+        EARP_R1          9:1     - 9:,
+        BUEGPI_R1       10:1     - 10:,
+        BUEGPI_R2       11:1     - 11:,
+        BUEARP_R1       12:1     - 12:,
+        FILLER1          1:1      - 6:,
+        FILLER2         13:1     - 28:
+/DERIVEDFIELD
+        COMMENT1 "EGPI_R1, EGPI_R2, EARP_R1"
+/DERIVEDFIELD
+        COMMENT2 "EGPI_R1, EGPI_R2"
+/DERIVEDFIELD
+        COMMENT3 "EGPI_R2, EARP_R1"
+/DERIVEDFIELD
+        COMMENT4 "EGPI_R1, EARP_R1"
+/DERIVEDFIELD
+        COMMENT5 "EGPI_R1"
+/DERIVEDFIELD
+        COMMENT6 "EGPI_R2"
+/DERIVEDFIELD
+        COMMENT7 "EARP_R1"
+/DERIVEDFIELD
+        COMMENT8 ""
+/KEYS
+        CTR_NF,
+        END_NT,
+        SEC_NF,
+        UWY_NF,
+        UW_NT
+/CONDITION BUPROVIDED1 ( BUEGPI_R1 != "" and BUEGPI_R2 != "" and BUEARP_R1 != "")
+/CONDITION BUPROVIDED2 ( BUEGPI_R1 != "" and BUEGPI_R2 != "" and BUEARP_R1 = "")
+/CONDITION BUPROVIDED3 ( BUEGPI_R1 = "" and BUEGPI_R2 != "" and BUEARP_R1 != "")
+/CONDITION BUPROVIDED4 ( BUEGPI_R1 != "" and BUEGPI_R2 = "" and BUEARP_R1 != "")
+/CONDITION BUPROVIDED5 ( BUEGPI_R1 != "" and BUEGPI_R2 = "" and BUEARP_R1 = "")
+/CONDITION BUPROVIDED6 ( BUEGPI_R1 = "" and BUEGPI_R2 != "" and BUEARP_R1 = "")
+/CONDITION BUPROVIDED7 ( BUEGPI_R1 = "" and BUEGPI_R2 = "" and BUEARP_R1 != "")
+/CONDITION BUPROVIDED8 ( BUEGPI_R1 = "" and BUEGPI_R2 = "" and BUEARP_R1 = "")
+/OUTFILE ${SORT_O}
+/REFORMAT FILLER1, BUEGPI_R1, BUEGPI_R2, BUEARP_R1, FILLER2
+/INCLUDE BUPROVIDED1
+/OUTFILE ${SORT_O2}
+/REFORMAT FILLER1, BUEGPI_R1, BUEGPI_R2, EARP_R1, FILLER2
+/INCLUDE BUPROVIDED2
+/OUTFILE ${SORT_O3}
+/REFORMAT FILLER1, EGPI_R1, BUEGPI_R2, BUEARP_R1, FILLER2
+/INCLUDE BUPROVIDED3
+/OUTFILE ${SORT_O4}
+/REFORMAT FILLER1, BUEGPI_R1, EGPI_R2, BUEARP_R1, FILLER2
+/INCLUDE BUPROVIDED4
+/OUTFILE ${SORT_O5}
+/REFORMAT FILLER1, BUEGPI_R1, EGPI_R2, EARP_R1, FILLER2
+/INCLUDE BUPROVIDED5
+/OUTFILE ${SORT_O6}
+/REFORMAT FILLER1, EGPI_R1, BUEGPI_R2, EARP_R1, FILLER2
+/INCLUDE BUPROVIDED6
+/OUTFILE ${SORT_O7}
+/REFORMAT FILLER1, EGPI_R1, EGPI_R2, BUEARP_R1, FILLER2
+/INCLUDE BUPROVIDED7
+/OUTFILE ${SORT_O8}
+/REFORMAT FILLER1, EGPI_R1, EGPI_R2, EARP_R1, FILLER2
+/INCLUDE BUPROVIDED8
+
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_195
+LIBEL="merge RATIO RET NP"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="$DFILT/${NJOB}_190B_${IB}_RATIO_RET_NP_1.dat 2000 1"
+SORT_I2="$DFILT/${NJOB}_190B_${IB}_RATIO_RET_NP_2.dat 2000 1"
+SORT_I3="$DFILT/${NJOB}_190B_${IB}_RATIO_RET_NP_3.dat 2000 1"
+SORT_I4="$DFILT/${NJOB}_190B_${IB}_RATIO_RET_NP_4.dat 2000 1"
+SORT_I5="$DFILT/${NJOB}_190B_${IB}_RATIO_RET_NP_5.dat 2000 1"
+SORT_I6="$DFILT/${NJOB}_190B_${IB}_RATIO_RET_NP_6.dat 2000 1"
+SORT_I7="$DFILT/${NJOB}_190B_${IB}_RATIO_RET_NP_7.dat 2000 1"
+SORT_I8="$DFILT/${NJOB}_190B_${IB}_RATIO_RET_NP_8.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_RET_NP.dat OVERWRITE 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+        CTR_NF           1:1     - 1:,
+        END_NT           2:1     - 2:,
+        SEC_NF           3:1     - 3:,
+        UWY_NF           4:1     - 4:,
+        UW_NT            5:1     - 5:
+/KEYS
+        CTR_NF,
+        END_NT,
+        SEC_NF,
+        UWY_NF,
+        UW_NT
+exit
+EOF
+SORT
+
+else
+
+#[005] LC PATTERN
+NSTEP=${NJOB}_195
+LIBEL="JOIN CSM_LC_AMORT_PATTERN with RETRO NP RATIO file..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="$DFILT/${NJOB}_150_${IB}_RATIO_RET_NP.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_RET_NP.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	SEC_NF     		3:1 	- 3:,
+	UWY_NF     		4:1 	- 4:,
+	CSM_CTR_NF     	1:1 	- 1:,
+	CSM_SEC_NF      2:1 	- 2:,
+	CSM_UWY_NF      3:1 	- 3:,
+	FILLER			1:1		- 21:,
+	CSM_PAT			8:1		- 8:,
+	CSM_PAT_PREV	10:1	- 10:,
+	LC_PAT			7:1		- 7:,
+	LC_PAT_PREV	   11:1	    - 11:
+/DERIVEDFIELD 
+        COMMENTVOID ""	
+/JOINKEYS
+	CTR_NF,          
+	SEC_NF,     
+	UWY_NF    
+/INFILE $DFILT/${NJOB}_180_${IB}_CSM_LC_AMORT_PAT_RETRO.dat  2000 1 "~"
+/JOINKEYS
+	CSM_CTR_NF, 
+	CSM_SEC_NF, 
+	CSM_UWY_NF 
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:CSM_PAT,CSM_PAT_PREV,LC_PAT,LC_PAT_PREV
+exit
+EOF
+SORT
+
+fi
+
+NSTEP=${NJOB}_00
+#------------------------------------------------------------------------------
+LIBEL="Check if BU file exists at FTP location"
+if [ "${FILEFOUND}" = 1 ]
+then
+
+#[005] LC PATTERN
+NSTEP=${NJOB}_200
+LIBEL="JOIN CSM_LC_AMORT_PATTERN with ASSUMED RATIO file..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="$DFILT/${NJOB}_140_${IB}_RATIO_ASSUMED.dat 2000 1"
+SORT_O="$DFILT/${NSTEP}_${IB}_RATIO_ASSUMED.dat 2000 1"
+#SORT_O="${ESF_RATIO_ASSUMED} 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	SEC_NF     		3:1 	- 3:,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:,
+	CSM_CTR_NF     	1:1 	- 1:,
+	CSM_SEC_NF      2:1 	- 2:,
+	CSM_UWY_NF      3:1 	- 3:,
+	CSM_UW_NT		4:1 	- 4:,
+	FILLER			1:1		- 20:,
+	CSM_PAT			8:1		- 8:,
+	CSM_PAT_PREV	10:1	- 10:,
+	LC_PAT			7:1		- 7:,
+	LC_PAT_PREV	   11:1	    - 11:
+/JOINKEYS
+	CTR_NF,          
+	SEC_NF,     
+	UWY_NF,
+	UW_NT	
+/INFILE $DFILT/${NJOB}_180_${IB}_CSM_LC_AMORT_PAT_ASSUMED.dat  2000 1 "~"
+/JOINKEYS
+	CSM_CTR_NF, 
+	CSM_SEC_NF, 
+	CSM_UWY_NF,
+	CSM_UW_NT 
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:CSM_PAT,CSM_PAT_PREV,LC_PAT,LC_PAT_PREV
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_200A
+LIBEL="JOIN RATIO ASSUMED WITH BU FILE"
+SORT_WDIR=${SORTWORK}S
+SORT_CMD=`CFTMP`
+SORT_I="$DFILT/${NJOB}_200_${IB}_RATIO_ASSUMED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_ASSUMED.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+        CTR_NF           1:1     - 1:,
+        END_NT           2:1     - 2:,
+        SEC_NF           3:1     - 3:,
+        UWY_NF           4:1     - 4:,
+        UW_NT            5:1     - 5:,
+        FILLER1          1:1     - 8:,
+        FILLER2          9:1     - 24:,
+        RCTR_NF         1:1      - 1:,
+        REND_NT         2:1      - 2:,
+        RSEC_NF         3:1      - 3:,
+        RUWY_NF         4:1      - 4:,
+        RUW_NT          5:1      - 5:,
+        EGPI_R1	       15:1      - 15:,
+		EGPI_R2	       16:1      - 16:,
+		EARP_R1        17:1      - 17:
+
+/JOINKEYS
+        CTR_NF,
+		END_NT,
+        SEC_NF,
+        UWY_NF,
+        UW_NT
+/INFILE ${DFILT}/${NJOB}_00D_${IB}_BU_AWK_ASSUMED.dat 2000 1 "~"
+/JOINKEYS
+        RCTR_NF,
+		REND_NT,
+        RSEC_NF,
+        RUWY_NF,
+        RUW_NT
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+        LEFTSIDE:FILLER1, RIGHTSIDE:EGPI_R1, EGPI_R2, EARP_R1, LEFTSIDE:FILLER2
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_200B
+LIBEL="Reformat RATIO ASSUMED"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="$DFILT/${NJOB}_200A_${IB}_RATIO_ASSUMED.dat 2000 1"
+SORT_O="$DFILT/${NSTEP}_${IB}_RATIO_ASSUMED_1.dat OVERWRITE 2000 1"
+SORT_O2="$DFILT/${NSTEP}_${IB}_RATIO_ASSUMED_2.dat OVERWRITE 2000 1"
+SORT_O3="$DFILT/${NSTEP}_${IB}_RATIO_ASSUMED_3.dat OVERWRITE 2000 1"
+SORT_O4="$DFILT/${NSTEP}_${IB}_RATIO_ASSUMED_4.dat OVERWRITE 2000 1"
+SORT_O5="$DFILT/${NSTEP}_${IB}_RATIO_ASSUMED_5.dat OVERWRITE 2000 1"
+SORT_O6="$DFILT/${NSTEP}_${IB}_RATIO_ASSUMED_6.dat OVERWRITE 2000 1"
+SORT_O7="$DFILT/${NSTEP}_${IB}_RATIO_ASSUMED_7.dat OVERWRITE 2000 1"
+SORT_O8="$DFILT/${NSTEP}_${IB}_RATIO_ASSUMED_8.dat OVERWRITE 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+        CTR_NF           1:1     - 1:,
+        END_NT           2:1     - 2:,
+        SEC_NF           3:1     - 3:,
+        UWY_NF           4:1     - 4:,
+        UW_NT            5:1     - 5:,
+        EGPI_R1          6:1     - 6:,
+        EGPI_R2          7:1     - 7:,
+        EARP_R1          8:1     - 8:,
+        BUEGPI_R1        9:1     - 9:,
+        BUEGPI_R2       10:1     - 10:,
+        BUEARP_R1       11:1     - 11:,
+		FILLER1          1:1      - 5:,
+        FILLER2         12:1     - 27:
+/DERIVEDFIELD
+        COMMENT1 "EGPI_R1, EGPI_R2, EARP_R1"
+/DERIVEDFIELD
+        COMMENT2 "EGPI_R1, EGPI_R2"
+/DERIVEDFIELD
+        COMMENT3 "EGPI_R2, EARP_R1"
+/DERIVEDFIELD
+        COMMENT4 "EGPI_R1, EARP_R1"
+/DERIVEDFIELD
+        COMMENT5 "EGPI_R1"
+/DERIVEDFIELD
+        COMMENT6 "EGPI_R2"
+/DERIVEDFIELD
+        COMMENT7 "EARP_R1"
+/DERIVEDFIELD
+        COMMENT8 ""
+/KEYS
+        CTR_NF,
+        END_NT,
+        SEC_NF,
+        UWY_NF,
+        UW_NT
+/CONDITION BUPROVIDED1 ( BUEGPI_R1 != "" and BUEGPI_R2 != "" and BUEARP_R1 != "")
+/CONDITION BUPROVIDED2 ( BUEGPI_R1 != "" and BUEGPI_R2 != "" and BUEARP_R1 = "")
+/CONDITION BUPROVIDED3 ( BUEGPI_R1 = "" and BUEGPI_R2 != "" and BUEARP_R1 != "")
+/CONDITION BUPROVIDED4 ( BUEGPI_R1 != "" and BUEGPI_R2 = "" and BUEARP_R1 != "")
+/CONDITION BUPROVIDED5 ( BUEGPI_R1 != "" and BUEGPI_R2 = "" and BUEARP_R1 = "")
+/CONDITION BUPROVIDED6 ( BUEGPI_R1 = "" and BUEGPI_R2 != "" and BUEARP_R1 = "")
+/CONDITION BUPROVIDED7 ( BUEGPI_R1 = "" and BUEGPI_R2 = "" and BUEARP_R1 != "")
+/CONDITION BUPROVIDED8 ( BUEGPI_R1 = "" and BUEGPI_R2 = "" and BUEARP_R1 = "")
+/OUTFILE ${SORT_O}
+/REFORMAT FILLER1, BUEGPI_R1, BUEGPI_R2, BUEARP_R1, FILLER2
+/INCLUDE BUPROVIDED1
+/OUTFILE ${SORT_O2}
+/REFORMAT FILLER1, BUEGPI_R1, BUEGPI_R2, EARP_R1, FILLER2
+/INCLUDE BUPROVIDED2
+/OUTFILE ${SORT_O3}
+/REFORMAT FILLER1, EGPI_R1, BUEGPI_R2, BUEARP_R1, FILLER2
+/INCLUDE BUPROVIDED3
+/OUTFILE ${SORT_O4}
+/REFORMAT FILLER1, BUEGPI_R1, EGPI_R2, BUEARP_R1, FILLER2
+/INCLUDE BUPROVIDED4
+/OUTFILE ${SORT_O5}
+/REFORMAT FILLER1, BUEGPI_R1, EGPI_R2, EARP_R1, FILLER2
+/INCLUDE BUPROVIDED5
+/OUTFILE ${SORT_O6}
+/REFORMAT FILLER1, EGPI_R1, BUEGPI_R2, EARP_R1, FILLER2
+/INCLUDE BUPROVIDED6
+/OUTFILE ${SORT_O7}
+/REFORMAT FILLER1, EGPI_R1, EGPI_R2, BUEARP_R1, FILLER2
+/INCLUDE BUPROVIDED7
+/OUTFILE ${SORT_O8}
+/REFORMAT FILLER1, EGPI_R1, EGPI_R2, EARP_R1, FILLER2
+/INCLUDE BUPROVIDED8
+
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_205
+LIBEL="merge RATIO ASSUMED"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="$DFILT/${NJOB}_200B_${IB}_RATIO_ASSUMED_1.dat 2000 1"
+SORT_I2="$DFILT/${NJOB}_200B_${IB}_RATIO_ASSUMED_2.dat 2000 1"
+SORT_I3="$DFILT/${NJOB}_200B_${IB}_RATIO_ASSUMED_3.dat 2000 1"
+SORT_I4="$DFILT/${NJOB}_200B_${IB}_RATIO_ASSUMED_4.dat 2000 1"
+SORT_I5="$DFILT/${NJOB}_200B_${IB}_RATIO_ASSUMED_5.dat 2000 1"
+SORT_I6="$DFILT/${NJOB}_200B_${IB}_RATIO_ASSUMED_6.dat 2000 1"
+SORT_I7="$DFILT/${NJOB}_200B_${IB}_RATIO_ASSUMED_7.dat 2000 1"
+SORT_I8="$DFILT/${NJOB}_200B_${IB}_RATIO_ASSUMED_8.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_ASSUMED.dat OVERWRITE 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+        CTR_NF           1:1     - 1:,
+        END_NT           2:1     - 2:,
+        SEC_NF           3:1     - 3:,
+        UWY_NF           4:1     - 4:,
+        UW_NT            5:1     - 5:
+/KEYS
+        CTR_NF,
+        END_NT,
+        SEC_NF,
+        UWY_NF,
+        UW_NT
+exit
+EOF
+SORT
+
+else
+
+#[005] LC PATTERN
+NSTEP=${NJOB}_205
+LIBEL="JOIN CSM_LC_AMORT_PATTERN with ASSUMED RATIO file..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="$DFILT/${NJOB}_140_${IB}_RATIO_ASSUMED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_ASSUMED.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	SEC_NF     		3:1 	- 3:,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:,
+	CSM_CTR_NF     	1:1 	- 1:,
+	CSM_SEC_NF      2:1 	- 2:,
+	CSM_UWY_NF      3:1 	- 3:,
+	CSM_UW_NT		4:1 	- 4:,
+	FILLER			1:1		- 20:,
+	CSM_PAT			8:1		- 8:,
+	CSM_PAT_PREV	10:1	- 10:,
+	LC_PAT			7:1		- 7:,
+	LC_PAT_PREV	   11:1	    - 11:
+/DERIVEDFIELD 
+        COMMENTVOID ""	
+/JOINKEYS
+	CTR_NF,          
+	SEC_NF,     
+	UWY_NF,
+	UW_NT	
+/INFILE $DFILT/${NJOB}_180_${IB}_CSM_LC_AMORT_PAT_ASSUMED.dat  2000 1 "~"
+/JOINKEYS
+	CSM_CTR_NF, 
+	CSM_SEC_NF, 
+	CSM_UWY_NF,
+	CSM_UW_NT 
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:CSM_PAT,CSM_PAT_PREV,LC_PAT,LC_PAT_PREV
+exit
+EOF
+SORT
+
+fi
+
+NSTEP=${NJOB}_00
+#------------------------------------------------------------------------------
+LIBEL="Check if BU file exists at FTP location"
+if [ "${FILEFOUND}" = 1 ]
+then
+
+#[005]
+NSTEP=${NJOB}_210
+LIBEL="JOIN CSM_LC_AMORT_PATTERN with RETRO P RATIO file..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_160_${IB}_RATIO_RET_P.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_RET_P.dat 2000 1"
+#SORT_O="${ESF_RATIO_RET_P} 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	SEC_NF     		3:1 	- 3:,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:,
+	CSM_CTR_NF     	1:1 	- 1:,
+	CSM_SEC_NF      2:1 	- 2:,
+	CSM_UWY_NF      3:1 	- 3:,
+	CSM_UW_NT		4:1 	- 4:,
+	FILLER			1:1		- 28:,
+	CSM_PAT			8:1		- 8:,
+	CSM_PAT_PREV	10:1	- 10:,
+	LC_PAT			7:1		- 7:,
+	LC_PAT_PREV	11:1	- 11:
+/JOINKEYS
+	CTR_NF,          
+	SEC_NF,     
+	UWY_NF,
+	UW_NT	
+/INFILE $DFILT/${NJOB}_180_${IB}_CSM_LC_AMORT_PAT_ASSUMED.dat  2000 1 "~"
+/JOINKEYS
+	CSM_CTR_NF, 
+	CSM_SEC_NF, 
+	CSM_UWY_NF,
+	CSM_UW_NT 
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:CSM_PAT,CSM_PAT_PREV,LC_PAT,LC_PAT_PREV
+	
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_210A
+LIBEL="JOIN RATIO RET P WITH BU FILE"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="$DFILT/${NJOB}_210_${IB}_RATIO_RET_P.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_RET_P.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+        CTR_NF           1:1     - 1:,
+        END_NT           2:1     - 2:,
+        SEC_NF           3:1     - 3:,
+        UWY_NF           4:1     - 4:,
+        UW_NT            5:1     - 5:,
+        RETCTR_NF        6:1     - 6:,
+        RETEND_NT        7:1     - 7:,
+        RETSEC_NF        8:1     - 8:,
+        RETRTY_NF        9:1     - 9:,
+        RETUW_NT        10:1     - 10:,
+        FILLER1          1:1     - 14:,
+        FILLER2         15:1     - 32:,
+        RCTR_NF         1:1      - 1:,
+        REND_NT         2:1      - 2:,
+        RSEC_NF         3:1      - 3:,
+        RUWY_NF         4:1      - 4:,
+        RUW_NT          5:1      - 5:,
+        RRETCTR_NF      6:1      - 6:,
+        RRETEND_NT      7:1      - 7:,
+        RRETSEC_NF      8:1      - 8:,
+        RRETRTY_NF      9:1      - 9:,
+        RRETUW_NT      10:1      - 10:,
+        EGPI_R1	       15:1      - 15:,
+		EGPI_R2	       16:1      - 16:,
+		EARP_R1        17:1      - 17:
+
+/JOINKEYS
+        CTR_NF,
+		END_NT,
+        SEC_NF,
+        UWY_NF,
+        UW_NT,
+        RETCTR_NF,
+		RETEND_NT,
+        RETSEC_NF,
+        RETRTY_NF,
+        RETUW_NT
+/INFILE ${DFILT}/${NJOB}_00D_${IB}_BU_AWK_RETRO_P.dat 2000 1 "~"
+/JOINKEYS
+        RCTR_NF,
+		REND_NT,
+        RSEC_NF,
+        RUWY_NF,
+        RUW_NT,
+        RRETCTR_NF,
+		RRETEND_NT,
+        RRETSEC_NF,
+        RRETRTY_NF,
+        RRETUW_NT
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+        LEFTSIDE:FILLER1, RIGHTSIDE:EGPI_R1, EGPI_R2, EARP_R1, LEFTSIDE:FILLER2
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_210B
+LIBEL="Reformat RATIO RET P"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="$DFILT/${NJOB}_210A_${IB}_RATIO_RET_P.dat 2000 1"
+SORT_O="$DFILT/${NSTEP}_${IB}_RATIO_RET_P_1.dat OVERWRITE 2000 1"
+SORT_O2="$DFILT/${NSTEP}_${IB}_RATIO_RET_P_2.dat OVERWRITE 2000 1"
+SORT_O3="$DFILT/${NSTEP}_${IB}_RATIO_RET_P_3.dat OVERWRITE 2000 1"
+SORT_O4="$DFILT/${NSTEP}_${IB}_RATIO_RET_P_4.dat OVERWRITE 2000 1"
+SORT_O5="$DFILT/${NSTEP}_${IB}_RATIO_RET_P_5.dat OVERWRITE 2000 1"
+SORT_O6="$DFILT/${NSTEP}_${IB}_RATIO_RET_P_6.dat OVERWRITE 2000 1"
+SORT_O7="$DFILT/${NSTEP}_${IB}_RATIO_RET_P_7.dat OVERWRITE 2000 1"
+SORT_O8="$DFILT/${NSTEP}_${IB}_RATIO_RET_P_8.dat OVERWRITE 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+        CTR_NF           1:1     - 1:,
+        END_NT           2:1     - 2:,
+        SEC_NF           3:1     - 3:,
+        UWY_NF           4:1     - 4:,
+        UW_NT            5:1     - 5:,
+        RETCTR_NF        6:1     - 6:,
+        RETEND_NT        7:1     - 7:,
+        RETSEC_NF        8:1     - 8:,
+        RETRTY_NF        9:1     - 9:,
+        RETUW_NT        10:1     - 10:,
+        EGPI_R1         12:1     - 12:,
+        EGPI_R2         13:1     - 13:,
+        EARP_R1         14:1     - 14:,
+        BUEGPI_R1       15:1     - 15:,
+        BUEGPI_R2       16:1     - 16:,
+        BUEARP_R1       17:1     - 17:,
+		FILLER1          1:1     - 11:,
+        FILLER2         18:1     - 35:
+/DERIVEDFIELD
+        COMMENT1 "EGPI_R1, EGPI_R2, EARP_R1"
+/DERIVEDFIELD
+        COMMENT2 "EGPI_R1, EGPI_R2"
+/DERIVEDFIELD
+        COMMENT3 "EGPI_R2, EARP_R1"
+/DERIVEDFIELD
+        COMMENT4 "EGPI_R1, EARP_R1"
+/DERIVEDFIELD
+        COMMENT5 "EGPI_R1"
+/DERIVEDFIELD
+        COMMENT6 "EGPI_R2"
+/DERIVEDFIELD
+        COMMENT7 "EARP_R1"
+/DERIVEDFIELD
+        COMMENT8 ""
+/KEYS
+        CTR_NF,
+        END_NT,
+        SEC_NF,
+        UWY_NF,
+        UW_NT,
+        RETCTR_NF,
+        RETEND_NT,
+        RETSEC_NF,
+        RETRTY_NF,
+        RETUW_NT
+/CONDITION BUPROVIDED1 ( BUEGPI_R1 != "" and BUEGPI_R2 != "" and BUEARP_R1 != "")
+/CONDITION BUPROVIDED2 ( BUEGPI_R1 != "" and BUEGPI_R2 != "" and BUEARP_R1 = "")
+/CONDITION BUPROVIDED3 ( BUEGPI_R1 = "" and BUEGPI_R2 != "" and BUEARP_R1 != "")
+/CONDITION BUPROVIDED4 ( BUEGPI_R1 != "" and BUEGPI_R2 = "" and BUEARP_R1 != "")
+/CONDITION BUPROVIDED5 ( BUEGPI_R1 != "" and BUEGPI_R2 = "" and BUEARP_R1 = "")
+/CONDITION BUPROVIDED6 ( BUEGPI_R1 = "" and BUEGPI_R2 != "" and BUEARP_R1 = "")
+/CONDITION BUPROVIDED7 ( BUEGPI_R1 = "" and BUEGPI_R2 = "" and BUEARP_R1 != "")
+/CONDITION BUPROVIDED8 ( BUEGPI_R1 = "" and BUEGPI_R2 = "" and BUEARP_R1 = "")
+/OUTFILE ${SORT_O}
+/REFORMAT FILLER1, BUEGPI_R1, BUEGPI_R2, BUEARP_R1, FILLER2
+/INCLUDE BUPROVIDED1
+/OUTFILE ${SORT_O2}
+/REFORMAT FILLER1, BUEGPI_R1, BUEGPI_R2, EARP_R1, FILLER2
+/INCLUDE BUPROVIDED2
+/OUTFILE ${SORT_O3}
+/REFORMAT FILLER1, EGPI_R1, BUEGPI_R2, BUEARP_R1, FILLER2
+/INCLUDE BUPROVIDED3
+/OUTFILE ${SORT_O4}
+/REFORMAT FILLER1, BUEGPI_R1, EGPI_R2, BUEARP_R1, FILLER2
+/INCLUDE BUPROVIDED4
+/OUTFILE ${SORT_O5}
+/REFORMAT FILLER1, BUEGPI_R1, EGPI_R2, EARP_R1, FILLER2
+/INCLUDE BUPROVIDED5
+/OUTFILE ${SORT_O6}
+/REFORMAT FILLER1, EGPI_R1, BUEGPI_R2, EARP_R1, FILLER2
+/INCLUDE BUPROVIDED6
+/OUTFILE ${SORT_O7}
+/REFORMAT FILLER1, EGPI_R1, EGPI_R2, BUEARP_R1, FILLER2
+/INCLUDE BUPROVIDED7
+/OUTFILE ${SORT_O8}
+/REFORMAT FILLER1, EGPI_R1, EGPI_R2, EARP_R1, FILLER2
+/INCLUDE BUPROVIDED8
+
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_215
+LIBEL="merge RATIO RET P"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="$DFILT/${NJOB}_210B_${IB}_RATIO_RET_P_1.dat 2000 1"
+SORT_I2="$DFILT/${NJOB}_210B_${IB}_RATIO_RET_P_2.dat 2000 1"
+SORT_I3="$DFILT/${NJOB}_210B_${IB}_RATIO_RET_P_3.dat 2000 1"
+SORT_I4="$DFILT/${NJOB}_210B_${IB}_RATIO_RET_P_4.dat 2000 1"
+SORT_I5="$DFILT/${NJOB}_210B_${IB}_RATIO_RET_P_5.dat 2000 1"
+SORT_I6="$DFILT/${NJOB}_210B_${IB}_RATIO_RET_P_6.dat 2000 1"
+SORT_I7="$DFILT/${NJOB}_210B_${IB}_RATIO_RET_P_7.dat 2000 1"
+SORT_I8="$DFILT/${NJOB}_210B_${IB}_RATIO_RET_P_8.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_RET_P.dat OVERWRITE 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+        CTR_NF           1:1     - 1:,
+        END_NT           2:1     - 2:,
+        SEC_NF           3:1     - 3:,
+        UWY_NF           4:1     - 4:,
+        UW_NT            5:1     - 5:,
+        RETCTR_NF        6:1     - 6:,
+        RETEND_NT        7:1     - 7:,
+        RETSEC_NF        8:1     - 8:,
+        RETRTY_NF        9:1     - 9:,
+        RETUW_NT        10:1     - 10:
+/KEYS
+        CTR_NF,
+        END_NT,
+        SEC_NF,
+        UWY_NF,
+        UW_NT,
+        RETCTR_NF,
+        RETEND_NT,
+        RETSEC_NF,
+        RETRTY_NF,
+        RETUW_NT
+exit
+EOF
+SORT
+
+else
+
+#[005]
+NSTEP=${NJOB}_215
+LIBEL="JOIN CSM_LC_AMORT_PATTERN with RETRO P RATIO file..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_160_${IB}_RATIO_RET_P.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_RET_P.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	SEC_NF     		3:1 	- 3:,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:,
+	CSM_CTR_NF     	1:1 	- 1:,
+	CSM_SEC_NF      2:1 	- 2:,
+	CSM_UWY_NF      3:1 	- 3:,
+	CSM_UW_NT		4:1 	- 4:,
+	FILLER			1:1		- 28:,
+	CSM_PAT			8:1		- 8:,
+	CSM_PAT_PREV   10:1	    - 10:,
+	LC_PAT			7:1		- 7:,
+	LC_PAT_PREV	   11:1	    - 11:
+/DERIVEDFIELD 
+        COMMENTVOID ""		
+/JOINKEYS
+	CTR_NF,          
+	SEC_NF,     
+	UWY_NF,
+	UW_NT	
+/INFILE $DFILT/${NJOB}_180_${IB}_CSM_LC_AMORT_PAT_ASSUMED.dat  2000 1 "~"
+/JOINKEYS
+	CSM_CTR_NF, 
+	CSM_SEC_NF, 
+	CSM_UWY_NF,
+	CSM_UW_NT 
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:CSM_PAT,CSM_PAT_PREV,LC_PAT,LC_PAT_PREV
+	
+exit
+EOF
+SORT
+
+fi
+
+
+NSTEP=${NJOB}_285
+LIBEL="SORT TRERETFACCTR RETRO NP PERIMETER ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3641_70_${IB}_TRERETFACCTR_RETRO_NP.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_TRERETFACCTR_RETRO_NP.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+        RETCTR_NF               1:1     - 1:,
+        RETEND_NT       2:1     - 2:EN,
+        RETSEC_NF               3:1     - 3:EN,
+        RTY_NF                  4:1     - 4:,
+        RETUW_NT                5:1     - 5:,
+        FILLER          1:1     - 32:
+/KEYS
+        RETCTR_NF,
+        RETEND_NT,
+        RETSEC_NF,
+        RTY_NF,
+        RETUW_NT
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+#012
+NSTEP=${NJOB}_290
+LIBEL="JOIN RET NP RATIO files..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_195_${IB}_RATIO_RET_NP.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_RET_NP.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	END_NT          2:1     - 2:,
+	SEC_NF     		3:1 	- 3:,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:,
+	RNP_CTR_NF     	1:1 	- 1:,
+	RNP_END_NT        2:1     - 2:,
+	RNP_SEC_NF        3:1 	- 3:,
+	RNP_UWY_NF        4:1 	- 4:,
+	RNP_UW_NT		    5:1 	- 5:,
+    GRPINISTS_CT    12:1    - 12:,
+    GRPFIRCLO_D     15:1    - 15:,
+	FILLER			1:1		- 25:
+/JOINKEYS
+	CTR_NF,
+    END_NT,	
+	SEC_NF,     
+	UWY_NF,
+	UW_NT
+/INFILE ${DFILT}/${NJOB}_285_${IB}_SORT_TRERETFACCTR_RETRO_NP.dat  2000 1 "~"
+/JOINKEYS
+	RNP_CTR_NF,
+    RNP_END_NT,	
+	RNP_SEC_NF, 
+	RNP_UWY_NF,
+	RNP_UW_NT
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:GRPINISTS_CT,GRPFIRCLO_D
+
+exit
+EOF
+SORT
+
+#012
+NSTEP=${NJOB}_300A
+LIBEL="SORT RETRO NP RATIO files..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_290_${IB}_RATIO_RET_NP.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_RET_NP.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	SEC_NF     		3:1 	- 3:EN,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:EN,
+	PLC_NT          6:1     - 6:EN,
+        FILLER          1:1     - 27:
+/KEYS
+	CTR_NF,          
+	SEC_NF,     
+	UWY_NF,
+	UW_NT,
+        PLC_NT	
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER	
+exit
+EOF
+SORT
+
+#[012]
+NSTEP=${NJOB}_300B
+LIBEL="ACF/PCA: RATIO CALCULATION RETRO NP for TRANSITION..."
+PRG=ESFC3642B
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+CLODAT_D ${PARM_ICLODAT_D}
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1=${DFILT}/${NJOB}_300A_${IB}_RATIO_RET_NP.dat
+export ${PRG}_O1=${DFILT}/${NSTEP}_${IB}_RATIO_RET_NP.dat
+EXECPRG
+
+#012
+NSTEP=${NJOB}_300C
+LIBEL="JOIN RETRO NP RATIO files..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_300A_${IB}_RATIO_RET_NP.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_RET_NP.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	SEC_NF     		3:1 	- 3:,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:,
+	EGPI_R1         7:1     - 7:,
+	EGPI_R2         8:1     - 8:,
+	EARP_R1         9:1     - 9:,
+	RNP_CTR_NF     	1:1 	- 1:,
+	RNP_SEC_NF      3:1 	- 3:,
+	RNP_UWY_NF      4:1 	- 4:,
+	RNP_UW_NT		5:1 	- 5:,
+	RNP_EGPI_R1     7:1     - 7:,
+	RNP_EGPI_R2     8:1     - 8:,
+	RNP_EARP_R1     9:1     - 9:,
+	FILLER			1:1		- 25:
+/JOINKEYS
+	CTR_NF,          
+	SEC_NF,     
+	UWY_NF,
+	UW_NT	
+/INFILE $DFILT/${NJOB}_300B_${IB}_RATIO_RET_NP.dat  2000 1 "~"
+/JOINKEYS
+	RNP_CTR_NF, 
+	RNP_SEC_NF, 
+	RNP_UWY_NF,
+	RNP_UW_NT 
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:RNP_EGPI_R1,RNP_EGPI_R2,RNP_EARP_R1
+
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_300D
+LIBEL="REFORMAT ESF_RATIO_RET_NP ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_300C_${IB}_RATIO_RET_NP.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_RET_NP.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	FILLER1			    1:1     - 6:,
+	FILLER2            10:1     - 25:,
+	INI_EGPI_R1 	    7:1     - 7:,
+	INI_EGPI_R2         8:1     - 8:,
+	INI_EARP_R1         9:1     - 9:,
+	RNP_EGPI_R1 	    26:1    - 26:,
+	RNP_EGPI_R2         27:1    - 27:,
+	RNP_EARP_R1         28:1    - 28:
+/CONDITION CONDRNP_EGPI_R1 RNP_EGPI_R1 NE ""
+/CONDITION CONDRNP_EGPI_R2 RNP_EGPI_R2 NE ""
+/CONDITION CONDRNP_EARP_R1 RNP_EARP_R1 NE ""
+/DERIVEDFIELD EGPI_R1 if CONDRNP_EGPI_R1 then RNP_EGPI_R1 else INI_EGPI_R1
+/DERIVEDFIELD EGPI_R2 if CONDRNP_EGPI_R2 then RNP_EGPI_R2 else INI_EGPI_R2
+/DERIVEDFIELD EARP_R1 if CONDRNP_EARP_R1 then RNP_EARP_R1 else INI_EARP_R1
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT 
+	FILLER1,
+	EGPI_R1,
+	EGPI_R2,
+        EARP_R1,	
+	FILLER2
+/COPY 
+exit
+EOF
+SORT
+
+#012
+NSTEP=${NJOB}_300E
+LIBEL="SORT RETRO NP RATIO files..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_300D_${IB}_RATIO_RET_NP.dat 2000 1"
+SORT_O="${ESF_RATIO_RET_NP}"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	END_NT          2:1     - 2:EN,
+	SEC_NF     		3:1 	- 3:EN,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:EN,
+	FILLER          1:1     - 25:
+/KEYS
+	CTR_NF, 
+    END_NT,	
+	SEC_NF,     
+	UWY_NF,
+	UW_NT	
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER	
+exit
+EOF
+SORT
+
+#012
+NSTEP=${NJOB}_310
+LIBEL="JOIN ASSUMED RATIO files..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_205_${IB}_RATIO_ASSUMED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_ASSUMED.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	END_NT          2:1     - 2:,
+	SEC_NF     		3:1 	- 3:,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:,
+	A_CTR_NF     	1:1 	- 1:,
+	A_END_NT        2:1     - 2:,
+	A_SEC_NF        3:1 	- 3:,
+	A_UWY_NF        4:1 	- 4:,
+	A_UW_NT		    5:1 	- 5:,
+    GRPINISTS_CT    12:1    - 12:,
+    GRPFIRCLO_D     15:1    - 15:,
+	FILLER			1:1		- 24:
+/JOINKEYS
+	CTR_NF,
+    END_NT,	
+	SEC_NF,     
+	UWY_NF,
+	UW_NT	
+/INFILE ${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3641_35_${IB}_SORT_TRERETFACCTR_ASSUMED.dat  2000 1 "~"
+/JOINKEYS
+	A_CTR_NF, 
+	A_END_NT,
+	A_SEC_NF, 
+	A_UWY_NF,
+	A_UW_NT 
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:GRPINISTS_CT,GRPFIRCLO_D
+
+exit
+EOF
+SORT
+
+#012
+NSTEP=${NJOB}_320A
+LIBEL="SORT ASSUMED RATIO files..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_310_${IB}_RATIO_ASSUMED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_ASSUMED.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	SEC_NF     		3:1 	- 3:EN,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:EN,
+	FILLER          1:1     - 26:
+/KEYS
+	CTR_NF, 
+	SEC_NF,     
+	UWY_NF,
+	UW_NT	
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER	
+exit
+EOF
+SORT
+
+#[012]
+NSTEP=${NJOB}_320B
+LIBEL="ACF/PCA: RATIO CALCULATION ASSUMED for TRANSITION..."
+PRG=ESFC3640B
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+CLODAT_D ${PARM_ICLODAT_D}
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1=${DFILT}/${NJOB}_320A_${IB}_RATIO_ASSUMED.dat
+export ${PRG}_O1=${DFILT}/${NSTEP}_${IB}_RATIO_ASSUMED.dat
+EXECPRG
+
+#012
+NSTEP=${NJOB}_320C
+LIBEL="JOIN ASSUMED RATIO files..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_320A_${IB}_RATIO_ASSUMED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_ASSUMED.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	SEC_NF     		3:1 	- 3:,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:,
+	EGPI_R1         6:1     - 6:,
+	EGPI_R2         7:1     - 7:,
+	EARP_R1         8:1     - 8:,
+	A_CTR_NF     	1:1 	- 1:,
+	A_SEC_NF        3:1 	- 3:,
+	A_UWY_NF        4:1 	- 4:,
+	A_UW_NT		    5:1 	- 5:,
+	A_EGPI_R1       6:1     - 6:,
+	A_EGPI_R2       7:1     - 7:,
+	A_EARP_R1       8:1     - 8:,
+	FILLER			1:1		- 24:
+/JOINKEYS
+	CTR_NF,          
+	SEC_NF,     
+	UWY_NF,
+	UW_NT	
+/INFILE $DFILT/${NJOB}_320B_${IB}_RATIO_ASSUMED.dat  2000 1 "~"
+/JOINKEYS
+	A_CTR_NF, 
+	A_SEC_NF, 
+	A_UWY_NF,
+	A_UW_NT 
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:A_EGPI_R1,A_EGPI_R2,A_EARP_R1
+
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_320D
+LIBEL="REFORMAT ESF_RATIO_ASSUMED ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_320C_${IB}_RATIO_ASSUMED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_ASSUMED.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	FILLER1			    1:1     - 5:,
+	FILLER2             9:1     - 24:,
+	INI_EGPI_R1 	    6:1     - 6:,
+	INI_EGPI_R2         7:1     - 7:,
+	INI_EARP_R1         8:1     - 8:,
+	A_EGPI_R1 	        25:1    - 25:,
+	A_EGPI_R2           26:1    - 26:,
+	A_EARP_R1           27:1    - 27:
+/CONDITION CONDA_EGPI_R1 A_EGPI_R1 NE ""
+/CONDITION CONDA_EGPI_R2 A_EGPI_R2 NE ""
+/CONDITION CONDA_EARP_R1 A_EARP_R1 NE ""
+/DERIVEDFIELD EGPI_R1 if CONDA_EGPI_R1 then A_EGPI_R1 else INI_EGPI_R1
+/DERIVEDFIELD EGPI_R2 if CONDA_EGPI_R2 then A_EGPI_R2 else INI_EGPI_R2
+/DERIVEDFIELD EARP_R1 if CONDA_EARP_R1 then A_EARP_R1 else INI_EARP_R1
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT 
+	FILLER1,
+	EGPI_R1,
+	EGPI_R2,
+        EARP_R1,	
+	FILLER2
+/COPY 
+exit
+EOF
+SORT
+
+#012
+NSTEP=${NJOB}_320E
+LIBEL="SORT ASSUMED RATIO files..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_320D_${IB}_RATIO_ASSUMED.dat 2000 1"
+SORT_O="${ESF_RATIO_ASSUMED}"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	END_NT          2:1     - 2:EN,
+	SEC_NF     		3:1 	- 3:EN,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:EN,
+	FILLER          1:1     - 24:
+/KEYS
+	CTR_NF,
+    END_NT,	
+	SEC_NF,     
+	UWY_NF,
+	UW_NT	
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER	
+exit
+EOF
+SORT
+
+#012
+NSTEP=${NJOB}_330
+LIBEL="JOIN RETRO P RATIO files..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_215_${IB}_RATIO_RET_P.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_RET_P.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	END_NT          2:1     - 2:,
+	SEC_NF     		3:1 	- 3:,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:,
+	RETCTR_NF  		6:1 	- 6:,
+	RETEND_NT       7:1     - 7:,
+	RETSEC_NF     	 8:1 	- 8:,
+	RETUWY_NF     	 9:1 	- 9:,
+	RETUW_NT        10:1 	- 10:,
+	PLC		11:1    - 11:,
+        RP_CTR_NF     	1:1 	- 1:,
+        RP_END_NT       2:1     - 2:,
+	RP_SEC_NF        3:1 	- 3:,
+	RP_UWY_NF        4:1 	- 4:,
+	RP_UW_NT		    5:1 	- 5:,
+    GRPINISTS_CT    12:1    - 12:,
+    GRPFIRCLO_D     15:1    - 15:,
+	RP_RETCTR_NF     27:1 	- 27:,
+	RP_RETEND_NT     28:1    - 28:,
+	RP_RETSEC_NF     	29:1 	- 29:,
+	RP_RETUWY_NF     	30:1 	- 30:,
+	RP_RETUW_NT        31:1 	- 31:,
+        RP_PLC             33:1         - 33:,
+	FILLER			1:1		- 32:
+/JOINKEYS
+	CTR_NF,          
+	END_NT,
+	SEC_NF,     
+	UWY_NF,
+	UW_NT,
+	RETCTR_NF,          
+	RETEND_NT,
+	RETSEC_NF,     
+	RETUWY_NF,
+	RETUW_NT,
+        PLC
+/INFILE ${DFILT}/${ENV_PREFIX}_ESFD3640_ESFD3641_55_${IB}_SORT_TRERETFACCTR_RETRO_P.dat  2000 1 "~"
+/JOINKEYS
+	RP_CTR_NF,
+    RP_END_NT,	
+	RP_SEC_NF, 
+	RP_UWY_NF,
+	RP_UW_NT, 
+	RP_RETCTR_NF,
+    RP_RETEND_NT,	
+	RP_RETSEC_NF, 
+	RP_RETUWY_NF,
+	RP_RETUW_NT,
+        RP_PLC 
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:GRPINISTS_CT,GRPFIRCLO_D
+
+exit
+EOF
+SORT
+
+#012
+NSTEP=${NJOB}_340A
+LIBEL="SORT RETRO P RATIO files..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_330_${IB}_RATIO_RET_P.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_RET_P.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	SEC_NF     		3:1 	- 3:EN,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:EN,
+	RETCTR_NF  		 6:1 	- 6:,
+	RETSEC_NF     	 8:1 	- 8:EN,
+	RETUWY_NF     	 9:1 	- 9:,
+	RETUW_NT        10:1 	- 10:EN,
+	FILLER          1:1     - 34:
+/KEYS
+	CTR_NF,
+	SEC_NF,     
+	UWY_NF,
+	UW_NT,
+    RETCTR_NF,
+	RETSEC_NF,
+	RETUWY_NF,
+	RETUW_NT
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER	
+exit
+EOF
+SORT
+
+#[012]
+NSTEP=${NJOB}_340B
+LIBEL="ACF/PCA: RATIO CALCULATION RETRO P for TRANSITION..."
+PRG=ESFC3641B
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+CLODAT_D ${PARM_ICLODAT_D}
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1=${DFILT}/${NJOB}_340A_${IB}_RATIO_RET_P.dat
+export ${PRG}_O1=${DFILT}/${NSTEP}_${IB}_RATIO_RET_P.dat
+EXECPRG
+
+#012
+NSTEP=${NJOB}_340C
+LIBEL="JOIN RETRO P RATIO files..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_340A_${IB}_RATIO_RET_P.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_RET_P.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	SEC_NF     		3:1 	- 3:,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:,
+	RETCTR_NF  		 6:1 	- 6:,
+	RETSEC_NF     	 8:1 	- 8:,
+	RETUWY_NF     	 9:1 	- 9:,
+	RETUW_NT        10:1 	- 10:,
+	EGPI_R1         12:1    - 12:,
+	EGPI_R2         13:1    - 13:,
+	EARP_R1         14:1    - 14:,
+	RP_CTR_NF     	1:1 	- 1:,
+	RP_SEC_NF       3:1 	- 3:,
+	RP_UWY_NF       4:1 	- 4:,
+	RP_UW_NT		5:1 	- 5:,
+	RP_RETCTR_NF	6:1 	- 6:,
+	RP_RETSEC_NF   	8:1 	- 8:,
+	RP_RETUWY_NF   	9:1 	- 9:,
+	RP_RETUW_NT    10:1 	- 10:,
+	RP_EGPI_R1     12:1     - 12:,
+	RP_EGPI_R2     13:1     - 13:,
+	RP_EARP_R1     14:1     - 14:,
+	FILLER			1:1		- 32:
+/JOINKEYS
+	CTR_NF,          
+	SEC_NF,     
+	UWY_NF,
+	UW_NT,	
+	RETCTR_NF,          
+	RETSEC_NF,     
+	RETUWY_NF,
+	RETUW_NT	
+/INFILE $DFILT/${NJOB}_340B_${IB}_RATIO_RET_P.dat  2000 1 "~"
+/JOINKEYS
+	RP_CTR_NF, 
+	RP_SEC_NF, 
+	RP_UWY_NF,
+	RP_UW_NT, 
+	RP_RETCTR_NF, 
+	RP_RETSEC_NF, 
+	RP_RETUWY_NF,
+	RP_RETUW_NT 
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:RP_EGPI_R1,RP_EGPI_R2,RP_EARP_R1
+
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_340D
+LIBEL="REFORMAT ESF_RATIO_RET_P ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_340C_${IB}_RATIO_RET_P.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_RATIO_RET_P.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	FILLER1		    1:1     - 11:,
+	FILLER2            15:1     - 32:,
+	INI_EGPI_R1 	   12:1     - 12:,
+	INI_EGPI_R2        13:1     - 13:,
+	INI_EARP_R1        14:1     - 14:,
+	RP_EGPI_R1 	    33:1    - 33:,
+	RP_EGPI_R2         34:1    - 34:,
+	RP_EARP_R1         35:1    - 35:
+/CONDITION CONDRP_EGPI_R1 RP_EGPI_R1 NE ""
+/CONDITION CONDRP_EGPI_R2 RP_EGPI_R2 NE ""
+/CONDITION CONDRP_EARP_R1 RP_EARP_R1 NE ""
+/DERIVEDFIELD EGPI_R1 if CONDRP_EGPI_R1 then RP_EGPI_R1 else INI_EGPI_R1
+/DERIVEDFIELD EGPI_R2 if CONDRP_EGPI_R2 then RP_EGPI_R2 else INI_EGPI_R2
+/DERIVEDFIELD EARP_R1 if CONDRP_EARP_R1 then RP_EARP_R1 else INI_EARP_R1
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT 
+	FILLER1,
+	EGPI_R1,
+	EGPI_R2,
+        EARP_R1,	
+	FILLER2
+/COPY 
+exit
+EOF
+SORT
+
+#012
+NSTEP=${NJOB}_340E
+LIBEL="SORT RETRO P RATIO files..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_340D_${IB}_RATIO_RET_P.dat 2000 1"
+SORT_O="${ESF_RATIO_RET_P}"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF    		1:1 	- 1:,
+	END_NT          2:1     - 2:EN,
+	SEC_NF     		3:1 	- 3:EN,
+	UWY_NF     		4:1 	- 4:,
+	UW_NT       	5:1 	- 5:EN,
+	RETCTR_NF  		6:1 	- 6:,
+	RETEND_NT       7:1     - 7:EN, 
+	RETSEC_NF     	8:1 	- 8:EN,
+	RETUWY_NF     	9:1 	- 9:,
+	RETUW_NT        10:1 	- 10:EN,
+	FILLER          1:1     - 32:
+/KEYS
+	CTR_NF,
+    END_NT,	
+	SEC_NF,     
+	UWY_NF,
+	UW_NT,
+    RETCTR_NF,
+	RETEND_NT,
+	RETSEC_NF,
+	RETUWY_NF,
+	RETUW_NT
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER	
+exit
+EOF
+SORT
+
+JOBEND

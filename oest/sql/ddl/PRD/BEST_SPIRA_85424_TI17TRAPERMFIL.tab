@@ -1,0 +1,41 @@
+use BEST
+go
+
+use BEST
+go
+
+/*==============================================================*/
+/* Table: TI17TRAPERMFIL                                        */
+/*==============================================================*/
+if not exists (select 1
+            from  sysobjects
+            where id = object_id('dbo.TI17TRAPERMFIL')
+            and   type = 'U')
+begin execute ("create table dbo.TI17TRAPERMFIL (
+   IDF_CT               varchar(30)                    not null,
+   PERMFIL_CT           varchar(50)                    not null,
+   PATHPATTRN_LL        varchar(128)                   null,
+   IO                   char(1)                        null,
+   PERM_LL              varchar(64)                    null,
+   constraint PK_TI17TRAPERMFIL primary key (IDF_CT, PERMFIL_CT)
+)
+")
+end
+go
+
+if not exists (select 1 
+            from  sysobjects c 
+            join  sysconstraints s on (s.constrid = c.id and s.tableid = object_id('dbo.TI17TRAPERMFIL'))
+            where name = 'FK_TI17TRAP_REF_FNCT__TI17FNC' and type = 'RI')
+alter table dbo.TI17TRAPERMFIL
+   add constraint FK_TI17TRAP_REF_FNCT__TI17FNC foreign key (IDF_CT)
+      references dbo.TI17FNC (IDF_CT)
+go
+
+
+
+GRANT ALL ON dbo.TI17TRAPERMFIL TO GOMEGA, GDBBATCH
+go
+GRANT SELECT ON dbo.TI17TRAPERMFIL TO GCONSULT
+GO
+

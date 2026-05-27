@@ -1,0 +1,101 @@
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDSII"
+EXTRT="Risk Adjustement SII"
+
+//------------------------------------------------------------------------------------//
+// Il est possible d'utiliser une varibale VAR dans la requete QRY (sql)              //
+// Si la variable "${VAR}" n'est pas declare ici ou dans le fichier de configuration  //
+// c'est la valeur dans le fichier {EST_PARAM} qui est utilise par defaut             //
+//------------------------------------------------------------------------------------//
+QRY="
+/*Risk adjustement sii */
+
+select CLOTYP_CT, norme_cf,  acmtrs_nt, patcat_ct, pattyp_ct, sum(acmamt_m) as 'ACMAMT', ssd_cf, cur_cf into #result 
+from bsar..${TTECLEDSII}
+where acmtrs_nt = 301
+and  norme_cf in ('I17G', 'I17P','I17L')
+and balshey_nf =${CONSOYEA}
+group by CLOTYP_CT, norme_cf, ssd_cf, cur_cf, acmtrs_nt, patcat_ct, pattyp_ct
+order by CLOTYP_CT, norme_cf, ssd_cf, acmtrs_nt, patcat_ct, pattyp_ct
+
+--select * from #result
+
+/*convertion all amounts in euro*/
+select a.CLOTYP_CT, a.norme_cf, a.ssd_cf, a.acmtrs_nt, a.patcat_ct, a.pattyp_ct, acmamt_eur=acmamt*exc_r into #result_convert_eur 
+from #result a , bref..tcurquot b
+where b.ssd_cf = a.ssd_cf and b.cur_cf = a.cur_cf
+and b.exc_d = '${INVCONSO_D}'
+
+--select * from #result_convert_eur 
+
+/* acmtrs label*/
+select c.CLOTYP_CT, c.norme_cf, c.ssd_cf, a.acmtrs_nt, a.acmtrs_gl , patcat_ct, pattyp_ct, ISNULL(convert(decimal(20,3), sum(acmamt_eur)),NULL) as acmamt_eur 
+from #result_convert_eur c, bref..TACMTRS a 
+where a.acmtrs_nt= c.acmtrs_nt
+and prs_cf =750
+group by c.CLOTYP_CT, c.norme_cf,c.ssd_cf, a.acmtrs_nt, a.acmtrs_gl ,patcat_ct, pattyp_ct
+order by c.CLOTYP_CT, c.norme_cf,c.ssd_cf, a.acmtrs_nt, a.acmtrs_gl ,patcat_ct, pattyp_ct
+
+drop table #result 
+drop table #result_convert_eur 
+"
+
+EOQ
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDA"
+EXTRT="Extract Risk Adjsutement In TTECLEDA"
+
+QRY="
+--Extract risk adjsutement in ttecleda
+
+select  'Initial RA Undiscounted ' Label, '42770' dettrncod_cf, ${CONSOYEA} balshey_nf into #tmpcod
+insert into #tmpcod values (  'Initial RA DSC' , '43610', ${CONSOYEA} )
+insert into #tmpcod values (  'Future RA Undiscounted' , '42780', ${CONSOYEA})
+insert into #tmpcod values (  'Incurred RA Undiscounted' , '42781', ${CONSOYEA})
+insert into #tmpcod values (  'Future RA DSC','42710',${CONSOYEA})
+insert into #tmpcod values (  'Incurred RA DSC', '42720', ${CONSOYEA})
+insert into #tmpcod values (  'Future RA OCI', '42730', ${CONSOYEA})
+insert into #tmpcod values (  'Incurred RA OCI', '42740', ${CONSOYEA})
+
+select 
+  b.Label, 
+  b.dettrncod_cf ,
+  a.ssd_cf, 
+  a.cur_cf,
+  a.trncod_cf,
+  a.balshey_nf,
+  ISNULL(sum(a.AMT_M),NULL) as 'AMT_M',
+  count (a.TRNCOD_CF) as 'NB_ROWS',
+  Case
+    WHEN substring(a.TRNCOD_CF, 8, 1)= 'I' THEN 'I17G'
+    WHEN substring(a.TRNCOD_CF, 8, 1)= 'K' THEN 'I17P'
+    WHEN substring(a.TRNCOD_CF, 8, 1)= 'M' THEN 'I17L'
+    else 'IFRS4'
+  END AS Norme_Label
+into #result
+from BSAR..${TTECLEDA} a, #tmpcod b
+where substring(a.TRNCOD_CF, 8, 1) in ('I', 'K', 'M')
+and   b.detTRNCOD_CF *= substring(a.TRNCOD_CF, 3, 5)
+and   b.balshey_nf   *= a.BALSHEY_NF
+group by b.Label, b.dettrncod_cf, a.ssd_cf, a.cur_cf, a.TRNCOD_CF, a.balshey_nf 
+order by  a.TRNCOD_CF, b.label
+
+
+--convertion des montants en euro
+select a.*,mt_eur=amt_m*exc_r into #result_convert_eur 
+from #result a , bref..tcurquot b
+where b.ssd_cf = a.ssd_cf and b.cur_cf = a.cur_cf
+and b.exc_d = '${INVCONSO_D}'
+
+-- select final 
+select distinct a.Label, a.Norme_Label, a.dettrncod_cf , a.trncod_cf,  ISNULL(convert(decimal(20,3), sum(mt_eur)),NULL) as 'mt_eur',sum(a.NB_ROWS) as nbr_rows
+from #result_convert_eur a
+group by a.Label, a.dettrncod_cf, a.trncod_cf, a.Norme_Label
+order by a.Label, a.dettrncod_cf, a.trncod_cf, a.Norme_Label
+
+drop table #tmpcod
+drop table #result
+drop table  #result_convert_eur 
+"

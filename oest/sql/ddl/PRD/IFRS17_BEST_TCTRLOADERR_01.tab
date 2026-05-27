@@ -1,0 +1,8 @@
+USE BEST
+GO
+
+print 'this file is no more required but as it is present in CSV hence nullifying it'
+go
+
+
+

@@ -1,0 +1,13 @@
+use BREF
+go
+
+/*==============================================================*/
+/* Table: TSUBTRS                                             */
+/*==============================================================*/
+
+EXEC sp_rename 'TSUBTRS.DACTYPE_B','DACVOBATYPE_CT','column'
+go
+ALTER TABLE dbo.TSUBTRS MODIFY DACVOBATYPE_CT tinyint
+go
+
+

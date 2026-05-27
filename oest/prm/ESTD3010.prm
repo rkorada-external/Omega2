@@ -1,0 +1,24 @@
+# Parameters List     SPOT EST16765
+
+#  03/12/2009  Roger Cassis      :spot:18415 -> Mise à jour commentaires parametres
+#  29/09/2015  Roger Cassis      :spot:29223 -> Mise à jour des commentaires des parametres
+
+# BLCSHT_D         Balance sheet date nouveau mois en cours
+# BALSHEY_NF       Balance sheet year du mois GTA
+# BALSHTMTH_NF     Balance sheet_month du mois GTA
+# QTRLIM_NF        mois du trimestre limite écoulé -> les traitements de postes avant/apres cette limite sont differents  SPOT 16765
+# ESTIM_B          0/1 -> si 1, on traite les postes Estimations
+# FORCEBILAN       Flag Force Bilan au 31/12/N-1 (1=Oui par D‰faut / 0= Bilan N preserve)
+# TRANSFESB        flag transfert etablissement (1=Oui / 0=Non par defaut)
+# GTRETRO          0/1 -> 0= sans retro / 1= avec retro
+# CREATION_GT      0/1 -> 0= le traitement ne cree pas de GT / 1= le traitement cree un GT
+
+BLCSHT_D 20160131
+BALSHEY_NF 2016
+BALSHTMTH_NF 1
+QTRLIM_NF 12
+ESTIM_B 0
+FORCEBILAN 1
+TRANSFESB 0
+GTRETRO 0
+CREATION_GT 1

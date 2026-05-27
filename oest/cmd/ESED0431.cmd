@@ -1,0 +1,131 @@
+#!/bin/ksh
+#==============================================================================
+#Application name              : ESTIMATION - Refonte Chargement de la Segmentation Actuarielle
+#Source name                   : ESED0431.cmd
+#revision                      : $Revision:   1.11  $
+#Date of creation              : 22/08/2004
+#author                        : M. DJELLOULI
+#references 		       : SPOT 10524
+#
+#------------------------------------------------------------------------------
+#description : UPDATE BSAR..TSEGEST From BEST..TSEGEST and BEST..TSEGMENT
+#------------------------------------------------------------------------------
+#Variables used :
+
+#-----------------------------------------------------------------------------
+#parameters :
+#
+#-----------------------------------------------------------------------------
+#historique des modifications :
+#[01] 09/05/2012 Florent :spot:23390 Solvency II
+#[02] 02/04/2014 Florent :spot:25427 Maj 1B, ordre des param่tres et SEG_NF contient les guillemets
+#[03] 01/06/2015 Florent :spot:28694 Segmentation VIE
+#=============================================================================
+#set -x
+
+# Call generic functions
+
+. ${DUTI}/fctgen.cmd
+NJOB="ESED0431"
+
+# Loading the daemon's parameters
+USR_CF=${1}
+CRE_D=${2}
+TYPMAJ=${3}
+SSD_CF=${4}
+VRS_NF=${5}
+SEG_NF=${6}
+UWY_NF=${7}
+CUR_CF=${8}
+SEGTYP_CT=${9}
+ACY_NF=${10}
+
+# Initialisation of the JOB
+JOBINIT
+
+#----------------------------------------------------------------------------
+# Connect on the infocenter server
+#----------------------------------------------------------------------------
+NSTEP=${NJOB}_10
+LIBEL="Switch to production server"
+SWITCH_SRV ${SRV_DEFAULT}
+
+NSTEP=${NJOB}_20
+# Bcp out
+#--------------------------------
+LIBEL="Transferring table BEST..TSEGEST et BEST..TSEGMENT into file"
+BCP_WAY="OUT"
+BCP_VER="+"
+BCP_QRY="exec BEST..PsSEGEST_03 ${VRS_NF}, ${SSD_CF}, '${SEGTYP_CT}', ${SEG_NF}, ${UWY_NF}, ${ACY_NF}"
+BCP_O=${DFILT}/${NSTEP}_${IB}_BCP_BEST_TSEGEST_O.dat
+BCP
+
+#----------------------------------------------------------------------------
+# Connect on the infocenter server
+#----------------------------------------------------------------------------
+NSTEP=${NJOB}_30
+LIBEL="Connect on the infocenter server"
+SWITCH_SRV ${SRV_2}
+
+#----------------------------------------------------------------------------
+# If there's one file with duplicate keys then exit
+#----------------------------------------------------------------------------
+if [ "$TYPMAJ" = "D" ]
+then
+NSTEP=${NJOB}_40
+LIBEL="Delete des Enregistrements de BSAR..TESEGEST sur Cl้"
+ISQL_BASE="BSAR"
+#เ voir pour supprimer dans tsegment si plus de lignes dans tsegest comme dans BEST..PiTSEGEST_02
+ISQL_QRY="delete BSAR..TSEGEST where SSD_CF=${SSD_CF} and SEGTYP_CT='${SEGTYP_CT}' and SEG_NF=${SEG_NF} and UWY_NF=${UWY_NF} and ACY_NF=${ACY_NF}"
+ISQL
+
+JOBEND
+fi
+
+NSTEP=${NJOB}_50
+LIBEL="Traitement Fichier dans BSAR..TSEGEST"
+# Lock on parameter file Rows generated in job ESID0063.cmd
+for lig in ` sed -e s'/ /จจจ/'g ${DFILT}/${NJOB}_20_${IB}_BCP_BEST_TSEGEST_O.dat | cat `
+do
+    set `echo $lig | sed -e s'/~/ /'g  `
+    export SEG_LL=`echo $1 | sed -e s'/จจจ/ /'g `
+    export SEGNAT_CT=`echo $2 | sed -e s'/จจจ/ /'g `
+    export CTRRET_B=`echo $3 | sed -e s'/จจจ/ /'g `
+    export PRMAMT_M=`echo $4 | sed -e s'/จจจ/ /'g `
+    export CLMAMT_M=`echo $5 | sed -e s'/จจจ/ /'g `
+    export LOSRAT_R=`echo $6 | sed -e s'/จจจ/ /'g `
+    export AMORAT_CT=`echo $7 | sed -e s'/จจจ/ /'g `
+
+ISQL_BASE="BSAR"
+ISQL_QRY="execute BSAR..PuTSEGEST_01 ${SSD_CF},'${SEGTYP_CT}',${SEG_NF},${UWY_NF},'${SEG_LL}', '${CUR_CF}', '${SEGNAT_CT}', ${CTRRET_B}, ${PRMAMT_M}, ${CLMAMT_M}, ${LOSRAT_R}, '${AMORAT_CT}', ${ACY_NF}"
+ISQL
+
+#NSTEP=${NJOB}_50
+#LIBEL="Traitement Fichier dans BSAR..TSEGEST"
+## Lock on parameter file Rows generated in job ESID0063.cmd
+#for lig in `cat ${DIBNR}/${NJOB}_20_${IB}_BCP_BEST_TSEGEST_O.dat`
+#do
+#
+## Setting the processing Date, the subsidiary and the establishment
+## Note : $TRT_D = $CLODATMAX_D !!!
+#
+#SSD_CF=`echo $lig | cut -d"~" -f1`
+#SEGTYP_CT=`echo $lig | cut -d"~" -f2`
+#SEG_NF=`echo $lig | cut -d"~" -f3`
+#UWY_NF=`echo $lig | cut -d"~" -f4`
+#SEG_LL=`echo $lig | cut -d"~" -f5`
+#CUR_CF=`echo $lig | cut -d"~" -f6`
+#SEGNAT_CT=`echo $lig | cut -d"~" -f7`
+#CTRRET_B=`echo $lig | cut -d"~" -f8`
+#PRMAMT_M=`echo $lig | cut -d"~" -f9`
+#CLMAMT_M=`echo $lig | cut -d"~" -f10`
+#LOSRAT_R=`echo $lig | cut -d"~" -f11`
+#AMORAT_CT=`echo $lig | cut -d"~" -f12`
+#
+#
+#NJOB="ESED0441"
+#. ${DCMD}/ESED0441.cmd ${SSD_CF} '${SEGTYP_CT}' ${SEG_NF} ${UWY_NF} '${SEG_LL}' '${CUR_CF}' '${SEGNAT_CT}' '${CTRRET_B}' ${PRMAMT_M} ${CLMAMT_M} ${LOSRAT_R} '${AMORAT_CT}'
+done
+
+# End of the Job
+JOBEND

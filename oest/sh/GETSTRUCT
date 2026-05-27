@@ -1,0 +1,73 @@
+#! /bin/ksh
+#===============================================================================
+# FUNCTION : GETSTRUCT
+#
+# The folowing parameters must be previousely defined :
+# 
+# GSTR_SRC    : the source file contain data and headers
+# GSTR_FS     : the field separator
+# GSTR_NOBLNK : optional parameter. init to YES to ignore blanck 
+#
+# Subject     : Generic function to get fields as Syncsort syntax of the data 
+#
+# Modification
+# [00]        : B.LAGHA   28/01/2019
+#===============================================================================
+GETSTRUCT () {
+#   STEP_PRG=GETSTRUCT
+#   STEPSTART
+   GETSTRUCT_ERR=0
+   GSTR_SRC=$1
+   GSTR_FS=$2
+   GSTR_NOBLNK=$3
+   if [ "${GSTR_NOBLNK}" == "YES" ]; then
+   # ignore blanck
+   #--------------
+      if [ ! -f ${GSTR_SRC} ]; then 
+         GETSTRUCT_ERR=12
+      else
+         # get the first line from file
+         #------------------------------- 
+         HEAD=$(sed -ne '1p' ${GSTR_SRC})
+         STRUCT=""
+         # build the struct
+         #------------------
+         STRUCT=$(echo -n ${HEAD} | awk -F${GSTR_FS} '
+         {  
+             struct = ""
+             for(i=1;i<NF;i++)
+                {
+                   struct=struct $i "	" i ":1 NOBLANK - " i ":NOBLANK,\\n";
+                }
+                struct=struct   $NF "   " i ":1 NOBLANK - " i ":NOBLANK";
+         }{printf struct}')
+         echo -e ${STRUCT}
+      fi
+   else
+   # not igniore blanck
+   #------------------
+      if [ ! -f ${GSTR_SRC} ]; then 
+         GETSTRUCT_ERR=12
+      else
+         # get the first line from file
+         #------------------------------- 
+         HEAD=$(sed -ne '1p' ${GSTR_SRC})
+         STRUCT=""
+         # build the struct
+         #------------------
+         STRUCT=$(echo -n ${HEAD} | awk -F${GSTR_FS} '
+         {  
+             struct = ""
+             for(i=1;i<NF;i++)
+                {
+                   struct=struct $i "	" i ":1 - " i ":,\\n";
+                }
+                struct=struct   $NF "   " i ":1 - " i ":";
+         }{printf struct}')
+         echo -e ${STRUCT}
+      fi
+   fi 
+
+#   STEPEND
+return ${GETSTRUCT_ERR}
+}

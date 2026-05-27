@@ -1,0 +1,6 @@
+Use BEST
+Go
+
+select getdate()
+
+go

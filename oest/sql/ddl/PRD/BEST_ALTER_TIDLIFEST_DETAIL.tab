@@ -1,0 +1,16 @@
+use BEST
+go
+
+/*==============================================================*/
+/* Table: TIDLIFEST_GLOBAL                                */
+/*==============================================================*/
+
+ALTER TABLE TIDLIFEST_GLOBAL ADD QUARTER_B UBOOLEAN_B DEFAULT 0 NOT NULL
+go
+
+/*==============================================================*/
+/* Table: TIDLIFEST_DETAIL                              */
+/*==============================================================*/
+
+ALTER TABLE TIDLIFEST_DETAIL  ADD QUARTER_B UBOOLEAN_B DEFAULT 0 NOT NULL
+go

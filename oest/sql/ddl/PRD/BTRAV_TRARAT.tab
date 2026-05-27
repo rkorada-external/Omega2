@@ -1,0 +1,56 @@
+USE BTRAV
+go
+
+/* UBGL_ON */
+
+IF OBJECT_ID('ESID0901_TRARAT') IS NOT NULL
+BEGIN
+    DROP TABLE ESID0901_TRARAT
+    PRINT '<<< DROPPED TABLE ESID0901_TRARAT >>>'
+END
+go
+
+create table ESID0901_TRARAT 
+(
+   LINE_NF				INT	,								
+   USR_CF		        UUSR_CF        		           NOT NULL,						
+   SSD_CF               USSD_CF                        not null,
+   ESB_CF               UESB_CF                        not null,
+   SEG_NF               USGMT_NF                       not null,
+   CTRNAT_CT            char(1)                        null,
+   NORME_CF 	        char(5)                        not null,
+   DOMAIN_CF            CHAR(7)                        null,
+   PRMRAT_R             USHA_R                         null,
+   RSRVRAT_R            USHA_R                         null,
+   RALIC_R              USHA_R                         null,    -- RA prudence LIC ratio
+   RALRC_R              USHA_R                         null     -- RA prudence LRC ratio
+)
+
+
+go
+GRANT REFERENCES ON ESID0901_TRARAT TO GCONSULT
+go
+GRANT REFERENCES ON ESID0901_TRARAT TO GOMEGA
+go
+GRANT SELECT ON ESID0901_TRARAT TO GCONSULT
+go
+GRANT SELECT ON ESID0901_TRARAT TO GOMEGA
+go
+GRANT INSERT ON ESID0901_TRARAT TO GCONSULT
+go
+GRANT INSERT ON ESID0901_TRARAT TO GOMEGA
+go
+GRANT DELETE ON ESID0901_TRARAT TO GCONSULT
+go
+GRANT DELETE ON ESID0901_TRARAT TO GOMEGA
+go
+GRANT UPDATE ON ESID0901_TRARAT TO GCONSULT
+go
+GRANT UPDATE ON ESID0901_TRARAT TO GOMEGA
+go
+
+IF OBJECT_ID('ESID0901_TRARAT') IS NOT NULL
+    PRINT '<<< CREATED TABLE ESID0901_TRARAT >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE ESID0901_TRARAT >>>'
+go

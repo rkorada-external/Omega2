@@ -1,0 +1,51 @@
+USE BSAR
+go
+set nocount on
+go
+
+
+setuser 'dbo'
+go
+
+
+--20/08/2021 NLD :spira:98350 -- in BSAR.dbo.TTECLEDR_[*], rename NEWCOLS3_NF to I17PRDCOD_CT 
+
+declare
+ @erreur     int
+,@LETTRE     char(1)
+,@CIBLE 	 char(1)
+,@maj        datetime
+
+
+select @CIBLE='A' -- si traiter table par table, modifie la cible ici et garder la condition if @LETTRE in(@CIBLE) en bas
+select @LETTRE='A' -- point de départ, ne pas changer
+
+print 'Script de mise a jour TTECLEDR*.I17PRDCOD_CT'
+
+
+while @LETTRE <= 'T' -- point de fin boucle, ne pas changer
+begin 
+  if @LETTRE in('A','B','C','D','E','F','H','P','T') -- La table 'S' n'est pas dans la cible
+  
+  and not exists(select 1 from syscolumns col, sysobjects obj where col.name='I17PRDCOD_CT' and obj.name = 'TTECLEDR_'+@LETTRE and col.id = obj.id)
+  begin
+    select @maj=getdate()
+
+    print '**** Debut alter table TTECLEDR_%1! à %2!', @LETTRE,@maj
+
+    exec('sp_rename "TTECLEDR_'+@LETTRE+'.NEWCOLS3_NF", "I17PRDCOD_CT"')
+
+    print 'exec sp_rename TTECLEDR_%1!,  lignes %2!',@LETTRE,@@rowcount
+
+    select @maj=getdate()
+    print '**** Fin alter table TTECLEDR_%1! à %2!', @LETTRE, @maj
+  end
+  else
+    print '!!!!! Pas de traitmement pour la table TTECLEDR_%1!',@LETTRE
+
+
+  select @LETTRE=char(ascii(@LETTRE)+1)
+end
+go
+ 
+

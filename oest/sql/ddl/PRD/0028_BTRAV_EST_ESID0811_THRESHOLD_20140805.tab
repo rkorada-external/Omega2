@@ -1,0 +1,35 @@
+USE BTRAV
+go
+
+/*==================================================================================================================*/
+/* Need to drop the old table named(EST_ESID0814_THRESHOLD) as we dont have the corresponding ESID0814.cmd exist now */
+/*==================================================================================================================*/
+if exists (select 1 from sysobjects where id = object_id('EST_ESID0814_THRESHOLD') and type = 'U') drop table EST_ESID0814_THRESHOLD
+go
+
+
+if exists (select 1 from sysobjects where id = object_id('EST_ESID0811_THRESHOLD') and type = 'U') drop table EST_ESID0811_THRESHOLD
+go
+
+
+CREATE TABLE EST_ESID0811_THRESHOLD(
+	CTR_NF UCTR_NF 	not null,
+	SEC_NF USEC_NF 	not null,
+	ACY_NF smallint not null,
+	SSD_CF USSD_CF  NOT NULL,
+    ESB_CF UESB_CF  NOT NULL,
+    USR_CF UUSR_CF  NOT NULL
+)
+
+go
+
+grant all on    EST_ESID0811_THRESHOLD to GOMEGA
+grant all on    EST_ESID0811_THRESHOLD to GDBBATCH
+grant select on EST_ESID0811_THRESHOLD to GCONSULT
+go
+
+IF OBJECT_ID('dbo.BTRAV..EST_ESID0811_THRESHOLD') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.[BTRAV..EST_ESID0811_THRESHOLD] >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.[BTRAV..EST_ESID0811_THRESHOLD] >>>'
+go

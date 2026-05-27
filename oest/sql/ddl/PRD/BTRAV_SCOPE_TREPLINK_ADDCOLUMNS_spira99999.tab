@@ -1,0 +1,6 @@
+USE BTRAV
+go
+
+alter table BTRAV..SCOPE_TREPLINK add TMP_I17G bit default 0, TMP_I17P bit default 0, TMP_I17L bit default 0
+
+go

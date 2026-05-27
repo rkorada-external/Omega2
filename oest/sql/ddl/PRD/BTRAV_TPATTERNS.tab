@@ -1,0 +1,138 @@
+USE BTRAV
+go
+
+IF OBJECT_ID('TPATTERNS') IS NOT NULL
+BEGIN
+    DROP TABLE TPATTERNS
+	PRINT '<<< TPATTERNS EXISTS. DROPPED. >>>'
+END
+GO
+	
+CREATE TABLE TPATTERNS
+(
+    SSD_CF     USSD_CF       NULL,
+    PATCAT_CT  char(5)       NOT NULL,
+    PATTYP_CT  char(5)       NOT NULL,
+    SEG_NF     USEG_NF       NULL,
+    UWY_NF     UUWY_NF       NULL,
+    CUR_CF     UCUR_CF       NULL,
+    LOB_CF     char(2)       NULL,
+    RATING_CF  char(5)       NULL,
+    NORME_CF   char(5)       NULL,
+    SEGNAT_CT  char(1)       DEFAULT '' NULL,
+    BALSHEY_NF smallint      NULL,
+    PATTERN_ID varchar(21)   NOT NULL,
+    CRE_D      UUPD_D        NOT NULL,
+    CREUSR_CF  UUPDUSR_CF    NOT NULL,
+    TOTAUX     decimal(11,8) NULL,
+    AN1        decimal(11,8) NULL,
+    AN2        decimal(11,8) NULL,
+    AN3        decimal(11,8) NULL,
+    AN4        decimal(11,8) NULL,
+    AN5        decimal(11,8) NULL,
+    AN6        decimal(11,8) NULL,
+    AN7        decimal(11,8) NULL,
+    AN8        decimal(11,8) NULL,
+    AN9        decimal(11,8) NULL,
+    AN10       decimal(11,8) NULL,
+    AN11       decimal(11,8) NULL,
+    AN12       decimal(11,8) NULL,
+    AN13       decimal(11,8) NULL,
+    AN14       decimal(11,8) NULL,
+    AN15       decimal(11,8) NULL,
+    AN16       decimal(11,8) NULL,
+    AN17       decimal(11,8) NULL,
+    AN18       decimal(11,8) NULL,
+    AN19       decimal(11,8) NULL,
+    AN20       decimal(11,8) NULL,
+    AN21       decimal(11,8) NULL,
+    AN22       decimal(11,8) NULL,
+    AN23       decimal(11,8) NULL,
+    AN24       decimal(11,8) NULL,
+    AN25       decimal(11,8) NULL,
+    AN26       decimal(11,8) NULL,
+    AN27       decimal(11,8) NULL,
+    AN28       decimal(11,8) NULL,
+    AN29       decimal(11,8) NULL,
+    AN30       decimal(11,8) NULL,
+    AN31       decimal(11,8) NULL,
+    AN32       decimal(11,8) NULL,
+    AN33       decimal(11,8) NULL,
+    AN34       decimal(11,8) NULL,
+    AN35       decimal(11,8) NULL,
+    AN36       decimal(11,8) NULL,
+    AN37       decimal(11,8) NULL,
+    AN38       decimal(11,8) NULL,
+    AN39       decimal(11,8) NULL,
+    AN40       decimal(11,8) NULL,
+    AN41       decimal(11,8) NULL,
+    AN42       decimal(11,8) NULL,
+    AN43       decimal(11,8) NULL,
+    AN44       decimal(11,8) NULL,
+    AN45       decimal(11,8) NULL,
+    AN46       decimal(11,8) NULL,
+    AN47       decimal(11,8) NULL,
+    AN48       decimal(11,8) NULL,
+    AN49       decimal(11,8) NULL,
+    AN50       decimal(11,8) NULL,
+    AN51       decimal(11,8) NULL,
+    AN52       decimal(11,8) NULL,
+    AN53       decimal(11,8) NULL,
+    AN54       decimal(11,8) NULL,
+    AN55       decimal(11,8) NULL,
+    AN56       decimal(11,8) NULL,
+    AN57       decimal(11,8) NULL,
+    AN58       decimal(11,8) NULL,
+    AN59       decimal(11,8) NULL,
+    AN60       decimal(11,8) NULL,
+    AN61       decimal(11,8) NULL,
+    AN62       decimal(11,8) NULL,
+    AN63       decimal(11,8) NULL,
+    AN64       decimal(11,8) NULL,
+    AN65       decimal(11,8) NULL,
+	SEGUWY_CF	varchar(14)	 NULL,
+	LOBUWY_CF	varchar(6)	 NULL
+)
+LOCK DATAROWS
+go
+IF OBJECT_ID('TPATTERNS') IS NOT NULL
+    PRINT '<<< CREATED TABLE TPATTERNS >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE TPATTERNS >>>'
+go
+GRANT REFERENCES ON TPATTERNS TO GOMEGA
+go
+GRANT REFERENCES ON TPATTERNS TO GDBBATCH
+go
+GRANT SELECT ON TPATTERNS TO GCONSULT
+go
+GRANT SELECT ON TPATTERNS TO GOMEGA
+go
+GRANT SELECT ON TPATTERNS TO GDBBATCH
+go
+GRANT INSERT ON TPATTERNS TO GOMEGA
+go
+GRANT INSERT ON TPATTERNS TO GDBBATCH
+go
+GRANT DELETE ON TPATTERNS TO GOMEGA
+go
+GRANT DELETE ON TPATTERNS TO GDBBATCH
+go
+GRANT UPDATE ON TPATTERNS TO GOMEGA
+go
+GRANT UPDATE ON TPATTERNS TO GDBBATCH
+go
+GRANT DELETE STATISTICS ON TPATTERNS TO GOMEGA
+go
+GRANT DELETE STATISTICS ON TPATTERNS TO GDBBATCH
+go
+GRANT TRUNCATE TABLE ON TPATTERNS TO GOMEGA
+go
+GRANT TRUNCATE TABLE ON TPATTERNS TO GDBBATCH
+go
+GRANT UPDATE STATISTICS ON TPATTERNS TO GOMEGA
+go
+GRANT UPDATE STATISTICS ON TPATTERNS TO GDBBATCH
+go
+GRANT TRANSFER TABLE ON TPATTERNS TO GDBBATCH
+go

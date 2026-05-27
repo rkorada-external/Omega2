@@ -1,0 +1,565 @@
+#!/bin/ksh
+#============================================================================================
+# APPLICATION NAME                  : ACF/PCA: RATIO CALCULATION
+# JOB NAME                          : ESFD3641.cmd
+# REVISION                          : 1.0
+# CREATION DATE                     : 12/08/2021
+# AUTHOR                            : L.ELFAHIM
+#============================================================================================
+#--------------------------------------------------------------------------------------------
+# DESCRIPTION - SPIRA 97373 - ACF/PCA: RATIO CALCULATION :
+#--------------------------------------------------------------------------------------------
+# CHANGES HISTORY :
+#============================================================================================
+#   12/08/2021      LEL     SPIRA : 97373       DEVELOPMENT OF INITIAL VERSION
+#[001] 10/01/2022 MZM  	SPIRA : 91532  	Bug Fix : Taille Syncsort de 1000 ==> 2000
+#[002] 22/06/2022 HR  	SPIRA : 102855 	Bug Fix : REQ.11.06 - IFRS17 - Retro NP - Gaps on transactions (1010 and 1051 in particular)
+#[003] 05/07/2022 JBD		SPIRA : 104778	Build new closing for I17S norm 
+#[004] 28/02/2024 MZM  	SPIRA : 111226  Chg EST Fut Rec - QWP on endorsement greater than 0 not taken into account
+#============================================================================================
+
+#set -x
+
+# Call generic functions
+. ${DUTI}/fctgen.cmd
+
+# Job Initialization
+JOBINIT
+
+ECHO_LOG ""                                                                                  
+ECHO_LOG #============================================================="                           
+ECHO_LOG "#===> NORME.....................: ${NORME}" 
+ECHO_LOG "#===> TYPEINV...................: ${TYPEINV}"                                
+ECHO_LOG "#===> TYPEINV0..................: ${TYPEINV0}"                                         
+ECHO_LOG "#===> NORME_CF..................: ${NORME_CF}"                                                       
+ECHO_LOG "#===> PARM_ICLODAT_D............: $PARM_ICLODAT_D"
+ECHO_LOG "#===> PARM_PREV_ICLODAT_D.......: $PARM_PREV_ICLODAT_D"
+ECHO_LOG "#..................... INPUT .............................." 
+ECHO_LOG "#===> EST_FCES..................: ${EST_FCES}"
+ECHO_LOG "#===> EST_FCURQUOT..............: ${EST_FCURQUOT}"
+ECHO_LOG "#===> EST_FPLACEMT22............: ${EST_FPLACEMT22}"                 
+ECHO_LOG "#===> EST_IADPERICASE...........: ${EST_IADPERICASE}" 
+ECHO_LOG "#===> EST_IRDPERICASE...........: ${EST_IRDPERICASE}"
+ECHO_LOG "#===> ESF_TRERETFACCTR..........: ${ESF_TRERETFACCTR}"                                                        
+ECHO_LOG "#..................... OUTPUT .............................."  
+ECHO_LOG "#===> NONE......................: ${NONE}"        
+ECHO_LOG #============================================================="
+
+#--------------------------------------------------------------------------------
+# 	REFORMAT ESF_TRERETFACCTR ACCORDING TO THE NORME : GROUP, PARENT and LOCAL
+#--------------------------------------------------------------------------------
+if [ ${NORME_CF} = "I17G" ] || [ ${NORME_CF} = "I17S" ] 
+then
+NSTEP=${NJOB}_00
+LIBEL="REFORMAT ESF_TRERETFACCTR to GROUP FORMAT..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${ESF_TRERETFACCTR} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_TRERETFACCTR.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	FILLER		1:1     - 26:
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER
+/COPY 	
+exit
+EOF
+SORT
+elif [ ${NORME_CF} = "I17P" ]
+then
+NSTEP=${NJOB}_00
+LIBEL="REFORMAT ESF_TRERETFACCTR to PARENT FORMAT..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${ESF_TRERETFACCTR} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_TRERETFACCTR.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	FILLER1			1:1     - 11:,
+	INI_STATUS_P 	13:1    - 13:,
+	FIRST_CLODAT_P  16:1    - 16:,
+	FILLER2			18:1    - 26:
+/DERIVEDFIELD SPACES "~~"	
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT 
+	FILLER1,
+	INI_STATUS_P,
+	SPACES,
+	FIRST_CLODAT_P,
+	SPACES,
+	FILLER2
+/COPY 
+exit
+EOF
+SORT
+else
+NSTEP=${NJOB}_00
+LIBEL="REFORMAT ESF_TRERETFACCTR to LOCAL FORMAT..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${ESF_TRERETFACCTR} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_TRERETFACCTR.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	FILLER1			1:1     - 11:,
+	INI_STATUS_L 	14:1    - 14:,
+	FIRST_CLODAT_L  17:1    - 17:,
+	FILLER2 		18:1    - 26:
+/DERIVEDFIELD SPACES "~~"	
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT 
+	FILLER1,
+	INI_STATUS_L,
+	SPACES,
+	FIRST_CLODAT_L,
+	SPACES,
+	SPACES,
+	FILLER2
+/COPY 
+exit
+EOF
+SORT
+fi
+
+NSTEP=${NJOB}_01
+LIBEL="FILTER ESF_TRERETFACCTR : KEEP ONLY INCEPTION STATUS 1 & 2"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_00_${IB}_TRERETFACCTR.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_TRERETFACCTR_VALID.dat"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	INIT_STATUS  	12:1 	- 12:EN,
+	FILLER    		1:1  	- 26:		
+/CONDITION INIT_STS_VALID 	INIT_STATUS = 1 OR INIT_STATUS = 2																					
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE INIT_STS_VALID
+/COPY 
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_05
+LIBEL="FILTER ESF_TRERETFACCTR ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_01_${IB}_TRERETFACCTR_VALID.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_TRERETFACCTR_ASSUMED.dat"
+SORT_O1="${DFILT}/${NSTEP}_${IB}_TRERETFACCTR_RETRO.dat"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF  	1:1 	- 1:,
+	END_NT  	2:1 	- 2:EN,
+	SEC_NF  	3:1 	- 3:EN,
+	UWY_NF  	4:1 	- 4:,
+	UW_NT    	5:1 	- 5:EN,
+	TYPE_CT		9:1 	- 9:,
+	FILLER    	1:1  	- 26:		
+/CONDITION COND_ACCEPT 	TYPE_CT = 'T' OR TYPE_CT = 'F'
+/CONDITION COND_RETRO 	TYPE_CT = 'R'																					
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE COND_ACCEPT
+/OUTFILE ${SORT_O1} OVERWRITE
+/INCLUDE COND_RETRO
+/COPY 
+exit
+EOF
+SORT
+
+## [004] Remove END_NT on the Key JOIN
+
+NSTEP=${NJOB}_10
+LIBEL="JOIN ESF_TRERETFACCTR ASSUMED AND EST_FCES ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_05_${IB}_TRERETFACCTR_ASSUMED.dat 2000 1 "
+SORT_O="${DFILT}/${NSTEP}_${IB}_TRERETFACCTR_ENRICHED.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF  		1:1 	- 1:,
+	END_NT  		2:1 	- 2:,
+	SEC_NF  		3:1 	- 3:,
+	UWY_NF  		4:1 	- 4:,
+	UW_NT    		5:1 	- 5:,
+	CES_CTR_NF		1:1 	- 1:,
+	CES_END_NT    	2:1 	- 2:,
+	CES_SEC_NF   	3:1 	- 3:,
+	CES_UWY_NF    	4:1 	- 4:,
+	CES_UW_NT  		5:1 	- 5:,
+	CES_RETCTR_NF	6:1 	- 6:,
+	CES_RETEND_NT	7:1 	- 7:,
+	CES_RETSEC_NF	8:1 	- 8:,
+	CES_RTY_NF 		9:1 	- 9:,
+	CES_RETUW_NT 	10:1 	- 10:,
+	FILLER			1:1		- 26:	
+/JOINKEYS
+	CTR_NF,       
+	SEC_NF,    
+	UWY_NF,    
+	UW_NT		
+/INFILE ${EST_FCES} 2000 1"~" 
+/JOINKEYS
+	CES_CTR_NF,         
+	CES_SEC_NF,     
+	CES_UWY_NF,     
+	CES_UW_NT
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:CES_RETCTR_NF,CES_RETEND_NT,CES_RETSEC_NF,CES_RTY_NF,CES_RETUW_NT
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_20
+LIBEL="FILTER TRERETFACCTR_ENRICHED : EXTRACT RETRO P ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_10_${IB}_TRERETFACCTR_ENRICHED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_TRERETFACCTR_RETRO_P.dat"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	RETCTR_NF	27:1 	- 27:,
+	FILLER    	31:1  	- 31:		
+/CONDITION COND_RETRO_P RETCTR_NF != ''																	
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE COND_RETRO_P
+/COPY 
+exit
+EOF
+SORT
+
+#-------------------------------
+#  PERIMETER ASSUMED MANAGMENT
+#-------------------------------
+NSTEP=${NJOB}_30
+LIBEL="JOIN IADPERICASE AND ASSUMED PERIMETER FILE ESF_TRERETFACCTR ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_05_${IB}_TRERETFACCTR_ASSUMED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_TRERETFACCTR_ASSUMED_ENRICHED.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF  		1:1 	- 1:,
+	END_NT  		2:1 	- 2:,
+	SEC_NF  		3:1 	- 3:,
+	UWY_NF  		4:1 	- 4:,
+	UW_NT    		5:1 	- 5:,
+	PER_CTR_NF  	3:1 	- 3:,
+	PER_END_NT  	4:1 	- 4:,
+	PER_SEC_NF  	5:1 	- 5:,
+	PER_UWY_NF  	6:1 	- 6:,
+	PER_UW_NT		7:1 	- 7:,
+	PER_EGPCUR_CF	23:1	- 23:,
+	FILLER    		1:1  	- 31:		
+/JOINKEYS
+	CTR_NF,    
+	END_NT,    
+	SEC_NF,    
+	UWY_NF,    
+	UW_NT		
+/INFILE ${EST_IADPERICASE} 2000 1"~" 
+/JOINKEYS
+	PER_CTR_NF,    
+	PER_END_NT,    
+	PER_SEC_NF,    
+	PER_UWY_NF,    
+	PER_UW_NT		
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:PER_EGPCUR_CF
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_35
+LIBEL="SORT TRERETFACCTR ASSUMED PERIMETER ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_30_${IB}_TRERETFACCTR_ASSUMED_ENRICHED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_TRERETFACCTR_ASSUMED.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF          1:1 	- 1:,
+	END_NT          2:1 	- 2:EN,
+	SEC_NF          3:1 	- 3:EN,
+	UWY_NF          4:1 	- 4:,
+	UW_NT           5:1 	- 5:EN,
+	FILLER         	1:1  	- 32:		
+/KEYS          
+	CTR_NF,      
+	END_NT,      
+	SEC_NF,      
+	UWY_NF,      
+	UW_NT
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+#-----------------------
+#   RETRO P MANAGMENT
+#-----------------------
+NSTEP=${NJOB}_40
+LIBEL="JOIN IRDPERICASE AND PERIMETER FILE RETRO P ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_20_${IB}_TRERETFACCTR_RETRO_P.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_TRERETFACCTR_RETRO_P_ENRICHED.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	RETCTR_NF		27:1 	- 27:,
+	RETEND_NT		28:1 	- 28:,
+	RETSEC_NF		29:1 	- 29:,
+	RTY_NF 			30:1 	- 30:,
+	RETUW_NT		31:1 	- 31:,
+	PER_CTR_NF		3:1 	- 3:,
+	PER_END_NT    	4:1 	- 4:,
+	PER_SEC_NF   	5:1 	- 5:,
+	PER_UWY_NF    	6:1 	- 6:,
+	PER_UW_NT		7:1 	- 7:,
+	PER_EGPCUR_CF	51:1	- 51:,
+	FILLER			1:1		- 31:	
+/JOINKEYS
+	RETCTR_NF,	
+	RETEND_NT,	
+	RETSEC_NF,	
+	RTY_NF, 		
+	RETUW_NT	
+/INFILE ${EST_IRDPERICASE} 2000 1 "~"
+/JOINKEYS
+	PER_CTR_NF,     
+	PER_END_NT,     
+	PER_SEC_NF,     
+	PER_UWY_NF,
+	PER_UW_NT	
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:PER_EGPCUR_CF
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_50
+LIBEL="ENRICHMENT of RETRO P PERIMETER FILE by ESF_FPLACEMT2..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_40_${IB}_TRERETFACCTR_RETRO_P_ENRICHED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_TRERETFACCTR_RETRO_P_PL.dat 2000 1"
+INPUT_TEXT $SORT_CMD <<EOF
+/FIELDS
+	RETCTR_NF 		27:1 	- 27:,
+	RETEND_NT   	28:1 	- 28:,
+	RETSEC_NF 		29:1 	- 29:,          
+	RTY_NF     		30:1 	- 30:,         
+	RETUW_NT		31:1 	- 31:,
+	PL_CTR_NF 		3:1 	- 3:,
+	PL_END_NT		4:1 	- 4:,
+	PL_SEC_NF 		5:1 	- 5:,
+	PL_UWY_NF 		6:1 	- 6:,
+	PL_UW_NT    	7:1 	- 7:,
+	PL_PLC_NT 		8:1 	- 8:,                        
+	FILLER    		1:1 	- 32:		          
+/JOINKEYS 
+	RETCTR_NF, 	
+    RETEND_NT,   
+    RETSEC_NF, 	
+	RTY_NF,
+	RETUW_NT	
+/INFILE ${EST_FPLACEMT22} 2000 1 "~"
+/JOINKEYS
+	PL_CTR_NF,
+	PL_END_NT,
+	PL_SEC_NF,	
+	PL_UWY_NF,
+	PL_UW_NT
+/JOIN UNPAIRED LEFTSIDE               
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:PL_PLC_NT 
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_55
+LIBEL="SORT TRERETFACCTR RETRO P PERIMETER ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_50_${IB}_TRERETFACCTR_RETRO_P_PL.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_TRERETFACCTR_RETRO_P.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CTR_NF          1:1 	- 1:,
+	END_NT          2:1 	- 2:EN,
+	SEC_NF          3:1 	- 3:EN,
+	UWY_NF          4:1 	- 4:,
+	UW_NT           5:1 	- 5:EN,
+	RETCTR_NF 		27:1 	- 27:,
+	RETEND_NT   	28:1 	- 28:EN,
+	RETSEC_NF 		29:1 	- 29:EN,          
+	RTY_NF     		30:1 	- 30:,         
+	RETUW_NT		31:1 	- 31:EN,
+	PLC_NT 			33:1 	- 33:EN,
+	FILLER         	1:1  	- 33:		
+/KEYS          
+	CTR_NF,      
+	END_NT,      
+	SEC_NF,      
+	UWY_NF,      
+	UW_NT,       
+	RETCTR_NF, 	
+	RETEND_NT,   
+	RETSEC_NF, 	
+	RTY_NF,     	
+	RETUW_NT,	
+	PLC_NT 		
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+#-----------------------
+#   RETRO NP MANAGMENT
+#-----------------------
+NSTEP=${NJOB}_60
+LIBEL="JOIN IRDPERICASE AND PERIMETER FILE RETRO NP ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_05_${IB}_TRERETFACCTR_RETRO.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_TRERETFACCTR_RETRO_ENRICHED.dat"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF  		1:1 	- 1:,
+	END_NT  		2:1 	- 2:,
+	SEC_NF  		3:1 	- 3:,
+	UWY_NF  		4:1 	- 4:,
+	PER_CTR_NF		3:1 	- 3:,
+	PER_END_NT    	4:1 	- 4:,
+	PER_SEC_NF   	5:1 	- 5:,
+	PER_UWY_NF    	6:1 	- 6:,
+	PER_EGPCUR_CF	51:1	- 51:,
+	PER_CTRCAT_CF 	107:1 	- 107:,
+	FILLER			1:1		- 31:	
+/JOINKEYS
+	CTR_NF,
+	END_NT,
+	SEC_NF,
+	UWY_NF
+/INFILE ${EST_IRDPERICASE} 2000 1 "~"
+/JOINKEYS
+	PER_CTR_NF,     
+	PER_END_NT,     
+	PER_SEC_NF,     
+	PER_UWY_NF     
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:PER_EGPCUR_CF,PER_CTRCAT_CF
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_70
+LIBEL="FILTER TRERETFACCTR_RETRO_NP ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_60_${IB}_TRERETFACCTR_RETRO_ENRICHED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_TRERETFACCTR_RETRO_NP.dat"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTRCAT_CF	33:1 	- 33:,
+	FILLER    	1:1  	- 32:		
+/CONDITION COND_RET_NP 	CTRCAT_CF = '02'																					
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE COND_RET_NP
+/REFORMAT FILLER
+/COPY 
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_80
+LIBEL="ENRICHMENT of TRERETFACCTR_RETRO_NP by ESF_FPLACEMT2..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_70_${IB}_TRERETFACCTR_RETRO_NP.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_TRERETFACCTR_RETRO_NP_PLA.dat 2000 1"
+INPUT_TEXT $SORT_CMD <<EOF
+/FIELDS 
+	RETCTR_NF 		1:1 	- 1:,
+	RETEND_NT   	2:1 	- 2:,
+	RETSEC_NF 		3:1 	- 3:,          
+	RTY_NF     		4:1 	- 4:,         
+	RETUW_NT		5:1 	- 5:,
+	PL_CTR_NF 		3:1 	- 3:,
+	PL_END_NT 		4:1 	- 4:,
+	PL_SEC_NF 		5:1 	- 5:,
+	PL_UWY_NF 		6:1 	- 6:,    
+	PL_PLC_NT 		8:1 	- 8:,                        
+	FILLER    		1:1 	- 32:		          
+/JOINKEYS 
+	RETCTR_NF,
+	RETEND_NT,
+	RETSEC_NF,	
+	RTY_NF        		
+/INFILE ${EST_FPLACEMT22} 2000 1 "~"
+/JOINKEYS
+	PL_CTR_NF,
+	PL_END_NT,
+	PL_SEC_NF,	
+	PL_UWY_NF
+/JOIN UNPAIRED LEFTSIDE               
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:PL_PLC_NT 
+exit
+EOF
+SORT
+
+#002 SORT PLC column 33 not 30 
+NSTEP=${NJOB}_90
+LIBEL="SORT TRERETFACCTR RETRO NP PERIMETER ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_80_${IB}_TRERETFACCTR_RETRO_NP_PLA.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_TRERETFACCTR_RETRO_NP.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	RETCTR_NF 		1:1 	- 1:,
+	RETEND_NT   	2:1 	- 2:EN,
+	RETSEC_NF 		3:1 	- 3:EN,          
+	RTY_NF     		4:1 	- 4:,         
+	RETUW_NT		5:1 	- 5:,
+	PLC_NT 			33:1 	- 33:EN,
+	FILLER         	1:1  	- 33:		
+/KEYS          
+	RETCTR_NF, 	
+	RETEND_NT,   
+	RETSEC_NF, 	
+	RTY_NF,     	
+	RETUW_NT,	
+	PLC_NT 		 
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+JOBEND

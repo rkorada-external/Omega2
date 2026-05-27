@@ -1,0 +1,106 @@
+USE BTRAV
+go
+
+/****************************************************
+Table            : BTRAV..OGLM0030_WORKFILE1
+Base principale  : BTRAV
+Version          : 
+Author           : SA
+Date of creation : 08/15/2015
+Fiche            :spot:28690
+Description      : Individual file based table for preliminary data validation.
+*********************************************************/
+
+/* UBGL_ON */
+
+IF OBJECT_ID('OGLM0030_WORKFILE1') IS NOT NULL
+BEGIN
+    DROP TABLE OGLM0030_WORKFILE1
+    PRINT '<<< DROPPED TABLE OGLM0030_WORKFILE1 >>>'
+END
+go
+
+CREATE TABLE OGLM0030_WORKFILE1
+(
+    NUMFIC_NT                varchar(50) NULL,
+    FILENAME                 varchar(100) NULL,
+    SSD_CF                   varchar(50) NULL,
+    ESB_CF                   varchar(50) NULL,
+    NUMLIGNE_NT              varchar(50) NULL,
+    BALSHEY_NF               varchar(50) NULL,
+    BALSHRMTH_NF             varchar(50) NULL,
+    BALSHRDAY_NF             varchar(50) NULL,
+    VALPERY_NF               varchar(50) NULL,
+    VALPERMTH_NF             varchar(50) NULL,
+    TRNCOD_CF                varchar(50) NULL,
+    RETAUTGEN_B              varchar(50) NULL,
+    CTR_NF                   varchar(50) NULL,
+    END_NT                   varchar(50) NULL,
+    SEC_NF                   varchar(50) NULL,
+    UWY_NF                   varchar(50) NULL,
+    UW_NT                    varchar(50) NULL,
+    OCCYEA_NF                varchar(50) NULL,
+    ACY_NF                   varchar(50) NULL,
+    SCOSTRMTH_NF             varchar(50) NULL,
+    SCOENDMTH_NF             varchar(50) NULL,
+    CLM_NF                   varchar(50) NULL,
+    CUR_CF                   varchar(50) NULL,
+    AMT_M                    varchar(50) NULL,
+    RETCTR_NF                varchar(50) NULL,
+    RETEND_NT                varchar(50) NULL,
+    RETSEC_NF                varchar(50) NULL,
+    RTY_NF                   varchar(50) NULL,
+    RETUW_NT                 varchar(50) NULL,
+    PLC_NT                   varchar(50) NULL,
+    RETOCCYEA_NF             varchar(50) NULL,
+    RETACY_NF                varchar(50) NULL,
+    RETSCOSTRMTH_NF          varchar(50) NULL,
+    RETSCOENDMTH_NF          varchar(50) NULL,
+    RCL_NF                   varchar(50) NULL,
+    RETCUR_CF                varchar(50) NULL,
+    RETAMT_M                 varchar(50) NULL,
+    COMMAC_LL                varchar(64) NULL,
+    SPEENTTYP_CF             varchar(50) NULL,
+    SPEENTNAT_CT             varchar(50) NULL,
+    EVT_NF                   varchar(50) NULL,
+    REVT_NF                  varchar(50) NULL,
+    GEAC_CLOSE_PERD_ADJ      varchar(50) NULL,
+    GEAC_REVERSAL_CODE       varchar(50) NULL
+)
+LOCK DATAROWS
+go
+IF OBJECT_ID('OGLM0030_WORKFILE1') IS NOT NULL
+    PRINT '<<< CREATED TABLE OGLM0030_WORKFILE1 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE OGLM0030_WORKFILE1 >>>'
+go
+GRANT REFERENCES ON OGLM0030_WORKFILE1 TO GOMEGA
+go
+GRANT REFERENCES ON OGLM0030_WORKFILE1 TO GDBBATCH
+go
+GRANT SELECT ON OGLM0030_WORKFILE1 TO GCONSULT
+go
+GRANT SELECT ON OGLM0030_WORKFILE1 TO GOMEGA
+go
+GRANT SELECT ON OGLM0030_WORKFILE1 TO GDBBATCH
+go
+GRANT INSERT ON OGLM0030_WORKFILE1 TO GOMEGA
+go
+GRANT INSERT ON OGLM0030_WORKFILE1 TO GDBBATCH
+go
+GRANT DELETE ON OGLM0030_WORKFILE1 TO GOMEGA
+go
+GRANT DELETE ON OGLM0030_WORKFILE1 TO GDBBATCH
+go
+GRANT UPDATE ON OGLM0030_WORKFILE1 TO GOMEGA
+go
+GRANT UPDATE ON OGLM0030_WORKFILE1 TO GDBBATCH
+go
+GRANT DELETE STATISTICS ON OGLM0030_WORKFILE1 TO GDBBATCH
+go
+GRANT TRUNCATE TABLE ON OGLM0030_WORKFILE1 TO GDBBATCH
+go
+GRANT UPDATE STATISTICS ON OGLM0030_WORKFILE1 TO GDBBATCH
+go
+GRANT TRANSFER TABLE ON OGLM0030_WORKFILE1 TO GDBBATCH
+go

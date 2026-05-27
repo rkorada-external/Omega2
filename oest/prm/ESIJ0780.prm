@@ -1,0 +1,36 @@
+# spira 82196 - S. Behague
+# Chaine parameter file
+# 1 parameter
+# - mail address
+TAUX_ERROR 5
+
+MSG01_KO Problem with SSD/ESB not corresponding to the name file
+MSG02_KO Transaction code prohibited
+MSG03_KO Balance sheet year or balance sheet month or balance sheet day is incorrect
+MSG04_KO Missing Assumed and Retro mandatory fields
+MSG05A_KO Assumed treaty is not in LIFE scope
+MSG05R_KO Retro treaty is not in LIFE scope
+MSG06_KO Amount Zero is not authorized
+MSG07_KO IAS39 treaties is not authorized
+MSG08_KO Dummy contract is not authorized
+MSG09_KO Closed account contract
+MSG10_KO Placement field must be empty 
+MSG11_KO Claim field must be empty
+MSG12_KO Event field must be empty
+MSG13_KO Transaction code does not exist
+MSG14_KO Counterbalance is missing
+MSG15_KO Accounting year is not correct
+MSG16_KO Validity year or validity month is incorrect
+MSG17_KO Check SCOR monthsSCOR Start month or SCOR End month is not correct
+MSG18_KO Prefix 1 is not authorized
+
+Err_01_KO incorrect format of date in file's name
+Err_02_KO Posting POS I17G AE in Extend Period is not permitted
+Err_03_KO Posting INV I17P I17L AE in Extend Period is not permitted
+Err_04_KO Posting AE is not permitted with Closing period
+Err_05_KO WARNING - Problem when retrieving inventory type for ${NORME}, Aucune AE inseree
+Err_06_KO Entity not eligible to ${NORME} No AE inseree
+Err_07_KO Problem with Period not corresponding to the current quarter in file
+Err_08_KO SSD 26 not authorized
+Err_09_KO Problem with duplicates
+

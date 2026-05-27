@@ -1,0 +1,13 @@
+use BEST
+go
+
+/*==============================================================*/
+/* Table: TLIFMOD2                                               */
+/*==============================================================*/
+ALTER TABLE dbo.TLIFMOD2 ADD GAAP_NT tinyint NULL
+go
+
+UPDATE dbo.TLIFMOD2 SET GAAP_NT = 2 WHERE GAAP_NT = NULL
+GO
+
+

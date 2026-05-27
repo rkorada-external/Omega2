@@ -1,0 +1,45 @@
+-------------------------------
+--mapping of  ESDJ7000
+
+	----------   Clean tables   ---------------------
+
+	delete BEST..TI17PERMFIL where IDF_CT in  ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESDJ7000')
+	delete BEST..TI17REQFNC where     IDF_CT  in ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESDJ7000')
+	delete BEST..TI17FNC where CHAIN_CT='ESDJ7000'
+	delete BEST..TI17CHN  where CHAIN_CT='ESDJ7000'
+
+	insert into BEST..TI17CHN values ('ESDJ7000',  '')
+
+	----------IDF_CT:   ESDJ7000 ------------------
+
+		insert into BEST..TI17FNC values ('ESDJ7000',' ','ESDJ7000',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_ARCSTATGTA_ID','${DFILP}/${ENV_PREFIX}_ESIX7000_ARCSTATGTA.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_FDRYTRN_ID','${DFILP}/${ENV_PREFIX}_ESIX7000_FDRYTRN${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_IAVPERICASE0','${DFILP}/${ENV_PREFIX}_ESDJ1010_IAVPERICASE0_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_IRVPERICASE0','${DFILP}/${ENV_PREFIX}_ESDJ1010_IRVPERICASE0_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_GTA','${DFILP}/${ENV_PREFIX}_ESDJ7000_GTA_ID_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_GTA_ID','${DFILP}/${ENV_PREFIX}_ESDJ7000_GTA_ID_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_GTR_ID','${DFILP}/${ENV_PREFIX}_ESDJ7000_GTR_ID_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_GTASW_ID','${DFILP}/${ENV_PREFIX}_ESDJ7000_GTASW_ID_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_GTRSW_ID','${DFILP}/${ENV_PREFIX}_ESDJ7000_GTRSW_ID_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_STATGTA','${DFILP}/${ENV_PREFIX}_ESDJ7000_STATGTA_ID_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_CURGTA_ID','${DFILP}/${ENV_PREFIX}_ESDJ7000_CURGTA_ID_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_IGTR00_ID','${DFILP}/${ENV_PREFIX}_ESDJ7000_IGTR00_ID_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_FRTOSTA_ID','${DFILP}/${ENV_PREFIX}_ESDJ7000_FRTOSTA_ID_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_IGTAA00_ID','${DFILP}/${ENV_PREFIX}_ESDJ7000_IGTAA00_ID_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_STATGTA_ID','${DFILP}/${ENV_PREFIX}_ESDJ7000_STATGTA_ID_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_STATGTR_ID','${DFILP}/${ENV_PREFIX}_ESDJ7000_STATGTR_ID_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_FACCTRTGT_ID','${DFILP}/${ENV_PREFIX}_ESDJ7000_FACCTRTGT_ID_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_DTSTATGTAA0_ID','${DFILP}/${ENV_PREFIX}_ESDJ7000_DTSTATGTAA0_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_VTSTATGTA0_ID','${DFILP}/${ENV_PREFIX}_ESDJ7000_VTSTATGTA0_ID_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESDJ7000',  'EST_TSTATGTAANO_ID','${DFILP}/${ENV_PREFIX}_ESDJ7000_TSTATGTAANO_ID_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('ALL',  'ESDJ7000','')
+go
+

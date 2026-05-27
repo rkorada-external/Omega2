@@ -1,0 +1,93 @@
+#!/bin/ksh
+#=============================================================================
+# description          : granularity spira : script de renommage des codes products
+# revision             : 1.0
+# date de creation     : 09/12/2020
+# auteur               : JYP - PERSEE
+#-----------------------------------------------------------------------------
+#[001] 02/02/2021 JYP : Spira 91991 : rollout I17P I17L 
+#[002] 03/02/2021 JYP : Spira 93415 : bugfix granularity AM/EU 
+set -x
+
+
+# Call generic functions
+. ${DUTI}/fctgen.cmd
+
+CHAININIT CNLD0030 $DENV/CNLD0030.env
+
+
+if [ "$LOGNAME" = "u007314" ] 
+then
+     site_usr="ubas"    # for local env
+else
+     site_usr="$LOGNAME"
+fi
+
+echo "PARM_BATCHUSER=$PARM_BATCHUSER"
+echo "LOGNAME=$LOGNAME"
+echo "site_usr=$site_usr"
+
+if [ -f ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FCTRI17PRD.dat ] 
+then
+
+cp -p ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FCTRI17PRD.dat ${DFILT}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FCTRI17PRD.dat_sav$$
+
+case "${site_usr}" in
+"ubas") 
+  cat ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FCTRI17PRD.dat | sed 's/~AS0/~ASG/' >  ${DFILT}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FCTRI17PRD.new  
+  cp -p ${DFILT}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FCTRI17PRD.new ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FCTRI17PRD.dat ;;
+"ubeu") 
+  cat ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FCTRI17PRD.dat | sed 's/~EU0/~EUG/' >  ${DFILT}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FCTRI17PRD.new  
+  cp -p  ${DFILT}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FCTRI17PRD.new ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FCTRI17PRD.dat ;;
+"ubam") 
+  cat ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FCTRI17PRD.dat | sed 's/~AM0/~AMG/' >  ${DFILT}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FCTRI17PRD.new  
+  cp -p ${DFILT}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FCTRI17PRD.new ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FCTRI17PRD.dat ;;
+esac
+
+fi 
+
+
+
+if [ -f ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FI17PRODUCT.dat ]
+then
+
+cp -p ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FI17PRODUCT.dat ${DFILT}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FI17PRODUCT.dat_sav$$
+
+case "${site_usr}" in
+"ubas")
+  cat   ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FI17PRODUCT.dat | sed 's/^AS0/ASG/' >  ${DFILT}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FI17PRODUCT.new
+  cp -p ${DFILT}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FI17PRODUCT.new ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FI17PRODUCT.dat ;;
+"ubeu")
+  cat    ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FI17PRODUCT.dat | sed 's/^EU0/EUG/' >  ${DFILT}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FI17PRODUCT.new
+  cp -p  ${DFILT}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FI17PRODUCT.new ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FI17PRODUCT.dat ;;
+"ubam")
+  cat   ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FI17PRODUCT.dat | sed 's/^AM0/AMG/' >  ${DFILT}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FI17PRODUCT.new
+  cp -p ${DFILT}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FI17PRODUCT.new ${DFILP}/${ENV_PREFIX}_ESFD3940_I17G_GRN_ALL_INI_FI17PRODUCT.dat ;;
+esac
+
+fi
+
+
+
+if [ -f ${DFILP}/${ENV_PREFIX}_ESFD0060_I17G____FI17PRODUCT.dat ]
+then
+
+cp -p ${DFILP}/${ENV_PREFIX}_ESFD0060_I17G____FI17PRODUCT.dat ${DFILT}/${ENV_PREFIX}_ESFD0060_I17G____FI17PRODUCT.dat_sav$$
+
+case "${site_usr}" in
+"ubas")
+  cat   ${DFILP}/${ENV_PREFIX}_ESFD0060_I17G____FI17PRODUCT.dat | sed 's/^AS0/ASG/' >  ${DFILT}/${ENV_PREFIX}_ESFD0060_I17G____FI17PRODUCT.new
+  cp -p ${DFILT}/${ENV_PREFIX}_ESFD0060_I17G____FI17PRODUCT.new ${DFILP}/${ENV_PREFIX}_ESFD0060_I17G____FI17PRODUCT.dat ;;
+"ubeu")
+  cat    ${DFILP}/${ENV_PREFIX}_ESFD0060_I17G____FI17PRODUCT.dat | sed 's/^EU0/EUG/' >  ${DFILT}/${ENV_PREFIX}_ESFD0060_I17G____FI17PRODUCT.new
+  cp -p  ${DFILT}/${ENV_PREFIX}_ESFD0060_I17G____FI17PRODUCT.new ${DFILP}/${ENV_PREFIX}_ESFD0060_I17G____FI17PRODUCT.dat ;;
+"ubam")
+  cat   ${DFILP}/${ENV_PREFIX}_ESFD0060_I17G____FI17PRODUCT.dat | sed 's/^AM0/AMG/' >  ${DFILT}/${ENV_PREFIX}_ESFD0060_I17G____FI17PRODUCT.new
+  cp -p ${DFILT}/${ENV_PREFIX}_ESFD0060_I17G____FI17PRODUCT.new ${DFILP}/${ENV_PREFIX}_ESFD0060_I17G____FI17PRODUCT.dat ;;
+esac
+
+fi
+
+
+
+

@@ -1,0 +1,45 @@
+USE BTRAV
+go
+-- UAT 1b btrav changes Sam Mansour Feb 03 2014
+--  Removed d b o references and added grant for GDBBATCH added the ubgl
+/* UBGL_ON */
+--IF OBJECT_ID(user_name()+'.TESTSSD') IS NOT NULL
+IF OBJECT_ID('TESTSSD') IS NOT NULL
+BEGIN
+    DROP TABLE TESTSSD
+--    IF OBJECT_ID(user_name()+'.TESTSSD') IS NOT NULL
+    IF OBJECT_ID('TESTSSD') IS NOT NULL
+        PRINT '<<< FAILED DROPPING TABLE TESTSSD >>>'
+    ELSE
+        PRINT '<<< DROPPED TABLE TESTSSD >>>'
+END
+go
+--23/10/2013 Florent  :spot:25427 - user géographique
+CREATE TABLE TESTSSD
+(
+    SSD_CF     USSD_CF       NULL,
+    VRS_NF     numeric(10,0) NULL,
+    CLOTYP_B   bit           DEFAULT 0 NOT NULL,
+    CLODAT1_D  datetime      NULL,
+    CLODAT2_D  datetime      NULL,
+    CLODAT3_D  datetime      NULL,
+    CLODAT4_D  datetime      NULL,
+    CLOPER1_LS char(64)      NULL,
+    CLOPER2_LS char(64)      NULL,
+    CLOPER3_LS char(64)      NULL,
+    CLOPER4_LS char(64)      NULL
+)
+LOCK DATAROWS
+go
+--IF OBJECT_ID(user_name()+'.TESTSSD') IS NOT NULL
+IF OBJECT_ID('TESTSSD') IS NOT NULL
+    PRINT '<<< CREATED TABLE TESTSSD >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE TESTSSD >>>'
+go
+GRANT SELECT ON TESTSSD TO GCONSULT
+go
+GRANT ALL ON TESTSSD TO GOMEGA
+go
+GRANT ALL ON TESTSSD TO GDBBATCH
+go

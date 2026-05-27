@@ -1,0 +1,6 @@
+USE BTRAV
+go
+
+alter table BTRAV..SCOPE_TRREPLINK add RETACCTYP_CT tinyint NULL, USGAAP_CT int NULL, FRSRTY_NF UUWY_NF default 1901
+
+go

@@ -1,0 +1,121 @@
+!	Working Constantes et variables multi-lingue
+!	M. Philippe HOUEE 		15/05/1997
+!
+! Edition (ESTR0320):
+!Liste des segments
+!--------------------------------------------------------
+
+#ifndef __sqh
+#define __sqh
+
+!----------------------------------------------------------------
+! Working multi-lingue
+!----------------------------------------------------------------
+#define WORKING   do C_working
+
+begin-procedure C_working($langue)
+   evaluate $langue
+
+	!---------------------------------------------------------
+	! Working Langue Francaise
+	!---------------------------------------------------------
+        when = 'F'
+		move 'Aucun Enregistrement '	      to $_msk_NODATA
+                move 'Contrat '                       to $_msk_CTR_NF
+                move ' Av.'                           to $_msk_END_NT
+                move 'Div.'                           to $_msk_DIV_NT
+                move 'Sec.'                           to $_msk_SEC_NF
+                move 'Dpt souscription  '             to $_msk_GRP_LS
+                move 'Cédante'                        to $_msk_CED_LS
+                move 'LOB'                            to $_msk_LOB_HS
+                move 'TOP'                            to $_msk_TOP_HS
+                move 'SOB'                            to $_msk_SOB_HS
+                move 'Nat.'                           to $_msk_CTRNATMNE_HD
+                move 'S-Nat.'                         to $_msk_CTRSNAMNE_LD
+                move 'Territorialité'                 to $_msk_CTYSUP_LS
+                move 'Date échéance'                  to $_msk_SECAN_D
+                move 'Segment : '                     to $_msk_SEG_NF
+                move 'Segment rétrocession : '        to $_msk_CTRRET_B
+                move 'Nombre de contrat / section : ' to $_msk_CTR_SEC_TOT
+	break
+
+	!----------------------------------------------------------
+	! Working Langue Anglaise
+	!----------------------------------------------------------
+        when = 'E'
+		move 'No record            ' 	      to $_msk_NODATA
+                move 'Contract'                       to $_msk_CTR_NF
+                move 'End.'                           to $_msk_END_NT
+                move 'Div.'                           to $_msk_DIV_NT
+                move 'Sec.'                           to $_msk_SEC_NF
+                move 'Underwriting group'             to $_msk_GRP_LS
+                move 'Cedente'                        to $_msk_CED_LS
+                move 'LOB'                            to $_msk_LOB_HS
+                move 'TOP'                            to $_msk_TOP_HS
+                move 'SOB'                            to $_msk_SOB_HS
+                move 'Nat.'                           to $_msk_CTRNATMNE_HD
+                move 'S-Nat.'                         to $_msk_CTRSNAMNE_LD
+                move 'Risk territory'                 to $_msk_CTYSUP_LS
+                move 'Cancel. date '                  to $_msk_SECAN_D
+		move 'Segment : '                     to $_msk_SEG_NF
+                move 'Retrocession contract : '       to $_msk_CTRRET_B
+                move 'Contract / section number : '   to $_msk_CTR_SEC_TOT
+		
+        break
+
+	!-----------------------------------------------------------
+	! Working Langue Inconnue ( en anglais)
+	!-----------------------------------------------------------
+        when-other
+		move 'No record            ' 	      to $_msk_NODATA
+                move 'Contract'                       to $_msk_CTR_NF
+                move 'End.'                           to $_msk_END_NT
+                move 'Div.'                           to $_msk_DIV_NT
+                move 'Sec.'                           to $_msk_SEC_NF
+                move 'Underwriting group'             to $_msk_GRP_LS
+                move 'Cedente'                        to $_msk_CED_LS
+                move 'LOB'                            to $_msk_LOB_HS
+                move 'TOP'                            to $_msk_TOP_HS
+                move 'SOB'                            to $_msk_SOB_HS
+                move 'Nat.'                           to $_msk_CTRNATMNE_HD
+                move 'S-Nat.'                         to $_msk_CTRSNAMNE_LD
+                move 'Risk territory'                 to $_msk_CTYSUP_LS
+                move 'Cancel. date '                  to $_msk_SECAN_D
+		move 'Segment : '                     to $_msk_SEG_NF
+                move 'Retrocession contract : '       to $_msk_CTRRET_B
+                move 'Contract / section number : '   to $_msk_CTR_SEC_TOT
+		
+   end-evaluate
+
+end-procedure
+
+!--------------------------------------------------------------------
+! Working mono-lingue
+!--------------------------------------------------------------------
+
+	! * SETUP *
+	#define NB_TRACE 20
+	#define MAXLINES 36 
+	#define ORIENT   landscape
+	#define FORMFEED noformfeed
+
+	! * Variables position *
+	#define ligne_entete      19
+	#define ligne_exercice    14
+	#define ligne_contrat     15
+
+	
+	! * Format *
+	#define msk_PAGE          '999999'
+	#define dateNULLE   	  'Jan  1 1900 12:00:00:000AM'
+
+	!>>> Mise en forme --> mef
+	#define mef_entete        $_bold
+	#define mef_fin_entete    $_end_bold
+	#define mef_tab           $_bold
+	#define mef_fin_tab       $_end_bold
+
+!------------------------------------------------------------------
+! Fin __sqh
+!------------------------------------------------------------------
+#endif

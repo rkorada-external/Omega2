@@ -1,0 +1,14 @@
+use BEST
+go
+
+/*==============================================================*/
+/* Table: TLIFDRI                                            */
+/*==============================================================*/
+
+ALTER TABLE dbo.TLIFDRI ADD RESPROPAG_B tinyint NULL
+go
+
+update dbo.TLIFDRI SET RESPROPAG_B=1 WHERE RESPROPAG_B IS NULL
+go
+
+

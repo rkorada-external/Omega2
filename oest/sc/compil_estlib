@@ -1,0 +1,38 @@
+#!/bin/ksh
+#==============================================================================
+#nom de l'application          : #########################
+#nom du source                 : ##########.sh
+#revision                      : $Revision:   1.0  $
+#date de creation              : 19/10/1995
+#auteur                        : S.C.O.R.
+#references des specifications : #################
+#squelette de base             :
+#------------------------------------------------------------------------------
+#description :
+#	Fabrique la library estlib.a du domaine estimation
+#------------------------------------------------------------------------------
+#historique des modifications :
+#   <jj/mm/aaaa>   <auteur>    <description de la modification>
+#
+# set -x
+
+DOMAIN=oest
+
+export APPL_HOME=/nfsprod1/scorprod
+export DINC2=${APPL_HOME}/otec/sc2
+export DCTLIB2=${APPL_HOME}/otec/lib2
+export DEXE=${APPL_HOME}/oest/exe
+export DSRC=${APPL_HOME}/otec/sc2
+export DLIB=${DCTLIB2}
+export DOBJ=${APPL_HOME}/otec/obj2
+cd ${DSRC}
+if [ $? != 0 ]
+then
+	echo "Impossible de se positionner dans $DSRC"
+	exit 1
+fi
+
+make -f estlib.mk 
+
+exit $?
+

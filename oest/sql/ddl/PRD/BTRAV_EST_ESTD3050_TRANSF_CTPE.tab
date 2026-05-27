@@ -1,0 +1,33 @@
+use BTRAV
+go
+
+/***************************************************
+[000] 21/08/2015 R. Cassis   :spot:29223 - Table de Contrepartie des postes pour Transfert de portefeuille
+*****************************************************/
+
+if object_id('EST_ESTD3050_TRANSF_CTPE') is not null
+begin
+  drop TABLE EST_ESTD3050_TRANSF_CTPE
+  print '<<< DROPPED TABLE EST_ESTD3050_TRANSF_CTPE >>>'
+end
+go
+CREATE TABLE EST_ESTD3050_TRANSF_CTPE
+(
+   ESSD_CF    USSD_CF NOT NULL,
+   EESB_CF    UESB_CF NOT NULL,
+   RSSD_CF    USSD_CF NOT NULL,
+   RESB_CF    UESB_CF NOT NULL,
+   POSTECP UDETTRS_CF DEFAULT '' NOT NULL
+)
+go
+if object_id('EST_ESTD3050_TRANSF_CTPE') is not null
+  print '<<< CREATED TABLE EST_ESTD3050_TRANSF_CTPE >>>'
+else
+  print '<<< FAILED CREATING TABLE EST_ESTD3050_TRANSF_CTPE >>>'
+go
+grant ALL on EST_ESTD3050_TRANSF_CTPE TO GOMEGA
+go
+grant ALL on EST_ESTD3050_TRANSF_CTPE TO GDBBATCH
+go
+grant select on EST_ESTD3050_TRANSF_CTPE TO GCONSULT
+go

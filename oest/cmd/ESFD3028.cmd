@@ -1,0 +1,1091 @@
+#!/bin/ksh
+#=============================================================================
+# nom de l'application          : ESTIMATION TEST
+# nom du script SHELL           : ESID3028.cmd
+# revision                      : $Revision: 1.10 $
+# date de creation              : 
+# auteur                        : 
+# references des specifications : 
+#-----------------------------------------------------------------------------
+# description :
+# Création VLIFEST, CPLIFEST, CPLIFEST_MVT et LIFESTNOACC
+#
+# job launched by ESID2030.cmd
+#-----------------------------------------------------------------------------
+# historique des modifications :
+# historique des modifications :
+#
+#[001] 24/07/2014 ABJ  spot:25773 Ajout de liberation acy>balshyear dans le LIFESTNOACC. 
+#[002] 18/09/2014 SBE  spot:25773 Ajout de liberation dans CPLIFEST
+#[003] 18/09/2014 ABJ  spot:25773 Modification du tri pour le pg de calcul de liberation
+#[004] 19/09/2014 M.MECHRI  spot:25773 suppression de SOMME des montants ESTMNT
+#[005] 01/10/2014 ABJ  spot:25773 Ajout de liberation > 2015
+#[006] 06/10/2014 ABJ  spot:25773  Add of Begining > 2015 in LifestNoACC
+#[007] 10/10/2014 JBG  spot:25773 Left trim spaces on ESTMNT_M before ESTC2043 call
+#[008] 14/10/2014 ABJ  :spot:25773 Ajout du mois bilan pour le ESTC2164
+#[009] 15/10/2014 ABJ  :spot:25773 Ajout d un ESTC2040 avant passage du pg de calcul de liberation
+#[010] 16/10/2014 ABJ  :spot:25773 Ajout d'un fichier de log pour le ESTC2164 ( pour les postes inexistants)
+#[011] 26/05/2015 JFO  :spot:28559 Correction code et re-organisation chaine
+#[012] 19/10/2015 RBE  :spot:29525 Correction: dernière postion des libérations sur LIFESTNOACC
+#[013] 19/10/2015 RBE  :spot:29541 Correction: recalcul du gaapdiff sur le VLIFEST
+#[014] 05/01/2016 RBE  :spot:29971 Correction: recalcul des libérations sur les NOACC
+#[015] 19/01/2016 SBE  :spot:30058 Correction: Calcul libérations NOACC
+#[016] 06/09/2016 RBE  :spot:31159 Correction: Estimations du traité acceptation des AC > 2016 ne sont pas à jour 
+#[017] 06/12/2016 MMA  :SPIRA 57802 : Suppression des doublons dans la VLIFEST195 provoquant des écarts
+#[018] 08/04/2019 RAF  :spot:70045 aggregate CPLIFEST_MVT for quarterly
+#[019] 03/01/2020 SBE  :spira:83913 Life CLOSING: ESID2030 - Plantage dû longueur de ligne fichier entrée 
+#[020] 21/01/2020 BEL  :spot:81896 Modifier l'ordre des champs de la cle du tri des fichiers d'entrer de ESTC2164.
+#[021] 21/01/2020 BEL  :spot:87591 Retirer le filtre 'NEWLIGNE' sur ${SORT_O} afin d'avoir toutes les lignes de VLIFEST195.
+#===============================================================================
+#set -x
+
+# Call generic functions
+. ${DUTI}/fctgen.cmd
+. ${DUTI}/fctprint.cmd
+. ${DUTI}/fctws.cmd
+
+# Get input parameters
+CRE_D=$1
+BALSHTYEA_NF=$2 
+BALSHTMTH_NF=$3
+LIF_ACY_MIN=5
+LIF_ACY_MAX=4
+
+# Calcul ACYMAX 
+ACYMAX=`expr ${BALSHTYEA_NF} + ${LIF_ACY_MAX}`
+
+# Job Initialisation
+JOBINIT
+
+# /!\ /!\ /!\ /!\ /!\ /!\ /!\ 
+#    FR      ==>       EN
+#
+# Liberation    ==  Beginning
+# Constitutions ==  Ending
+
+###
+# echo
+# echo "Input files :"
+# echo "VLIFEST       ==> ${EST_VLIFEST195}" 
+# echo "LIFESTNOACC   ==> ${EST_LIFESTNOACC}"
+# echo "CPLIFEST_MVT  ==> ${EST_CPLIFEST_MVT}"
+# echo "CPLIFEST      ==> ${EST_CPLIFEST}"   
+# echo "LIFTRANSFR    ==> ${EST_LIFTRANSFR}"
+# echo
+###
+
+#####################################################
+#                  VLIFEST DEBUT                    #
+#####################################################
+
+
+NSTEP=${NJOB}_000
+# Sauvegarde VLIFEST
+#---------------------------------------------------------------------------
+LIBEL="Save VLIFEST195"
+gzip -c ${EST_VLIFEST195}   >     ${DFILI}/${NSTEP}_VLIFEST_START_${NJOB}.dat.gz
+
+
+NSTEP=${NJOB}_010
+# Tri du VLIFEST195 - Liberations
+#------------------------------------------------------------------------------
+LIBEL="Sorting VLIFEST195 with and without beginning"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${EST_VLIFEST195} 1000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_VLIFEST${IT}_wLIB.dat"      # Sans liberations
+SORT_O1="${DFILT}/${NSTEP}_${IB}_SORT_VLIFEST${IT}_woLIB.dat"    # Anciennes liberations
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS 
+        CTR_NF           2:1 -  2:,
+        END_NT           3:1 -  3:,
+        SEC_NF           4:1 -  4:EN,
+        UWY_NF           5:1 -  5:,
+        UW_NT            6:1 -  6:,
+        ACY_NF           7:1 -  7:,
+        CRE_D            8:1 -  8:,
+        ACMTRS_NT       10:1 - 10:,
+        ACMTRS4_NT      10:4 - 10:4,
+        BALSHEY_NF      11:1 - 11:,
+        CUR_CF          13:1 - 13:,
+        DETTRNCOD_CF    20:1 - 20:,
+        GAAP_NF         22:1 - 22:,
+		ACM_NF			25:1 - 25:EN
+/KEYS 
+    CTR_NF,
+    END_NT,
+    SEC_NF,
+    ACMTRS_NT,
+    ACY_NF,
+	ACM_NF,
+    UWY_NF,
+    DETTRNCOD_CF,
+    GAAP_NF,
+    UW_NT,
+    BALSHEY_NF,
+    CRE_D,
+    CUR_CF
+/CONDITION ACMTRS_A ( ACMTRS4_NT = "4")
+/OUTFILE   ${SORT_O}
+/OMIT      ACMTRS_A
+/OUTFILE   ${SORT_O1}
+/INCLUDE   ACMTRS_A
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_030
+# Suppression des espaces dans ESTMNT_M
+#-----------------------------------------------------------------------------
+LIBEL="Supressing white spaces in ESTMNT_M from VLIFEST"
+AWK_I=${DFILT}/${NJOB}_010_${IB}_SORT_VLIFEST${IT}_wLIB.dat
+AWK_O=${DFILT}/${NJOB}_030_${IB}_SORT_VLIFEST${IT}_wLIB_NO_SPACE.dat
+AWK_CMD=`CFTMP`
+INPUT_TEXT ${AWK_CMD} <<EOF
+BEGIN{ FS="\~"; OFS="\~" }
+        { gsub(\/ \/,"",\$14); print \$0 }
+exit
+EOF
+AWK
+
+
+NSTEP=${NJOB}_040
+# Tri du LIFESTLIB
+#------------------------------------------------------------------------------
+LIBEL="Sorting \${DFILT}/${NJOB}_030_${IB}_SORT_VLIFEST${IT}_wLIB_NO_SPACE.dat for ESTC2164"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_030_${IB}_SORT_VLIFEST${IT}_wLIB_NO_SPACE.dat 1000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_VLIFEST${IT}_wLIB_NO_SPACE_SORT.dat" # Nouvelles liberations
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS
+        CTR_NF           2:1 -  2:,
+        END_NT           3:1 -  3:,
+        SEC_NF           4:1 -  4:EN,
+        UWY_NF           5:1 -  5:,
+        UW_NT            6:1 -  6:,
+        ACY_NF           7:1 -  7:,
+        ACMTRS_NT       10:1 - 10:,
+        DETTRNCOD_CF    20:1 - 20:,
+        GAAP_NF         22:1 - 22:,
+        ACM_NF          25:1 - 25:EN
+/KEYS
+    CTR_NF,
+    END_NT,
+    SEC_NF,
+    ACY_NF,
+    ACM_NF,
+    ACMTRS_NT,
+    DETTRNCOD_CF,
+    UWY_NF,
+    UW_NT,
+    GAAP_NF
+/OUTFILE ${SORT_O}
+exit
+EOF
+SORT
+
+
+NSTEP=${NJOB}_050
+# Tri du LIFESTLIB
+#------------------------------------------------------------------------------
+LIBEL="Sorting LIFESTLIB for ESTC2164"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${EST_LIFESTLIB} 1000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_LIFESTLIB${IT}.dat" # Nouvelles liberations
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS 
+        CTR_NF           2:1 -  2:,
+        END_NT           3:1 -  3:,
+        SEC_NF           4:1 -  4:EN,
+        UWY_NF           5:1 -  5:,
+        UW_NT            6:1 -  6:,
+        ACY_NF           7:1 -  7:,
+        ACMTRS_NT       10:1 - 10:,
+        DETTRNCOD_CF    20:1 - 20:,
+        GAAP_NF         22:1 - 22:,
+		ACM_NF			25:1 - 25:EN
+/KEYS 
+    CTR_NF,
+    END_NT,
+    SEC_NF,
+    ACY_NF,
+	ACM_NF,
+    ACMTRS_NT,
+    DETTRNCOD_CF,
+    UWY_NF,
+    UW_NT,
+    GAAP_NF
+/OUTFILE ${SORT_O}
+exit
+EOF
+SORT
+
+
+NSTEP=${NJOB}_070
+# Calculation des liberations pour le VLIFEST
+#------------------------------------------------------------------------------
+LIBEL="Calculation of beginning VLIFEST"
+PRG=ESTC2164
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} <<EOF
+CRE_D $CRE_D
+BALSHTYEA $BALSHTYEA_NF
+BALSHTMTH_NF $BALSHTMTH_NF
+ACY_MIN $LIF_ACY_MIN
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1=${DFILT}/${NJOB}_040_${IB}_SORT_VLIFEST${IT}_wLIB_NO_SPACE_SORT.dat  # VLIFEST sans liberation ni espace 
+export ${PRG}_I2=${DFILT}/${NJOB}_050_${IB}_SORT_LIFESTLIB${IT}.dat              # Liberations
+export ${PRG}_I3=${EST_SUBTRS}
+export ${PRG}_I4=${EST_SUBTRSASSO}
+export ${PRG}_O1=${DFILT}/${NSTEP}_${IB}_${PRG}_LIFESTLIB${IT}_MAJ.dat           # lignes avec liberations mise a jour
+export ${PRG}_O2=${DFILT}/${NSTEP}_${IB}_${PRG}${IT}_LOG.dat
+EXECPRG
+
+
+
+#[014]
+#[015]
+NSTEP=${NJOB}_100
+# Création du CPLIFEST_MVT pour recharger dans TLIFEST
+#------------------------------------------------------------------------------
+LIBEL="Sorting VLIFEST - Creation of CPLIFEST_MVT to be reloaded in TLIFEST"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_030_${IB}_SORT_VLIFEST${IT}_wLIB_NO_SPACE.dat 1000 1"   # VLIFEST sans liberation ni espace 
+SORT_I2="${DFILT}/${NJOB}_070_${IB}_ESTC2164_LIFESTLIB${IT}_MAJ.dat 1000 1"      # Nouvelles liberations
+SORT_O="${DFILT}/${NSTEP}_${IB}_VLIFEST${IT}_MAJ.dat"                            # VLIFEST avec nouvelles libérations
+SORT_O2="${DFILT}/${NSTEP}_${IB}_VLIFEST${IT}_NOACC.dat"  
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS 
+        CTR_NF           2:1 - 2:,
+        SEC_NF           4:1 - 4:,
+        UWY_NF           5:1 - 5:,   
+        ACY_NF           7:1 - 7:EN,
+        CRE_D            8:1 - 8:,
+        ACMTRS_NT       10:1 - 10:,
+        DETTRNCOD_CF    20:1 - 20:,
+        GAAP_NF         22:1 - 22:,
+		ACM_NF			25:1 - 25:EN,
+        CRE_D2           8:1 - 8:14,
+        BATCH_B         52:1 - 52:
+/KEYS 
+    CTR_NF,
+    SEC_NF,
+    UWY_NF,
+    ACY_NF,
+	ACM_NF,
+    ACMTRS_NT    DESCENDING,
+    DETTRNCOD_CF DESCENDING,
+    GAAP_NF      DESCENDING,
+    CRE_D        DESCENDING
+/CONDITION ACY ( ACY_NF > ${ACYMAX} ) 
+/CONDITION NOACC (ACY_NF > `expr ${BALSHTYEA_NF}` AND ACY_NF <= ${ACYMAX})
+/OUTFILE       ${SORT_O}
+/OMIT      ACY
+/OUTFILE       ${SORT_O2}
+/INCLUDE   NOACC
+exit
+EOF
+SORT
+
+
+NSTEP=${NJOB}_120
+# Launching cleaning chain ESID0002
+#------------------------------------------------------------------------------
+LIBEL="Launching cleaning chain ESID0002"
+IBC=${IB}
+INPUT_FILE1="${DFILT}/${NJOB}_100_${IB}_VLIFEST${IT}_MAJ.dat"
+OUTPUT_FILE_NAME="${DFILT}/${NSTEP}_${IB}_VLIFEST${IT}.dat"
+OUTPUT_FILE_NAME_DIFF="${DFILT}/${NSTEP}_${IB}_VLIFEST${IT}_OLD.dat"
+${DCMD}/ESID0002.cmd ${IBC} ${OUTPUT_FILE_NAME} ${OUTPUT_FILE_NAME_DIFF} ${INPUT_FILE1} 2>&1 | ${TEE}   # ${INPUT_FILE2}
+IB=${IBC}
+
+
+#####################################################
+#       VLIFEST INTERROMPU (fin step 270)           #
+#####################################################
+
+#####################################################
+#                LIFESTNOACC DEBUT                  #
+#####################################################
+
+#[014]
+NSTEP=${NJOB}_130
+# Launching cleaning chain ESID0002
+#------------------------------------------------------------------------------
+LIBEL="Launching cleaning chain ESID0002"
+IBC=${IB}
+INPUT_FILE1="${EST_LIFESTNOACC}"
+INPUT_FILE2="${DFILT}/${NJOB}_100_${IB}_VLIFEST${IT}_NOACC.dat"
+OUTPUT_FILE_NAME="${DFILT}/${NSTEP}_${IB}_LIFESTNOACC${IT}_O.dat"
+OUTPUT_FILE_NAME_DIFF="${DFILT}/${NSTEP}_${IB}_ESID0002_OLD_LIFESTNOACC${IT}.dat"
+#on sauvegarde la variable NJOB qui est modifiée dans le ESID0002 avec le JOBINIT
+SAVINGJOB=${NJOB}
+NJOB=${NSTEP}_ESID0002
+${DCMD}/ESID0002.cmd ${IBC} ${OUTPUT_FILE_NAME} ${OUTPUT_FILE_NAME_DIFF} ${INPUT_FILE1} ${INPUT_FILE2} 2>&1 | ${TEE}
+IB=${IBC}
+NJOB=${SAVINGJOB}
+
+#[014]
+NSTEP=${NJOB}_140
+# Tri du LIFESTLIB avec et sans liberations
+#------------------------------------------------------------------------------
+LIBEL="Sorting LIFESTLIB with and without beginning"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_130_${IB}_LIFESTNOACC${IT}_O.dat 1000 1"  # Lignes du LIFESTNOACC
+SORT_O1="${DFILT}/${NSTEP}_${IB}_LIFESTNOACC${IT}_LIB.dat"         # Lignes du LIFESTNOACC avec liberations
+SORT_O2="${DFILT}/${NSTEP}_${IB}_LIFESTNOACC${IT}_woLIB.dat"       # Lignes du LIFESTNOACC sans liberations
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS 
+        CTR_NF           2:1 -  2:,
+        END_NT           3:1 -  3:,
+        SEC_NF           4:1 -  4:EN,
+        ACY_NF           7:1 -  7:,
+        UWY_NF           5:1 -  5:,
+        UW_NT            6:1 -  6:,
+        ACMTRS_NT       10:1 - 10:,
+        ACMTRS4_NT      10:4 - 10:4,
+        DETTRNCOD_CF    20:1 - 20:,
+        GAAP_NF         22:1 - 22:,
+		ACM_NF			25:1 - 25:EN
+/KEYS 
+    CTR_NF,
+    END_NT,
+    SEC_NF,
+    ACY_NF,
+	ACM_NF,
+    UWY_NF,
+    UW_NT,
+    ACMTRS_NT,
+    DETTRNCOD_CF,
+    GAAP_NF
+/CONDITION LIB (ACMTRS4_NT = "4" )
+/OUTFILE   ${SORT_O1}
+/INCLUDE   LIB
+/OUTFILE   ${SORT_O2}
+/OMIT      LIB
+exit
+EOF
+SORT
+
+#####################################################
+
+#[010] 
+NSTEP=${NJOB}_160
+# Calculation des liberations LIFESTNOACC
+#------------------------------------------------------------------------------
+LIBEL="Calculation of begining for LIFESTNOACC"
+PRG=ESTC2164
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} <<EOF
+CRE_D $CRE_D
+BALSHTYEA    $BALSHTYEA_NF
+BALSHTMTH_NF $BALSHTMTH_NF
+ACY_MIN      $LIF_ACY_MIN
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1=${DFILT}/${NJOB}_140_${IB}_LIFESTNOACC${IT}_woLIB.dat
+export ${PRG}_I2=${DFILT}/${NJOB}_140_${IB}_LIFESTNOACC${IT}_LIB.dat
+export ${PRG}_I3=${EST_SUBTRS}
+export ${PRG}_I4=${EST_SUBTRSASSO}
+export ${PRG}_O1=${DFILT}/${NSTEP}_${IB}_${PRG}_LIFESTNOACC${IT}_LIB_MAJ.dat     # Lignes des liberations du LIFESTNOACC MAJ 
+export ${PRG}_O2=${DFILT}/${NSTEP}_${IB}_${PRG}${IT}_LOG.dat
+EXECPRG
+
+
+NSTEP=${NJOB}_180
+# Add of Begining > 2015 in LifestNoACC
+#------------------------------------------------------------------------------
+LIBEL="Addind information to LIFESTNOACC"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_140_${IB}_LIFESTNOACC${IT}_LIB.dat 1000 1"   
+SORT_I2="${DFILT}/${NJOB}_140_${IB}_LIFESTNOACC${IT}_woLIB.dat 1000 1"
+SORT_I3="${DFILT}/${NJOB}_160_${IB}_ESTC2164_LIFESTNOACC${IT}_LIB_MAJ.dat 1000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_LIFESTNOACC${IT}.dat"
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS 
+        CTR_NF          2:1 -  2:,
+        SEC_NF          4:1 -  4:,
+        UWY_NF          5:1 -  5:,
+        ACY_NF          7:1 -  7: EN,
+        CRE_D           8:1 -  8:,
+        ACMTRS_NT      10:1 - 10:,
+        ACMTRS_NT1     10:1 - 10:1,
+        DETTRNCOD_CF   20:1 - 20:,
+		ACM_NF			25:1 - 25:EN,
+        BALSHEY_NF     11:1 - 11: EN,
+        BALSHMTH_NF    12:1 - 12: EN,
+        FILLER          1:1 - 41:,
+        FILLER1        43:1 - 54: 
+/KEYS 
+    CTR_NF, 
+    SEC_NF, 
+    UWY_NF,
+    ACY_NF, 
+	ACM_NF,
+    ACMTRS_NT, 
+    DETTRNCOD_CF,
+    BALSHEY_NF DESCENDING,
+    BALSHMTH_NF DESCENDING,
+    CRE_D DESCENDING        
+/CONDITION ACCRET1 ( ACMTRS_NT1 = "1" )
+/CONDITION ACY (ACY_NF > `expr ${BALSHTYEA_NF}`)
+/DERIVEDFIELD ACCRET_B1 if ACCRET1 then "A~" else "R~"
+/OUTFILE   ${SORT_O}
+/INCLUDE   ACY 
+/REFORMAT 
+        FILLER, 
+        ACCRET_B1, 
+        FILLER1
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_200
+# Launching cleaning chain ESID0002
+#------------------------------------------------------------------------------
+LIBEL="Launching cleaning chain ESID0002"
+IBC=${IB}
+INPUT_FILE1="${DFILT}/${NJOB}_180_${IB}_SORT_LIFESTNOACC${IT}.dat"
+OUTPUT_FILE_NAME="${DFILT}/${NSTEP}_${IB}_SORT_LIFESTNOACC${IT}.dat"
+OUTPUT_FILE_NAME_DIFF="${DFILT}/${NSTEP}_${IB}_LIFESTNOACC${IT}_OLD.dat"
+${DCMD}/ESID0002.cmd ${IBC} ${OUTPUT_FILE_NAME} ${OUTPUT_FILE_NAME_DIFF} ${INPUT_FILE1} 2>&1 | ${TEE}   # ${INPUT_FILE2}
+IB=${IBC}
+
+
+#####################################################
+#    LIFESTNOACC INTERROMPU (suite step 290)        #
+#####################################################
+
+#####################################################
+#                CPLIFEST_MVT DEBUT                 #
+#####################################################
+
+#[016]
+NSTEP=${NJOB}_220
+# Mise au format CPLIFEST
+#-----------------------------------------------------------------------------
+LIBEL="Sorting and Formating VLIFEST in order to create CPLIFEST MVT"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_120_${IB}_VLIFEST${IT}.dat 1000 1"
+SORT_I2="${DFILT}/${NJOB}_050_${IB}_SORT_LIFESTLIB${IT}.dat 1000 1"
+SORT_I3="${DFILT}/${NJOB}_070_${IB}_ESTC2164_LIFESTLIB${IT}_MAJ.dat 1000 1"
+SORT_I4="${DFILT}/${NJOB}_140_${IB}_LIFESTNOACC${IT}_LIB.dat 1000 1"
+SORT_I5="${DFILT}/${NJOB}_160_${IB}_ESTC2164_LIFESTNOACC${IT}_LIB_MAJ.dat 1000 1"
+SORT_I6="${DFILT}/${NJOB}_200_${IB}_SORT_LIFESTNOACC${IT}.dat 1000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_LIFEST${IT}_MVT.dat" 
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS 
+        SSD_CF  1:1 -  1:EN,
+        CTR_NF  2:1 -  2:,
+        END_NT  3:1 -  3:,
+        SEC_NF  4:1 -  4:,
+        UWY_NF  5:1 -  5:,
+        ACY_NF  7:1 -  7:EN,
+		ACM_NF  25:1 - 25:EN
+/COPY
+/OUTFILE   ${SORT_O}
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_230
+# Launching cleaning chain ESID0002
+#------------------------------------------------------------------------------
+LIBEL="Launching cleaning chain ESID0002"
+IBC=${IB}
+INPUT_FILE1="${DFILT}/${NJOB}_220_${IB}_LIFEST${IT}_MVT.dat"
+OUTPUT_FILE_NAME="${DFILT}/${NSTEP}_${IB}_SORT_LIFEST${IT}_MVT.dat"
+OUTPUT_FILE_NAME_DIFF="${DFILT}/${NSTEP}_${IB}_LIFEST${IT}_MVT_OLD.dat"
+${DCMD}/ESID0002.cmd ${IBC} ${OUTPUT_FILE_NAME} ${OUTPUT_FILE_NAME_DIFF} ${INPUT_FILE1} 2>&1 | ${TEE}   # ${INPUT_FILE2}
+IB=${IBC}
+
+
+NSTEP=${NJOB}_240
+# Mise au format CPLIFEST
+#-----------------------------------------------------------------------------
+LIBEL="Sorting and Formating VLIFEST in order to create CPLIFEST MVT"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_230_${IB}_SORT_LIFEST${IT}_MVT.dat 1000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_CPLIFEST${IT}_MVT.dat" 
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS 
+        SSD_CF           1:1 -  1:EN,
+        CTR_NF           2:1 -  2:,
+        END_NT           3:1 -  3:,
+        SEC_NF           4:1 -  4:,
+        UWY_NF           5:1 -  5:,
+        UW_NT            6:1 -  6:,
+        ACY_NF           7:1 -  7:EN,
+        CRE_D            8:1 -  8:,
+        PRS_CF           9:1 -  9:,
+        ACMTRS_NT       10:1 - 10:, 
+        BALSHEY_NF      11:1 - 11:,
+        BALSHTMTH_NF    12:1 - 12:EN,
+        CUR_CF          13:1 - 13:,
+        ESTMNT_M        14:1 - 14:EN 15/3,
+        INDSUP_B        15:1 - 15:,
+        ORICOD_LS       16:1 - 16:,
+        CREUSR_CF       17:1 - 17:,
+        LSTUPD_D        18:1 - 18:,
+        LSTUPDUSR_CF    19:1 - 19:,
+        DETTRNCOD_CF    20:1 - 20:,
+        GAAP_NF         22:1 - 22:,
+        CRE_D2           8:1 -  8:14,
+        GAAPDIFF_M      23:1 - 23:EN 15/3,
+        PROPAGATION_B   24:1 - 24:,
+        ESTMTH_NF       25:1 - 25:EN,
+        ORICTR_NF       26:1 - 26:,
+        ORISEC_NF       27:1 - 27:,
+        ORIUWY_NF       28:1 - 28:,
+        BATCH_B         52:1 - 52:
+/KEYS 
+    CTR_NF,
+    SEC_NF,
+    UWY_NF    
+/DERIVEDFIELD CALCULATED_B "0~" 
+/CONDITION NEWMVT ( ( CRE_D2 = "${CRE_D} 23:59" ) AND BATCH_B = "1" )
+/OUTFILE ${SORT_O}
+/INCLUDE NEWMVT
+/REFORMAT   
+        CTR_NF,
+        END_NT,
+        SEC_NF,
+        UWY_NF,
+        UW_NT,
+        CRE_D,
+        BALSHEY_NF,
+        BALSHTMTH_NF,
+        ACY_NF,
+        GAAP_NF,
+        DETTRNCOD_CF,
+		ESTMTH_NF,
+        PRS_CF,
+        ACMTRS_NT,
+        SSD_CF,
+        CUR_CF,
+        ESTMNT_M,
+        INDSUP_B,
+        ORICOD_LS,
+        CREUSR_CF,
+        LSTUPD_D,
+        LSTUPDUSR_CF,
+        ORICTR_NF,
+        ORISEC_NF,
+        ORIUWY_NF,
+        GAAPDIFF_M,
+        PROPAGATION_B,
+        CALCULATED_B,
+        BATCH_B
+exit
+EOF
+SORT
+
+if [ "${IT}" = "Y" ]
+then     
+	NSTEP=${NJOB}_260
+	# Inversion des montants avant le remplissage de la table TLIFEST
+	#-----------------------------------------------------------------------------
+	LIBEL="Inversion des montants avant le remplissage de la table TLIFEST"
+	AWK_I=${DFILT}/${NJOB}_240_${IB}_CPLIFEST${IT}_MVT.dat
+	AWK_O=${EST_CPLIFEST_MVT}
+	AWK_CMD=`CFTMP`
+	INPUT_TEXT ${AWK_CMD} <<EOF
+	BEGIN{ FS="\~"; OFS="\~" }
+	        { if( \$14 < "2000" ) { print \$0 }}
+	        { if( \$14 > "2000" ) { \$17 = sprintf("%-.3lf",-\$17) ; print \$0 }}
+	exit
+EOF
+	AWK
+else
+	NSTEP=${NJOB}_260
+	# Inversion des montants avant le remplissage de la table TLIFEST
+	#-----------------------------------------------------------------------------
+	LIBEL="Inversion des montants avant le remplissage de la table TLIFEST"
+	AWK_I=${DFILT}/${NJOB}_240_${IB}_CPLIFEST${IT}_MVT.dat
+	AWK_O=${DFILT}/${NSTEP}_${IB}_CPLIFEST${IT}_MVT.dat
+	AWK_CMD=`CFTMP`
+	INPUT_TEXT ${AWK_CMD} <<EOF
+	BEGIN{ FS="\~"; OFS="\~" }
+	        { if( \$14 < "2000" ) { print \$0 }}
+	        { if( \$14 > "2000" ) { \$17 = sprintf("%-.3lf",-\$17) ; print \$0 }}
+	exit
+EOF
+	AWK
+
+	NSTEP=${NJOB}_261
+	# SORT CPLIFEST_MVT before aggreagte
+	#[018]
+	#------------------------------------------------------------------------------
+	LIBEL="SORT CPLIFEST_MVT before aggreagte"
+	SORT_WDIR=${SORTWORK}
+	SORT_CMD=`CFTMP`
+	SORT_I="${DFILT}/${NJOB}_260_${IB}_CPLIFEST${IT}_MVT.dat 1000 1"
+	SORT_O="${DFILT}/${NSTEP}_${IB}_CPLIFEST${IT}_MVT_SORT.dat 1000 1"
+	INPUT_TEXT ${SORT_CMD} <<EOF
+	/FIELDS
+		CTR_NF			1:1 - 1:,
+		SEC_NF			3:1 - 3:EN,
+		UWY_NF			4:1 - 4:,
+		ACY_NF			9:1 - 9:,
+		GAAP_NF			10:1 - 10:EN,
+		DETTRNCOD_CF	11:1 - 11:,
+		ACM_NF			12:1 - 12:EN,
+		ACMTRS_NT		14:1- 14:
+	/KEYS
+		CTR_NF,
+		SEC_NF,
+		UWY_NF,
+		ACY_NF,
+		ACMTRS_NT,
+		DETTRNCOD_CF,
+		GAAP_NF,
+		ACM_NF
+	/OUTFILE ${SORT_O}
+	exit
+EOF
+	SORT
+	
+	NSTEP=${NJOB}_262
+	# SORT CPLIFEST before aggregate
+	#[018]
+	#------------------------------------------------------------------------------
+	LIBEL="SORT CPLIFEST before aggregate"
+	SORT_WDIR=${SORTWORK}
+	SORT_CMD=`CFTMP`
+	SORT_I="${EST_CPLIFEST} 1000 1"
+	SORT_O="${DFILT}/${NSTEP}_${IB}_CPLIFEST${IT}_SORT.dat 1000 1"
+	INPUT_TEXT ${SORT_CMD} <<EOF
+	/FIELDS
+		CTR_NF			1:1 - 1:,
+		SEC_NF			3:1 - 3:EN,
+		UWY_NF			4:1 - 4:,
+		ACY_NF			9:1 - 9:,
+		GAAP_NF			10:1 - 10:EN,
+		DETTRNCOD_CF	11:1 - 11:,
+		ACM_NF			12:1 - 12:EN,
+		ACMTRS_NT		14:1- 14:
+	/KEYS
+		CTR_NF,
+		SEC_NF,
+		UWY_NF,
+		ACY_NF,
+		ACMTRS_NT,
+		DETTRNCOD_CF,
+		GAAP_NF,
+		ACM_NF
+	/OUTFILE ${SORT_O}
+	exit
+EOF
+	SORT
+	
+	NSTEP=${NJOB}_263
+	# aggregate CPLIFEST_MVT
+	#[018]
+	#------------------------------------------------------------------------------
+	LIBEL="aggregate CPLIFEST_MVT"
+	PRG=ESTC2167
+	FPRM=`CFTMP`
+	INPUT_TEXT ${FPRM} <<EOF
+	CRE_D ${CRE_D}
+	exit
+EOF
+	export ${PRG}_I1=${DFILT}/${NJOB}_261_${IB}_CPLIFEST${IT}_MVT_SORT.dat
+	export ${PRG}_I2=${DFILT}/${NJOB}_262_${IB}_CPLIFEST${IT}_SORT.dat
+	export ${PRG}_I3=${EST_SUBTRS}
+	export ${PRG}_O1=${EST_CPLIFEST_MVT}
+	EXECPRG
+fi
+
+gzip -c ${EST_CPLIFEST_MVT}     >       ${DFILT}/${NJOB}_CPLIFEST_MVT.dat.gz
+
+#####################################################
+#                CPLIFEST_MVT FINI                  #
+#####################################################
+
+#####################################################
+#      LIFESTNOACC et VLIFEST SUITE ET FIN          #
+#####################################################
+
+
+NSTEP=${NJOB}_270
+# Creating VLIFEST
+#------------------------------------------------------------------------------
+LIBEL="Creating VLIFEST"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_120_${IB}_VLIFEST${IT}.dat 1000 1"
+SORT_O="${EST_VLIFEST195}"
+SORT_O2="${DFILT}/${NSTEP}_${IB}_VLIFEST${IT}_ACY_sup_BALSHTYEA.dat"
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS 
+        CTR_NF  2:1 - 2:,
+        SEC_NF  4:1 - 4:,
+        ACY_NF  7:1 - 7:EN,
+		ACM_NF	25:1 - 25:EN
+/KEYS
+    CTR_NF,
+    SEC_NF,
+    ACY_NF,
+	ACM_NF
+/CONDITION ACY (ACY_NF > `expr ${BALSHTYEA_NF}`)
+/OUTFILE   ${SORT_O}
+/OMIT      ACY
+/OUTFILE   ${SORT_O2}
+/INCLUDE   ACY
+exit
+EOF
+SORT
+
+gzip -c ${DFILT}/${NJOB}_270_${IB}_VLIFEST${IT}_ACY_sup_BALSHTYEA.dat    >    ${DFILT}/${NSTEP}_VLIFEST${IT}_ACY_sup_BALSHTYEA.dat.gz
+
+
+NSTEP=${NJOB}_280
+# Creating LIFESTNOACC
+#------------------------------------------------------------------------------
+LIBEL="Getting beginings from VLIFEST"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_270_${IB}_VLIFEST${IT}_ACY_sup_BALSHTYEA.dat 1000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_VLIFEST${IT}_LIB_NOACC.dat"
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS 
+        CTR_NF           2:1 -  2:,
+        SEC_NF           4:1 -  4:EN,
+        ACY_NF           7:1 -  7:EN,
+        UWY_NF           5:1 -  5:,
+        ACMTRS4_NT      10:4 - 10:4,
+		ACM_NF			25:1 - 25:EN
+/KEYS 
+    CTR_NF,
+    SEC_NF,
+    ACY_NF,
+	ACM_NF,
+    UWY_NF
+/CONDITION NOACC (ACMTRS4_NT = "4" AND ACY_NF = `expr ${BALSHTYEA_NF} + 1`)
+/OUTFILE   ${SORT_O}
+/INCLUDE   NOACC
+exit
+EOF
+SORT
+
+
+NSTEP=${NJOB}_290
+# Creating LIFESTNOACC
+#------------------------------------------------------------------------------
+LIBEL="Creating LIFESTNOACC"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_200_${IB}_SORT_LIFESTNOACC${IT}.dat 1000 1"
+SORT_I2="${DFILT}/${NJOB}_280_${IB}_VLIFEST${IT}_LIB_NOACC.dat 1000 1"
+SORT_O="${EST_LIFESTNOACC}"
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS 
+        CTR_NF           2:1 -  2:,
+        END_NT           3:1 -  3:,
+        SEC_NF           4:1 -  4:EN,
+        ACY_NF           7:1 -  7:,
+        UWY_NF           5:1 -  5:,
+        UW_NT            6:1 -  6:,
+        ACMTRS_NT       10:1 - 10:,
+        ACMTRS4_NT      10:4 - 10:4,
+        DETTRNCOD_CF    20:1 - 20:,
+        GAAP_NF         22:1 - 22:,
+		ACM_NF			25:1 - 25:EN
+/KEYS 
+    CTR_NF,
+    END_NT,
+    SEC_NF,
+    ACY_NF,
+	ACM_NF,
+    UWY_NF,
+    UW_NT,
+    ACMTRS_NT,
+    DETTRNCOD_CF,
+    GAAP_NF
+/OUTFILE   ${SORT_O}
+exit
+EOF
+SORT
+
+#[013]
+#####################################################
+# VLIFEST195
+
+# [021] BEGIN
+NSTEP=${NJOB}_291
+#------------------------------------------------------------------------------
+LIBEL="Annual Estimates Sort"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${EST_VLIFEST195} 1000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_VLIFEST${IT}_O.dat"
+SORT_O2="${DFILT}/${NSTEP}_${IB}_OLD_LIFEST${IT}_O.dat"
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS CTR_NF           2:1 -  2:,
+        SEC_NF           4:1 -  4:,
+        UWY_NF           5:1 -  5:,
+        ACY_NF           7:1 -  7:,
+        CRE_D2           8:1 -  8:14,
+        ACMTRS_NT       10:1 - 10:,
+        DETTRNCOD_CF    20:1 - 20:,
+        GAAP_NF         22:1 - 22:,
+		ACM_NF			25:1 - 25:EN,
+        BATCH_B         52:1 - 52:
+/KEYS CTR_NF,
+      SEC_NF,
+      UWY_NF,
+      ACY_NF,
+		ACM_NF,
+      ACMTRS_NT,
+      DETTRNCOD_CF,
+      GAAP_NF
+/CONDITION NEWLIGNE  ( ( CRE_D2 = "${CRE_D} 23:59" ) AND BATCH_B = "1" ) 
+/OUTFILE  ${SORT_O}
+
+/OUTFILE  ${SORT_O2}
+/OMIT NEWLIGNE
+exit
+EOF
+SORT
+# [021] END 
+
+
+NSTEP=${NJOB}_292
+# Annual Estimates Screen
+#------------------------------------------------------------------------------
+LIBEL="DiffGaap Calculation"
+PRG=ESTC2046
+export ${PRG}_I1=${DFILT}/${NJOB}_291_${IB}_SORT_VLIFEST${IT}_O.dat
+export ${PRG}_I2=${EST_SUBTRSESBPROP}
+export ${PRG}_I3=${EST_SUBTRS}
+export ${PRG}_O1=${DFILT}/${NSTEP}_${IB}_${PRG}_NEW_LIFEST${IT}_O.dat
+export ${PRG}_O2=${DFILT}/${NSTEP}_${IB}_VLIFEST${IT}_ERR.log
+EXECPRG
+
+
+NSTEP=${NJOB}_293
+# Merge des fichiers LIFEST AVANT ET APRES
+#------------------------------------------------------------------------------
+LIBEL="Annual Estimates Sort"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_291_${IB}_OLD_LIFEST${IT}_O.dat 1000 1"
+SORT_I2="${DFILT}/${NJOB}_292_${IB}_ESTC2046_NEW_LIFEST${IT}_O.dat 1000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_NEW_LIFEST${IT}_O.dat 1000 1"
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS CTR_NF       2:1 -  2:,
+        SEC_NF       4:1 -  4:,
+        UWY_NF       5:1 -  5:,
+        ACY_NF       7:1 -  7:,
+        CRE_D        8:1 -  8:,
+        ACMTRS_NT   10:1 - 10:,
+        DETTRNCOD_CF    20:1 - 20:,
+        GAAP_NF         22:1 - 22:,
+		ACM_NF			25:1 - 25:EN
+/KEYS CTR_NF,
+      SEC_NF,
+      UWY_NF,
+      ACY_NF,
+		ACM_NF,
+      ACMTRS_NT,
+      DETTRNCOD_CF,
+      GAAP_NF
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_294
+#[017]
+# Lancement de de l'ESID0002 pour nettoyage et dedoublonnage
+#------------------------------------------------------------------------------
+LIBEL="Launching cleaning chain ESID0002 PASSAGE ${PASS}"
+IBC=${IB}
+INPUT_FILE1="${DFILT}/${NJOB}_293_${IB}_NEW_LIFEST${IT}_O.dat"
+OUTPUT_FILE_NAME="${EST_VLIFEST195}"
+OUTPUT_FILE_NAME_DIFF="${DFILT}/${NSTEP}_VLIFEST${IT}_AUTOSEG_MAJ_DOUBLON.ANO"
+${DCMD}/ESID0002.cmd ${IBC} ${OUTPUT_FILE_NAME} ${OUTPUT_FILE_NAME_DIFF} ${INPUT_FILE1} ${INPUT_FILE2} 2>&1 | ${TEE}
+IB=${IBC}
+
+#####################################################
+#                 CPLIFEST DEBUT                    #
+#####################################################
+
+NSTEP=${NJOB}_300
+# Reconstitution du CPLIFEST : selectionner les anciens mouvements
+#------------------------------------------------------------------------------
+LIBEL="Selecting old MVT in CPLIFEST"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${EST_CPLIFEST} 1000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_CPLIFEST${IT}_OLD_O.dat"
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS 
+        CTR_NF  1:1 - 1:,
+        END_NT  2:1 - 2:,
+        SEC_NF  3:1 - 3:,
+        UWY_NF  4:1 - 4:,
+        CRE_D   6:1 - 6:,
+        CRE_D2  6:1 - 6:14
+/KEYS 
+    CTR_NF,
+    END_NT,
+    SEC_NF,
+    UWY_NF,
+    CRE_D
+/CONDITION NEWMVT ( CRE_D2 = "${CRE_D} 23:59" ) 
+/OUTFILE   ${SORT_O}
+/OMIT      NEWMVT
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_320
+# Reconstitution du CPLIFEST : anciens et nouveaux mouvements
+#------------------------------------------------------------------------------
+LIBEL="Creating CPLIFEST"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${EST_CPLIFEST_MVT} 1000 1"
+#SORT_I="${DFILT}/${NJOB}_260_${IB}_CPLIFEST${IT}_MVT.dat 1000 1"
+SORT_I2="${DFILT}/${NJOB}_300_${IB}_SORT_CPLIFEST${IT}_OLD_O.dat 1000 1"
+SORT_O="${EST_CPLIFEST}"
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS 
+        CTR_NF  1:1 - 1:,
+        END_NT  2:1 - 2:,
+        SEC_NF  3:1 - 3:,
+        UWY_NF  4:1 - 4:,
+        CRE_D   6:1 - 6:
+/KEYS 
+    CTR_NF,
+    END_NT,
+    SEC_NF,
+    UWY_NF,
+    CRE_D
+/OUTFILE ${SORT_O}
+exit
+EOF
+SORT
+
+gzip -c ${EST_CPLIFEST}     >       ${DFILT}/${NJOB}_CPLIFEST.dat.gz
+
+
+#####################################################
+#                  CPLIFEST FINI                    #
+#####################################################
+
+#####################################################
+#                LIFTRANSFR DEBUT                   #
+#####################################################
+
+
+NSTEP=${NJOB}_340
+# Create EST_LIFTRANSFR for ESID2040 internal retro only
+#------------------------------------------------------------------------------
+LIBEL="Create EST_LIFTRANSFR for ESID2040 internal retro only "
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${EST_VLIFEST195} 1000 1"
+SORT_O="${EST_LIFTRANSFR} OVERWRITE"
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS 
+        CTR_NF          2:1 - 2:,
+        END_NT          3:1 - 3:,
+        SEC_NF          4:1 - 4:,
+        UWY_NF          5:1 - 5:,
+        UW_NT           6:1 - 6:,
+        ACY_NF          7:1 - 7:,
+        CRE_D           8:1 - 8:,
+        ACMTRS_NT       10:1 - 10:,
+        BALSHEY_NF      11:1 - 11:,
+        BALSHTMTH_NF    12:1 - 12:EN,
+        CUR_CF          13:1 - 13:,
+        ESTMNT_M        14:1 - 14:EN 15/3,
+        DETTRNCOD_CF    20:1 - 20:,
+        GAAP_NF         22:1 - 22:,
+		ACM_NF			25:1 - 25:EN
+/KEYS 
+    CTR_NF,
+    END_NT,
+    SEC_NF,
+    UWY_NF,
+    UW_NT,
+    CRE_D,
+    BALSHEY_NF,
+    BALSHTMTH_NF,
+    ACY_NF,
+	ACM_NF,
+    ACMTRS_NT,
+    DETTRNCOD_CF,
+    GAAP_NF,
+    CUR_CF
+/OUTFILE ${SORT_O}
+exit
+EOF
+SORT
+
+
+#####################################################
+#                 LIFTRANSFR FINI                   #
+#####################################################
+
+
+NSTEP=${NJOB}_360
+# Get the printer code from the subsidiary
+# Cela permet de recuperer le PRDSIT, GEOSIT et PRT_CF necessaire pour l'envoi du .pdf sur le bon serveur INTRANET
+# On a une édition à sortir par site, PARIS;MUTRE;NY;SGP
+#------------------------------------------------------------------------------
+if [ "${HOST_PRDSIT}" = "FRA1" ]
+then
+    SSD_CF=2
+    GET_PRTID_FROMSSD ${SSD_CF}
+fi
+
+if [ "${HOST_PRDSIT}" = "FRAM" ]
+then
+    SSD_CF=9
+    GET_PRTID_FROMSSD ${SSD_CF}
+fi
+
+if [ "${HOST_PRDSIT}" = "USA1" ]
+then
+    SSD_CF=10
+    GET_PRTID_FROMSSD ${SSD_CF}
+fi
+
+if [ "${HOST_PRDSIT}" = "SGP1" ]
+then
+    SSD_CF=20
+    GET_PRTID_FROMSSD ${SSD_CF}
+fi
+
+NSTEP=${NJOB}_380
+#subject : Print out perimeter anos
+#--------------------------------------------------------------------------
+LIBEL="Print out on INTRANET"
+WS_REPORT_NAME=ESID2050
+WS_PARAMS_TEXT <<EOF
+SSD_CF          ${SSD_CF}
+ACTION          WEB
+EOF
+WS_INPUT_FILE=${DFILT}/${NJOB}_50_${IB}_ESID2050_ANOS_O.dat
+WS_REPORT
+
+NSTEP=${NJOB}_400
+# Deletion of Temporary Files
+#------------------------------------------------------------------------------
+LIBEL="Deletion of Temporary Files"
+RMFIL "${DFILT}/${NJOB}_*_${IB}*.dat"
+
+# Job End
+JOBEND

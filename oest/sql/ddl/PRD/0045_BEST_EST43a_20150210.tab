@@ -1,0 +1,10 @@
+/*==============================================================*/
+/* Table: TACCSUP - ADD COLUMN EVT_NF,REVT_NF as varchar       */
+/*==============================================================*/
+
+USE BEST
+GO
+ALTER TABLE dbo.TACCSUP ADD EVT_NF varchar(10)  NULL
+go
+ALTER TABLE dbo.TACCSUP ADD REVT_NF varchar(10)  NULL
+go

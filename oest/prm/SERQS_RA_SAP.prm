@@ -1,0 +1,12 @@
+# Chain Parameter File
+# setup to choose SERQS options by norms, on RA/SAP part
+# 0 : not activated 
+# 1 : phase1 
+# 2 : phase2 
+I4I 1
+EBS 1
+I17G 1
+I17P 1
+I17L 1
+I17S 1
+LOCAL 1

@@ -1,0 +1,2480 @@
+USE BEST
+go
+IF OBJECT_ID('dbo.PiACCSUP_02') IS NOT NULL
+BEGIN
+    DROP PROCEDURE dbo.PiACCSUP_02
+    IF OBJECT_ID('dbo.PiACCSUP_02') IS NOT NULL
+        PRINT '<<< FAILED DROPPING PROCEDURE dbo.PiACCSUP_02 >>>'
+    ELSE
+        PRINT '<<< DROPPED PROCEDURE dbo.PiACCSUP_02 >>>'
+END
+go
+create procedure PiACCSUP_02(
+	@p_ssd_cf	USSD_CF,
+	@p_usr_cf	UUSR_CF,
+	@p_batch_mode UL16 = NULL )
+with execute as caller as
+/***************************************************
+Domaine : (ES) Estimation
+Base principale : BEST
+Auteur: O.GIRAUX/J.RIBOT
+Date de creation: Reecriture complète en Janvier 2003
+Description du programme:
+---------------------------
+Contrôles de cohérences lors du chargement massif par fichier d'écritures de service.
+Si tout est OK, INSERTion des lignes ds BEST..TACCSUP.
+Fonctionnement de la proc :
+----------------------------
+Pour repérer les anomalies, on remplit une table tempo à partir de btrav..TESTUTISUP
+et de la requête correspondant aux règles que doivent suivre les mouvements.
+Un écart du nombre de lignes indique que certains mouvements sont en anomalies et
+il y a débranchement sur la fin de la proc pour remplir la table des anos.
+Description générale:
+------------------------
+Plus grande décomposition des anos pour une meilleure compréhension des anos par les users.
+ATTENTION, L'ORDRE DES CONTROLES EST IMPORTANT. Par ex ano 18 doit être controlée après les controles
+des sections.
+( libellés visibles ds TBANTECL : COL_LS = ANO_CT )
+        - Libellé inventaire ( ano 19)
+        - Periode de validité ( ano 20 )
+        - Poste comptable ( ano 33 )                (code 33 utilisé également ds chargmt massif rétro)
+        - Année Compte acceptation ( ano 21 )
+        - Année compte rétro ( ano 22 )
+        - Section acceptation inconnue ( ano 28 )  (code 28 utilisé également ds chargmt massif rétro)
+        - Section rétro inconnue ( ano 27 )        (code 27 utilisé également ds chargmt massif rétro)
+        - Poste comptable incorrect par rapport à la lob (ano 18 )
+        - Placement incorrect ( ano 23 )
+        - Devise accept incorrecte ( ano 24 )
+        - Devise rétro incorrecte ( ano 25 )
++
+    - mise a jour automatique des infos tiers
+    - mise a jour du poste de contrepartie
+    - mise a jour de l'année de survenance retro a partir exercice retro
+         si partie retro renseignée et année de survenance retro non renseignée
+    - mise a jour systématique du montant acceptation et de la devise à partir du montant
+    retro et de la devise retro lors de la maj des types comptables.( ACCTYP)
+    - ajout du num de ligne ds la table TCTRANO
+
++
+
+    Comme on n'a au niveau de la fenêtre d'affichage des anomalies qu'une zone "Contrat",
+    cette zone contiendra:
+    - le contrat accept si on est sur une anomalie purement acceptation
+    (ex: A/C accept incorrecte,section accept incorrecte ....)
+    - le contrat rétro si on est sur une anomalie purement rétro
+    - le contrat accept par défaut lorsqu'on est sur une anomalie générale ( de poste comptable, d'année bilan ...)
+    ou le contrat rétro si l'acceptation n'est pas renseignée.
+     -> fait au niveau de la maj finale de BEST..TCTRANO
+
+Au niveau de l'appli, on a déjà un ens de contrôles vérifiant si lorsqu'une info acceptation est saisie,
+le contrat l'est également (idem coté rétro) + d'autres vérifiant que les champs obligatoires sont bien présents.
+
+O.GIRAUX
+_________________
+MODIFICATION 1 - MOD001
+Auteur: M. DJELLOULI
+Date: 31-03-2004
+Description:
+    Modification des Erreurs liées au Retour de Fonction
+    Simplification de l'enregistrement des erreurs (Fin de Procédure)
+
+_________________
+MODIFICATION 2 - MOD002
+Auteur: M. DJELLOULI
+Date: 22-06-2004
+Description:
+    Modification BUG - Contrôle Chargement Ecriture Service
+
+_________________
+MODIFICATION 3 - MOD003
+Auteur: M. DJELLOULI
+Date: 30-03-2005
+Description:
+
+Contrôle de la période bilan:
+Ø	Doit être de type " Libellé d'inventaire ", c'est à dire sur le dernier jour du mois
+Ø	Doit être sur l'année de la période de saisie.Sinon Anomalie " Libellé inventaire incorrect " à ANO_CT=19 dans REFERENCES.
+
+Contrôle de la période de fin de validité :
+Ø	L'année doit correspondre à l'année de la période de saisie.
+Ø	Periode_De_Validité >= Periode_Inventaire >= Periode_Saisie
+      Sinon Anomalie " Période fin de validité incorrecte " à ANO_CT=20 dans REFERENCES.
+
+Autres Développements à faire :
+-	Mettre en place un nouveau contrôle vérifiant que :
+      La date du 1er inventaire est supérieure à la date du dernier inventaire ayant tourné dans l'environnement
+      (champs à prendre en compte : BALSHEY_NF, BALSHRMTH_NF et BALSHRDAY_NF de la table : BEST..TACCSUP).
+      Pour ce contrôle, utiliser le code erreur : ANO_CT=19.
+
+Ø	Cela revient à Vérifier : Periode-Bilan_Saisie >= Periode-Bilan_EnCours
+      Similaire à Anomalie 19 précédente
+
+
+    Autre Correction :
+    Seule la Dernière Anomalie était relevé dans le Fichier de Retour des Anos.
+    Affichage du Dernier Message Ano et des Codes Anomalies rencontrées En Retour de Proc.
+    MsgGlobalAnomalie = Deniere Anomalie + NumMsgAnomalie
+
+_________________
+MODIFICATION 4 - MOD004
+Auteur: M. DJELLOULI
+Date: 11-04-2005
+Description:  VERSION 5.1 - Omega Estimations
+                    Correction Chargement sur Poste Comptables d'Ouvertures Qd Période de Validité <> Période de Bilan
+                  -> Génération Anomalie ANO_CT = 46 : Poste Ouverture: Périodes non =
+                    Pour cette Modif, la proc temporaire (jusqui'ici) est stockée dans O:\PROJETS\ORET\1.SUIVI\SPOT\10775
+
+_________________
+MODIFICATION 5 - MOD005
+Auteur: M. DJELLOULI
+Date: 26-04-2005
+Description:  VERSION 5.1 - Omega Estimations
+                  Ajour du champ 'Type d'ecriture Service' dans le Chargement des Ecritures Services.
+                  SPOT 5084 - Ajout de la Colonne SPEENTTYP_CF
+_________________
+MODIFICATION 6
+Auteur: M.DJELLOULI
+Date:	27/04/2005
+Version:
+Description: SPOT 14445 - EST_ESID0801_TESTUTISUP remplace TESTUTISUP
+_________________
+MODIFICATION 7
+Auteur:     M.DJELLOULI - MOD007
+Date:        24/06/2005
+Description: SPOT 5085 - Ajout Zone SPEENTNAT_CT
+
+_________________
+MODIFICATION 8
+Auteur:     M.DJELLOULI - MOD008
+Date:        20/10/2005
+Description: SPOT 10833 - Correction des Mois Validité Période pour Ano_ct = 46
+_________________
+MODIFICATION 9
+Auteur:     M.DJELLOULI - MOD009
+Date:        05/01/2006
+Description: Correction Bug Chargement Ecriture Service sur Contrôle Période de Saisie (Ano 20)
+_________________
+MODIFICATION 10
+Auteur:     M.DJELLOULI - MOD010
+Date:        06/01/2006
+Description: Annulation Correction MOD008
+_________________
+MODIFICATION 11
+Auteur:     M.DJELLOULI - MOD011
+Date:        20/02/2006
+Description: SPOT 12520 - Quand ils existent d'anciens enregistrments dans la table EST_ESID0801_TESTUTISUP
+             les nouvelles anomalies générées , reprennent les anciennes données de EST_ESID0801_TESTUTISUP
+             Lors de l'INSERTion dans TCTRANO_TMP, on vérifie que le User et SSD_CF sont bien ceux liés à EST_ESID0801_TESTUTISUP
+_________________
+MODIFICATION 12
+Auteur:     M.DJELLOULI - MOD012
+Date:        11/04/2006
+Description: SPOT 12408 - Correction CREUSR_CF par @p_usr_cf au lieu de "DSK"
+_________________
+MODIFICATION 13
+Auteur:     Dominique Ourmiah - MOD013
+Date:        21/03/2007
+Description: SPOT 13135 - Rendre impossible la création d'écritures service
+                          sur des contrats "terminés comptable"
+_________________
+MODIFICATION 14
+Auteur:     Dominique Ourmiah - MOD014
+Date:        16/12/2008
+Description: SPOT 16593 - Ajout nouveaux codes postes comptable pour comptabilisation IFRS dans les chaines Inventaire
+_________________
+MODIFICATION 15
+Auteur:     Dominique Ourmiah - MOD015
+Date:        30/01/2009
+Description: SPOT 15577 - Rendre impossible la création d'écritures service
+                          sur des sections à l'état autre que "Accepté", "Définitif", "Renouvelé" ou "Résilié"
+_________________
+MODIFICATION 16
+Auteur:     Dominique Ourmiah - MOD016
+Date:        18/03/2009
+Description: SPOT 17099 - Idem MOD015 Ajout état "Expiré"
+
+_________________
+MODIFICATION 17
+Auteur:     Jacky Ribot - MOD017
+Date:        29/06/2009
+Description: SPOT 16657  Interdire la création d'ES le jour du booking (saisie + chargement)
+----------------|-------------|-----------------------------------------------------------------------------------------------------------------------
+van de velde    | 17/09/2009  |[18053] pour les fac xxLyyyyy, remplacement du test sur les lettres par un interval qui couvre l'ensemble du domaine des FACs
+----------------|-------------|-----------------------------------------------------------------------------------------------------------------------
+_________________
+MODIFICATION    [019]
+Auteur:         D.GATIBELZA
+Date:           15/09/2009 - retouché au 02/10/2009
+Version:        9.1
+Description:    ESTVIE17265 Il faut ajouter un contrôle sur l'ACY quand saisie manuelle d'écriture service  on ne doit pas avoir ACYUWY
+----------------|-------------|-----------------------------------------------------------------------------------------------------------------------
+van de velde    | 21/10/2009  |[14839] Ajout d'un contrôle supplémentaire entre poste principal et poste de contre-partie ( ANO ===> 33)
+                |             |vérification du contrôle sur le statut 'Terminé Comptable'
+----------------|-------------|-----------------------------------------------------------------------------------------------------------------------
+van de velde    | 22/01/2010  |[18612] modification de la gestions des anomalies
+                |             |        Pour ANO 18, ne pas sortir en anomalie, mais continuer les controles.
+                |             |        Interdire les postes de bilan service et bilan service rejet (x5yyyyyz et x8yyyyyz)
+----------------|-------------|-----------------------------------------------------------------------------------------------------------------------
+22 Florent 25/01/2012 :spot:22456 EVOLUTION DES REGROUPEMENTS PARENT GAAP
+23 Florent 05/03/2012 :spot:23494 correction EVOLUTION DES REGROUPEMENTS PARENT GAAP
+24 JF VDV  31/05/2012 : [23390] - Amenagements SOLVENCY
+[025] 23/07/2012 R. Cassis  :spot:23802 - Modifs 1er car trncod a 4% et 2% dans le like
+[026] 01/08/2012 L. Rakotozafy :spot:23860 ajout paramètre pour différencier traitement TP et batch
+_________________
+MODIFICATION 27
+Auteur:     Kbagwe - MOD027
+Date:        12/04/2013
+Description: Replacing obsolete table TSUBTRSESB
+_________________
+Modification - Removed dbo and added 'with execute as caller as'
+_________________
+Author: Ashish Kumar Singh
+Date: 15/10/2013
+Version: 1
+Description: Phase1b: Removed CTR_NF like  
+[028] 04/02/2014  R. Cassis :spot:25427 Ajout grant GDBBATCH et appel BEST..PsSITE_01
+_________________
+Modification 29 - Adapted SP for SII06a changes (SCOR Spira defect #29158)
+Author: Pierre Etienne MARX, Capgemini
+Date: 25/07/2014
+Version: [029]
+Description: Adapted SP for SII06a changes (SCOR Spira defect #29158)
+********************************************************************************************************************************************************/
+declare @erreur     	int,
+		@error_type		int,
+        @tran_imbr		bit,
+        @MsgAnomalie    varchar(120),
+        @NumMsgAnomalie    varchar(120),                                               -- MOD003 Nb Anomalies : Numéros des Erreurs Rencontrées
+        @MsgGlobalAnomalie    varchar(240),                                            -- MOD003 Anomalies GLobales Rencontrées
+		@cre_d			datetime,	/* date du jour */
+		@entpery_nf		smallint,	/* année de saisie */
+		@entpermth_nf 	tinyint,	/* mois de saisie */
+		@spcend_d		datetime,	/* variable en sortie de PsCALEND_02 */
+		@account_d		datetime,	/* variable en sortie de PsCALEND_02 */
+		@closing_b		bit,		/* variable en sortie de PsCALEND_02 */
+		@nbligne_testutisup	int,		/* nbre lignes de la table utilisateurs en entrée */
+		@nbligne_tempaccsup	int,		/* nbre lignes en sortie de traitement */
+		@nbligne_tctrano	int,		/* MOD001 - nbre lignes en Anomalies */
+		@max_trn_nt		numeric( 10, 0 ), /* numéro d'écriture maxi de BEST..TACCSUP */
+		@nbligne_PosteOuverture	int,		-- nbre lignes des Postes d'Ouvertures - MOD004
+		@Verif_d			datetime            -- Date de Verification - Si Conso/Social : Antérieur < PeriodePrecedente, Sinon Date du Jour
+
+select @erreur = 0
+select @tran_imbr = 1
+select @cre_d = getdate()
+select @error_type = -1
+select @MsgAnomalie = ""
+select @NumMsgAnomalie = " - Autres Anomalies Trouvées N° "
+
+
+/* ------------------------------------------------------------
+   Création des tables temporaires
+ -------------------------------------------------------------- */
+
+create table #TACCSUP1 (
+	TRN_NT			numeric(10,0)	NULL,
+	ACCTYP_NF		tinyint	NULL,
+	SSD_CF			USSD_CF	NULL,
+	ESB_CF			UESB_CF	NULL,
+	ENTPERY_NF		UUWY_NF	NULL,
+	ENTPERMTH_NF	tinyint	NULL,
+	BALSHEY_NF		UUWY_NF	NULL,
+	BALSHRMTH_NF	tinyint	NULL,
+	BALSHRDAY_NF	tinyint	NULL,
+    VALPERY_NF	    UUWY_NF	NULL,
+	VALPERMTH_NF	tinyint	NULL,
+	TRNCOD_CF		UDETTRS_CF	NULL,
+	DBLTRNCOD_CF	UDETTRS_CF	NULL,
+	RETAUTGEN_B		tinyint	NULL,
+	CTR_NF			UCTR_NF	NULL,
+	END_NT			UEND_NT	NULL,
+	SEC_NF			USEC_NF	NULL,
+	UWY_NF			UUWY_NF	NULL,
+	UW_NT			UUW_NT		NULL,
+	OCCYEA_NF		UUWY_NF	NULL,
+	ACY_NF			UUWY_NF	NULL,
+	SCOSTRMTH_NF	tinyint	NULL,
+	SCOENDMTH_NF	tinyint	NULL,
+	CLM_NF			UCLM_NF	NULL,
+	CUR_CF			UCUR_CF	NULL,
+	AMT_M			UAMT_M		NULL,
+	CED_NF			UCLI_NF	NULL,
+	BRK_NF			UCLI_NF	NULL,
+	GEMPRMPAY_NF	UCLI_NF	NULL,
+	GANPAYORD_NT	UPAYORD_NT	NULL,
+	RETCTR_NF		URETCTR_NF	NULL,
+	RETEND_NT		UEND_NT	NULL,
+	RETSEC_NF		URETSEC_NF	NULL,
+	RTY_NF			UUWY_NF	NULL,
+	RETUW_NT		UUW_NT	NULL,
+	PLC_NT			UPLC_NT	NULL,
+	RETOCCYEA_NF	UUWY_NF	NULL,
+	RETACY_NF		UUWY_NF	NULL,
+	RETSCOSTRMTH_NF	tinyint	NULL,
+	RETSCOENDMTH_NF	tinyint	NULL,
+	RCL_NF			UCLM_NF	NULL,
+	RETCUR_CF		UCUR_CF	NULL,
+	RETAMT_M		UAMT_M	NULL,
+	RTO_NF			UCLI_NF	NULL,
+	INT_NF			UCLI_NF	NULL,
+	RETPAY_NF		UCLI_NF	NULL,
+	RETKEY_CF		char(1)	NULL,
+	ACCTRN_NT		numeric(10,0) NULL,
+	COMMAC_LL		UL64		  NULL,
+	CRE_D			UUPD_D		  NULL,
+	CREUSR_CF		UUPDUSR_CF	  NULL,
+	LSTUPD_D		UUPD_D		  NULL,
+	LSTUPDUSR_CF	UUPDUSR_CF	  NULL,
+    SPEENTTYP_CF    tinyint       NULL,               -- MOD005 26/04/2005
+    SPEENTNAT_CT    tinyint       NULL                -- MOD007 27/06/2005
+ )
+
+create table #TACCSUP2 (
+	TRN_NT			numeric(10,0)	NULL,
+	ACCTYP_NF		tinyint	NULL,
+	SSD_CF			USSD_CF	NULL,
+	ESB_CF			UESB_CF	NULL,
+	ENTPERY_NF		UUWY_NF	NULL,
+	ENTPERMTH_NF	tinyint	NULL,
+	BALSHEY_NF		UUWY_NF	NULL,
+	BALSHRMTH_NF	tinyint	NULL,
+	BALSHRDAY_NF	tinyint	NULL,
+    VALPERY_NF	    UUWY_NF	NULL,
+	VALPERMTH_NF	tinyint	NULL,
+	TRNCOD_CF		UDETTRS_CF	NULL,
+	DBLTRNCOD_CF	UDETTRS_CF	NULL,
+	RETAUTGEN_B		tinyint	NULL,
+	CTR_NF			UCTR_NF	NULL,
+	END_NT			UEND_NT	NULL,
+	SEC_NF			USEC_NF	NULL,
+	UWY_NF			UUWY_NF	NULL,
+	UW_NT			UUW_NT		NULL,
+	OCCYEA_NF		UUWY_NF	NULL,
+	ACY_NF			UUWY_NF	NULL,
+	SCOSTRMTH_NF	tinyint	NULL,
+	SCOENDMTH_NF	tinyint	NULL,
+	CLM_NF			UCLM_NF	NULL,
+	CUR_CF			UCUR_CF	NULL,
+	AMT_M			UAMT_M		NULL,
+	CED_NF			UCLI_NF	NULL,
+	BRK_NF			UCLI_NF	NULL,
+	GEMPRMPAY_NF	UCLI_NF	NULL,
+	GANPAYORD_NT	UPAYORD_NT	NULL,
+	RETCTR_NF		URETCTR_NF	NULL,
+	RETEND_NT		UEND_NT	NULL,
+	RETSEC_NF		URETSEC_NF	NULL,
+	RTY_NF			UUWY_NF	NULL,
+	RETUW_NT		UUW_NT		NULL,
+	PLC_NT			UPLC_NT	NULL,
+	RETOCCYEA_NF	UUWY_NF	NULL,
+	RETACY_NF		UUWY_NF	NULL,
+	RETSCOSTRMTH_NF	tinyint	NULL,
+	RETSCOENDMTH_NF	tinyint	NULL,
+	RCL_NF			UCLM_NF	NULL,
+	RETCUR_CF		UCUR_CF	NULL,
+	RETAMT_M		UAMT_M		NULL,
+	RTO_NF			UCLI_NF	NULL,
+	INT_NF			UCLI_NF	NULL,
+	RETPAY_NF		UCLI_NF	NULL,
+	RETKEY_CF		char(1)	NULL,
+	ACCTRN_NT		numeric(10,0) NULL,
+	COMMAC_LL		UL64		NULL,
+	CRE_D			UUPD_D		NULL,
+	CREUSR_CF		UUPDUSR_CF	NULL,
+	LSTUPD_D		UUPD_D		NULL,
+	LSTUPDUSR_CF	UUPDUSR_CF	NULL,
+    SPEENTTYP_CF    tinyint       NULL,                -- MOD005 26/04/2005
+    SPEENTNAT_CT    tinyint       NULL                -- MOD007 27/06/2005
+	 )
+
+create table #TACCSUP3 (
+	TRN_NT			numeric(10,0)	identity,
+	ACCTYP_NF		tinyint	NULL,
+	SSD_CF			USSD_CF	NULL,
+	ESB_CF			UESB_CF	NULL,
+	ENTPERY_NF		UUWY_NF	NULL,
+	ENTPERMTH_NF	tinyint	NULL,
+	BALSHEY_NF		UUWY_NF	NULL,
+	BALSHRMTH_NF	tinyint	NULL,
+	BALSHRDAY_NF	tinyint	NULL,
+    VALPERY_NF		UUWY_NF	NULL,
+	VALPERMTH_NF	tinyint	NULL,
+	TRNCOD_CF		UDETTRS_CF	NULL,
+	DBLTRNCOD_CF	UDETTRS_CF	NULL,
+	RETAUTGEN_B		tinyint	NULL,
+	CTR_NF			UCTR_NF	NULL,
+	END_NT			UEND_NT	NULL,
+	SEC_NF			USEC_NF	NULL,
+	UWY_NF			UUWY_NF	NULL,
+	UW_NT			UUW_NT		NULL,
+	OCCYEA_NF		UUWY_NF	NULL,
+	ACY_NF			UUWY_NF	NULL,
+	SCOSTRMTH_NF	tinyint	NULL,
+	SCOENDMTH_NF	tinyint	NULL,
+	CLM_NF			UCLM_NF	NULL,
+	CUR_CF			UCUR_CF	NULL,
+	AMT_M			UAMT_M		NULL,
+	CED_NF			UCLI_NF	NULL,
+	BRK_NF			UCLI_NF	NULL,
+	GEMPRMPAY_NF	UCLI_NF	NULL,
+	GANPAYORD_NT	UPAYORD_NT	NULL,
+	RETCTR_NF		URETCTR_NF	NULL,
+	RETEND_NT		UEND_NT	NULL,
+	RETSEC_NF		URETSEC_NF	NULL,
+	RTY_NF			UUWY_NF	NULL,
+	RETUW_NT		UUW_NT		NULL,
+	PLC_NT			UPLC_NT	NULL,
+	RETOCCYEA_NF	UUWY_NF	NULL,
+	RETACY_NF		UUWY_NF	NULL,
+	RETSCOSTRMTH_NF	tinyint	NULL,
+	RETSCOENDMTH_NF	tinyint	NULL,
+	RCL_NF			UCLM_NF	NULL,
+	RETCUR_CF		UCUR_CF	NULL,
+	RETAMT_M		UAMT_M		NULL,
+	RTO_NF			UCLI_NF	NULL,
+	INT_NF			UCLI_NF	NULL,
+	RETPAY_NF		UCLI_NF	NULL,
+	RETKEY_CF		char(1)	NULL,
+	ACCTRN_NT		numeric(10,0) NULL,
+	COMMAC_LL		UL64		NULL,
+	CRE_D			UUPD_D		NULL,
+	CREUSR_CF		UUPDUSR_CF	NULL,
+	LSTUPD_D		UUPD_D		NULL,
+	LSTUPDUSR_CF	UUPDUSR_CF	NULL,
+    SPEENTTYP_CF    tinyint       NULL,                -- MOD005 26/04/2005
+    SPEENTNAT_CT    tinyint       NULL                -- MOD007 27/06/2005
+	 )
+
+
+-- Debut MOD001 - Creation table temporaire des Anomalies
+CREATE TABLE #TCTRANO_TMP
+(
+    CTR_NF     UCTR_NF       NULL,
+    END_NT     UEND_NT       NULL,
+    SEC_NF     USEC_NF       NULL,
+    VRS_NF     numeric(10,0) NULL,
+    SSD_CF     USSD_CF       NULL,
+    SEGTYP_CT  USEGTYP_CT    DEFAULT '' NULL,
+    SEG_NF     USEG_NF       DEFAULT '' NULL,
+    ANO_CT     tinyint       NULL,
+    NUMLINE_NT int           DEFAULT 0 NULL
+)
+
+-- Suppression par securite des lignes d'ano.
+-- Normalement cela est egalement fait dans l'appli lors de l'envoi de la demande
+
+Execute BEST..PdCTRANO_05 @p_ssd_cf,@p_usr_cf
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur Accès BEST..PdCTRANO_05'
+	goto ErreurNorm
+    end
+
+
+-- On supprime de btrav..TESTUTISUP toutes les lignes de filiale differente de la filiale
+-- passée en paramètre, on ne doit normalement que très rarement tomber ds ce cas, cela signifie
+-- que le user a saisi par erreur plusieurs filiales ds son fichier
+
+DELETE btrav..EST_ESID0801_TESTUTISUP
+where
+    SSD_CF      != @p_ssd_cf
+and	LSTUPDUSR_CF = @p_usr_cf
+
+Declare @p_date_t DateTime
+Select @p_date_t = GetDate()
+Select @Verif_d  = GetDate()
+
+-- *********************************************************************************************
+-- Calcul et stockage du nombre de lignes de la table utilisateurs btrav..EST_ESID0801_TESTUTISUP
+-- **********************************************************************************************
+
+select @nbligne_testutisup = count(*) FROM btrav..EST_ESID0801_TESTUTISUP
+where
+	SSD_CF       = @p_ssd_cf
+and	LSTUPDUSR_CF = @p_usr_cf
+
+
+-- *************************************************************************************
+--
+--          1ère ETAPE: MAJ AUTOMATIQUE DE CERTAINS CHAMPS
+--
+-- *************************************************************************************
+
+-- accès à la table BREF..TCALEND pour déterminer la période de saisie
+-- -------------------------------------------------------------------
+
+Execute @erreur = BREF..PsCALEND_02
+			@cre_d,
+			'C',
+			@entpery_nf output,
+        	@entpermth_nf output,
+			@spcend_d output,
+			@account_d output,
+			@closing_b output
+
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur Accès BREF..PsCALEND_02'
+	goto ErreurNorm
+    end
+
+-- SPOT 16657 JR 29 06 2009    MOD017
+-- ---------------------------------------------------------
+-- Test si on est entre la fin per excep et la date de compta
+-- ---------------------------------------------------------
+--[025]
+--if (@p_date_t > @spcend_d and @p_date_t <= @account_d)
+if (convert(Char(10),@p_date_t,112) > convert(Char(10),@spcend_d,112) and convert(Char(10),@p_date_t,112) <= convert(Char(10),@account_d,112) )
+    begin
+      select @MsgAnomalie = 'Erreur No AEs are allowed before booking'
+      goto ErreurNorm
+    end
+
+-- FIN SPOT 16657 JR 29 06 2009      MOD017
+
+-- Debut MOD007 M.DJELLOULI - 19/07/2005 - SPOT 5085 - Si SPEENTNAT_CT est Conso ou Social, Récupération Période Conso/social
+-- ---------------------------------------------------------
+-- Test Appel Proc de Récupération des Périodes PtREQJOB_05
+-- ---------------------------------------------------------
+
+Declare @P_Booking_D       Char(8),       -- Date de Booking T-1
+        @P_PsTomGen_D      Char(8),       -- Date de Fin de Saisie Post Omega Social (Periode T)
+        @P_EnConso_D       Char(8),       -- Date de Fin de Saisie Ecritures Conso (Periode T)
+        @DateInventaireConso   Char(8),   -- Date Libelle Inventaire Pour Saisie Ecriture Conso & Social (Periode T-1)
+        @PeriodeConsoAA     numeric(4,0), -- Periode AAAA Pour Saisie Ecriture Conso & Social (Periode T-1)
+        @PeriodeConsoMM     numeric(2,0), -- Periode MM Pour Saisie Ecriture Conso & Social (Periode T-1)
+        @DateInventaireService Char(8),   -- Date Libelle Inventaire Pour Saisie Ecriture Service (Periode T)
+        @PeriodeServiceAA   numeric(4,0), -- Periode AAAA Pour Saisie Ecriture Services (Periode T)
+        @PeriodeServiceMM   numeric(2,0), -- Periode MM Pour Saisie Ecriture Services (Periode T)
+        @P_SuffixeTable       char(1),
+        @P_Erreur               int,
+		  @P_EBSPsTomGen_D      Char(8)     -- Date de Fin de Saisie Post Omega Social (Periode T)	--[23390]
+
+declare @site_cf        varchar(10)
+declare @param1         varchar(20)
+select  @param1 = convert(varchar,@p_ssd_cf)
+
+execute @erreur = BEST..PsSITE_01 @param1,'2',@site_cf output
+
+If EXISTS (Select 1 FROM btrav..EST_ESID0801_TESTUTISUP
+                    where
+                       SSD_CF       = @p_ssd_cf
+                   and LSTUPDUSR_CF = @p_usr_cf)
+
+   Begin
+        Execute @erreur = BEST..PtREQJOB_05
+                               @p_date_t,
+                               @site_cf,
+                               @P_Booking_D           Output,
+                               @P_PsTomGen_D          Output,
+                               @P_EnConso_D           Output,
+                               @DateInventaireConso   Output,
+                               @PeriodeConsoAA        Output,
+                               @PeriodeConsoMM        Output,
+                               @DateInventaireService Output,
+                               @PeriodeServiceAA      Output,
+                               @PeriodeServiceMM      Output,
+                               @P_SuffixeTable        Output,
+                               @P_Erreur              Output,
+                               @P_EBSPsTomGen_D       Output -- modif 24
+
+        Select @P_Booking_D             as 'Booking_D',
+               @P_PsTomGen_D            as 'PsTomGen_D',
+               @P_EnConso_D             as 'EnConso_D',
+               @DateInventaireConso     as 'DateInventaireConso',
+               @PeriodeConsoAA          as 'PeriodeConsoAA',
+               @PeriodeConsoMM          as 'PeriodeConsoMM',
+               @DateInventaireService   as 'DateInventaireService',
+               @PeriodeServiceAA        as 'PeriodeServiceAA',
+               @PeriodeServiceMM        as 'PeriodeServiceMM',
+               @P_SuffixeTable          as 'P_SuffixeTable',
+               @P_Erreur                as 'P_Erreur'
+
+        if @erreur != 0
+            begin
+                select @MsgAnomalie = 'Erreur Accès BEST..PtREQJOB_05'
+        	    goto ErreurNorm
+            end
+
+        If (@P_SuffixeTable = '0') or (@P_SuffixeTable = Null)
+                Begin
+                    select @MsgAnomalie = "Erreur Paramètres CONSO/SOCIAL Incorrect" + Convert(Char(5), @P_Erreur)
+                	goto ErreurNorm
+                End
+            Else
+                Begin
+                  If EXISTS (Select 1 FROM btrav..EST_ESID0801_TESTUTISUP
+                                      where
+                                          SSD_CF       = @p_ssd_cf
+                                      and LSTUPDUSR_CF = @p_usr_cf
+                                      and SPEENTNAT_CT not in(1,4))		--[23390]
+                    Begin
+                       Select @entpery_nf = @PeriodeConsoAA
+                       Select @entpermth_nf = @PeriodeConsoMM
+                       Select @Verif_d = DateAdd(Day, -1, @DateInventaireConso)
+                    End
+                  Else
+                    Begin
+                       Select @Verif_d = DateAdd(Day, -1, @DateInventaireService)
+                    End
+                End
+    End
+
+
+
+UPDATE	btrav..EST_ESID0801_TESTUTISUP
+SET	ENTPERY_NF   = @entpery_nf,
+	ENTPERMTH_NF = @entpermth_nf,
+	CRE_D        = @cre_d,
+	LSTUPD_D     = @cre_d,
+	CREUSR_CF    = @p_usr_cf                  -- MOD012-11/04/2006 CREUSR_CF = "DSK"
+FROM	btrav..EST_ESID0801_TESTUTISUP
+where 	SSD_CF       = @p_ssd_cf
+and	    LSTUPDUSR_CF = @p_usr_cf
+
+select @erreur = @@error
+
+if @erreur != 0
+    begin
+    select @MsgAnomalie = "Erreur MAJ btrav..EST_ESID0801_TESTUTISUP - Periode de Saisie"
+	goto ErreurNorm
+    end
+
+-- accès à la table BFAC..TCONTR pour renseigner les infos accept
+-- ---------------------------------------------------------------
+
+UPDATE btrav..EST_ESID0801_TESTUTISUP
+SET	SSD_CF = B.SSD_CF,
+	ESB_CF = B.ACCESB_CF,
+	CED_NF = B.CED_NF,
+	BRK_NF = B.PRD_NF,
+	GEMPRMPAY_NF = B.GENPRMPAY_NF,
+	GANPAYORD_NT = B.GANPAYORD_NT
+FROM	btrav..EST_ESID0801_TESTUTISUP A, BFAC..TCONTR B
+where
+ 	A.SSD_CF        = @p_ssd_cf
+and	A.LSTUPDUSR_CF  = @p_usr_cf
+and	A.CTR_NF        = B.CTR_NF
+and	A.END_NT        = B.END_NT
+and	A.UWY_NF        = B.UWY_NF
+and	A.UW_NT         = B.UW_NT
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur MAJ btrav..EST_ESID0801_TESTUTISUP - Info Acceptation BFAC..TCONTR'
+	goto ErreurNorm
+    end
+
+-- accès à la table BTRT..TCONTR pour renseigner les infos accept
+-- --------------------------------------------------------------
+
+UPDATE btrav..EST_ESID0801_TESTUTISUP
+SET	SSD_CF = B.SSD_CF,
+	ESB_CF = B.ACCESB_CF,
+	CED_NF = B.CED_NF,
+	BRK_NF = B.PRD_NF,
+	GEMPRMPAY_NF = B.GENPRMPAY_NF,
+	GANPAYORD_NT = B.GANPAYORD_NT
+FROM	btrav..EST_ESID0801_TESTUTISUP A,
+        btrt..TCONTR B
+where
+    A.SSD_CF       = @p_ssd_cf
+and	A.LSTUPDUSR_CF = @p_usr_cf
+and	A.CTR_NF       = B.CTR_NF
+and	A.END_NT       = B.END_NT
+and	A.UWY_NF       = B.UWY_NF
+and	A.UW_NT        = B.UW_NT
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+      select @MsgAnomalie = 'Erreur MAJ btrav..EST_ESID0801_TESTUTISUP - Info Acceptation BTRT..TCONTR'
+      goto ErreurNorm
+    end
+
+-- accès à la table BRET..TRETCTR pour renseigner les champs filiale, établissement
+-- Pour le cas où on n'a pas d'acceptation dc ces infos ne sont pas encore à jour
+-- --------------------------------------------------------------------------------
+
+UPDATE btrav..EST_ESID0801_TESTUTISUP
+SET	SSD_CF = B.SSD_CF,
+	ESB_CF = B.ESB_CF
+FROM	btrav..EST_ESID0801_TESTUTISUP A,
+        bret..TRETCTR B
+where
+    A.SSD_CF        = @p_ssd_cf
+and	A.LSTUPDUSR_CF  = @p_usr_cf
+and	A.RETCTR_NF     = B.RETCTR_NF
+and	A.RTY_NF        = B.RTY_NF
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = "Erreur MAJ btrav..EST_ESID0801_TESTUTISUP - Info Contrats BRET..TRETCTR"
+	goto ErreurNorm
+    end
+
+-- Maj par défaut de l'ex de survenance acceptation
+-- ---------------------------------------------------
+
+UPDATE btrav..EST_ESID0801_TESTUTISUP
+SET	OCCYEA_NF = UWY_NF
+where
+    CTR_NF       != NULL
+and OCCYEA_NF    = null
+and SSD_CF       = @p_ssd_cf
+and	LSTUPDUSR_CF = @p_usr_cf
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = '"Erreur MAJ btrav..EST_ESID0801_TESTUTISUP - Maj par défaut de l''ex de survenance acceptation'
+	goto ErreurNorm
+    end
+
+-- Maj par défaut de l'exercice de survenance rétrocession
+-- -------------------------------------------------------
+
+UPDATE btrav..EST_ESID0801_TESTUTISUP
+SET	RETOCCYEA_NF = RTY_NF
+where
+    RETCTR_NF    != NULL
+and RETOCCYEA_NF = null
+and SSD_CF       = @p_ssd_cf
+and	LSTUPDUSR_CF = @p_usr_cf
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur MAJ btrav..EST_ESID0801_TESTUTISUP - Maj par défaut de l''ex de survenance rétro '
+	goto ErreurNorm
+    end
+
+-- Maj infos tiers rétro
+-- placements non historisés et comptables, valides (16)ou résiliés (19)
+-- --------------------------------------------------------------------------
+
+UPDATE btrav..EST_ESID0801_TESTUTISUP
+SET a.RTO_NF    = b.RTO_NF,
+    a.INT_NF    = b.INT_NF,
+      RETPAY_NF = PAY_NF,
+	  RETKEY_CF = KEY_CF
+
+FROM btrav..EST_ESID0801_TESTUTISUP a,
+     bret..TPLACEMT b
+	 where
+             a.RETCTR_NF != NULL
+         and a.RETCTR_NF = b.RETCTR_NF
+		 and a.RTY_NF    = b.RTY_NF
+		 and a.PLC_NT    = b.PLC_NT
+		 and HIS_B       = 0
+		 and ACCPLC_B    = 1
+  		 and (PLCSTS_CT  = 16 or PLCSTS_CT = 19)
+         and A.SSD_CF    = @p_ssd_cf
+         and A.LSTUPDUSR_CF = @p_usr_cf
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur MAJ btrav..EST_ESID0801_TESTUTISUP - Maj infos tiers rétro '
+	goto ErreurNorm
+    end
+
+-- Maj poste de contrepartie
+-- -------------------------
+
+UPDATE btrav..EST_ESID0801_TESTUTISUP
+SET  DBLTRNCOD_CF = CTRSCOD_CF
+FROM btrav..EST_ESID0801_TESTUTISUP a,
+     bref..TDETTRS b
+where
+    DETTRS_CF      = TRNCOD_CF
+and A.SSD_CF       = @p_ssd_cf
+and	A.LSTUPDUSR_CF = @p_usr_cf
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur MAJ btrav..EST_ESID0801_TESTUTISUP - Maj poste de contrepartie'
+	goto ErreurNorm
+    end
+
+-- **********************************************************************************
+--                                                                                  *
+--                     2ème ETAPE: CONTROLES DE COHERENCE                           *
+--    LES LIBELLES DES ANOS CI-DESSOUS SE TROUVENT DANS LA TABLE BREF..TBANTECL     *
+--                  ILS SONT REFERENCES PAR "ANO_CT"                                *
+--                                                                                  *
+-- **********************************************************************************
+
+-- -----------------------------------------------------------------------------*
+--                   CONTROLE DU LIBELLE D'INVENTAIRE                           *
+--               L'année doit correspondre à l'année saisie                     *
+--                + doit etre sur dernier jour du mois                          *
+--                   sinon ano 19                                               *
+-- -----------------------------------------------------------------------------*
+
+INSERT into #TACCSUP1
+select	TRN_NT, ACCTYP_NF, SSD_CF, ESB_CF, ENTPERY_NF, ENTPERMTH_NF, BALSHEY_NF, BALSHRMTH_NF,
+	BALSHRDAY_NF, VALPERY_NF, VALPERMTH_NF, TRNCOD_CF, DBLTRNCOD_CF, RETAUTGEN_B, CTR_NF,
+	END_NT, SEC_NF, UWY_NF, UW_NT, OCCYEA_NF, ACY_NF, SCOSTRMTH_NF, SCOENDMTH_NF	, CLM_NF,
+	CUR_CF, AMT_M, CED_NF, BRK_NF, GEMPRMPAY_NF, GANPAYORD_NT, RETCTR_NF, RETEND_NT, RETSEC_NF,
+	RTY_NF, RETUW_NT, PLC_NT, RETOCCYEA_NF, RETACY_NF, RETSCOSTRMTH_NF, RETSCOENDMTH_NF, RCL_NF,
+	RETCUR_CF, RETAMT_M, RTO_NF, INT_NF, RETPAY_NF, RETKEY_CF, ACCTRN_NT,	COMMAC_LL, CRE_D,
+	CREUSR_CF, LSTUPD_D, LSTUPDUSR_CF, SPEENTTYP_CF, SPEENTNAT_CT                                                      -- MOD005 26/04/2005 -- MO007
+FROM	btrav..EST_ESID0801_TESTUTISUP
+where 	SSD_CF = @p_ssd_cf
+and	LSTUPDUSR_CF = @p_usr_cf
+and	BALSHEY_NF = ENTPERY_NF
+and	BALSHRDAY_NF = datepart( dd, dateadd( dd, -1, dateadd( mm, +1, convert( char(6), BALSHEY_NF * 100+ BALSHRMTH_NF ) + '01' ) ) )
+and	BALSHRMTH_NF >= ENTPERMTH_NF            -- MOD003 Vérifier que le Mois de Bilan >= Periode de Bilan En Cours
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur Génération TACCSUP1 - Anomalie(s) liee(s) au libelle d''inventaire'
+	goto ErreurAno
+    end
+
+-- Comparaison du nombre de lignes entre EST_ESID0801_TESTUTISUP et #TACCSUP1
+-- génération d'une anomalie ===> ANO 19 et sortie de la procédure
+-- --------------------------------------------------------------------------
+
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP1
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+
+if ( @nbligne_tempaccsup != @nbligne_testutisup )
+	begin
+	select @error_type = 19
+    select @MsgAnomalie = 'Anomalie(s) liee(s) au libelle d''inventaire'
+    select @NumMsgAnomalie = @NumMsgAnomalie + '19 '
+
+    INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+    SELECT DISTINCT CTR_NF, END_NT, SEC_NF, 1, SSD_CF, "A", @p_usr_cf, @error_type, NUMLINE_NT
+    FROM btrav..EST_ESID0801_TESTUTISUP
+    WHERE TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP1)
+      and SSD_CF = @p_ssd_cf
+      and	LSTUPDUSR_CF = @p_usr_cf
+	end
+
+-- Purge de  #TACCSUP1 avant réutilisation
+-- ---------------------------------------
+
+DELETE #TACCSUP1
+
+
+-- ----------------------------------------------------------------------------
+--                   CONTROLE DE LA PERIODE DE VALIDITE
+--                      si pb ===> ano 20
+-- -----------------------------------------------------------------------------
+
+INSERT into #TACCSUP1
+select	TRN_NT, ACCTYP_NF, SSD_CF, ESB_CF, ENTPERY_NF, ENTPERMTH_NF, BALSHEY_NF, BALSHRMTH_NF,
+	BALSHRDAY_NF, VALPERY_NF, VALPERMTH_NF, TRNCOD_CF, DBLTRNCOD_CF, RETAUTGEN_B, CTR_NF,
+	END_NT, SEC_NF, UWY_NF, UW_NT, OCCYEA_NF, ACY_NF, SCOSTRMTH_NF, SCOENDMTH_NF	, CLM_NF,
+	CUR_CF, AMT_M, CED_NF, BRK_NF, GEMPRMPAY_NF, GANPAYORD_NT, RETCTR_NF, RETEND_NT, RETSEC_NF,
+	RTY_NF, RETUW_NT, PLC_NT, RETOCCYEA_NF, RETACY_NF, RETSCOSTRMTH_NF, RETSCOENDMTH_NF, RCL_NF,
+	RETCUR_CF, RETAMT_M, RTO_NF, INT_NF, RETPAY_NF, RETKEY_CF, ACCTRN_NT,	COMMAC_LL, CRE_D,
+	CREUSR_CF, LSTUPD_D, LSTUPDUSR_CF, SPEENTTYP_CF, SPEENTNAT_CT                                           -- MOD005 26/04/2005 -- MOD007
+FROM btrav..EST_ESID0801_TESTUTISUP
+where SSD_CF = @p_ssd_cf
+and	LSTUPDUSR_CF = @p_usr_cf
+
+and	(        -- Période de Fin de Validité >= Période de Saisie
+             (
+                  ( VALPERMTH_NF >= DatePart(mm, @Verif_d) and VALPERY_NF = DatePart(yy, @Verif_d)   )      -- MOD007
+             OR ( VALPERY_NF > DatePart(yy, @Verif_d)   )
+             )
+                -- ET
+       and
+             (  -- Période de Fin de Validité <= Période Bilan
+                   ( VALPERMTH_NF >= BALSHRMTH_NF and VALPERY_NF = BALSHEY_NF )
+             )
+      )
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur Génération TACCSUP1 - Anomalie(s) liee(s) aux periodes de validite'
+	goto ErreurAno
+    end
+
+-- Comparaison du nombre de lignes entre les tables btrav..EST_ESID0801_TESTUTISUP et #TACCSUP1
+-- génération d'une anomalie ===> ANO 20 et sortie de la procédure.
+-- ----------------------------------------------------------------------------------------------
+
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP1
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+if ( @nbligne_tempaccsup != @nbligne_testutisup )
+	begin
+	select @error_type = 20
+    select @MsgAnomalie = 'Anomalie(s) liee(s) aux periodes de validite'
+    select @NumMsgAnomalie = @NumMsgAnomalie + '20 '
+
+    INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+    SELECT DISTINCT CTR_NF, END_NT, SEC_NF, 1, SSD_CF, "A", @p_usr_cf, @error_type, NUMLINE_NT
+    FROM btrav..EST_ESID0801_TESTUTISUP
+    WHERE TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP1)
+      and SSD_CF = @p_ssd_cf                    -- MOD011 MDJ 21/02/2006
+      and LSTUPDUSR_CF = @p_usr_cf              -- MOD011 MDJ 21/02/2006
+end
+
+-- Purge de  #TACCSUP1 avant réutilisation
+-- ---------------------------------------
+DELETE #TACCSUP1
+
+-- -----------------------------------------------------------------------------
+--                   CONTROLES DU POSTE COMPTABLE
+--                   si pb ===> ano 33
+-- -----------------------------------------------------------------------------
+-- I - VERIFIER
+-- Quand le contrat rétrocession est renseigné, même si on a de l'acceptation, le fichier contient un poste de type rétro.
+INSERT into #TACCSUP1
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+  A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, B.CTRSCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+  A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+  A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+  A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+  A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+  A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT   -- MOD005 26/04/2005 -- MOD007
+ from BTRAV..EST_ESID0801_TESTUTISUP A, BREF..TDETTRS B
+  where A.SSD_CF=@p_ssd_cf
+    and	A.LSTUPDUSR_CF=@p_usr_cf
+    and A.TRNCOD_CF=B.DETTRS_CF
+    and B.OPN_B=1          -- poste open
+<<<<<<< HEAD
+    and (  (A.SPEENTNAT_CT in(4,5,6) and (TRNCOD_CF LIKE '_[EHJL]%' or TRNCOD_CF LIKE '%G') ) -- EBS MOD029 EBS AE for Solvency (G suffix) should ignore the 2nd prefix test
+=======
+    and (  (A.SPEENTNAT_CT in(4,5,6) and (TRNCOD_CF LIKE '_[EHJL]%' or TRNCOD_CF LIKE '%G') ) -- EBS P&C or LIFE
+>>>>>>> omega2-sql_21700_cumulated.zip
+        or (A.SPEENTNAT_CT in(1,2,3) and TRNCOD_CF LIKE '_[4679CNORSUVWXY]%') ) -- IFRS
+    and (  (CTR_NF!=NULL and RETCTR_NF in(NULL,'') and TRNCOD_CF like '[13]%')
+        or (RETCTR_NF!=NULL and TRNCOD_CF like '[24]%') )
+select @erreur = @@error
+if @erreur != 0
+begin
+  select @MsgAnomalie = "Erreur Génération TACCSUP1 - Anomalie(s) liee(s) aux  postes comptables"
+	goto ErreurAno
+end
+
+-- modif 22, modif 23
+delete #TACCSUP1
+ from #TACCSUP1 a
+ where TRNCOD_CF like '_[1-9]%'
+   and not exists(select 1 from BREF..TDETTRS d, BREF..TSUBTRSESB s				--MOD027
+                   where d.dettrs_cf=a.TRNCOD_CF
+                     and s.ssd_cf=a.SSD_CF
+                     and s.ESB_CF=a.ESB_CF										--MOD027
+                     and d.pcptrs_cf=s.pcptrs_cf
+                     and d.trs_cf=s.trs_cf
+                     and d.subtrs_cf=s.subtrs_cf
+                     and d.opn_b=1
+                     and d.dettrs_cf!=d.ctrscod_cf)
+select @erreur = @@error
+if @erreur != 0
+begin
+  select @MsgAnomalie = "Erreur Génération TACCSUP1 - Anomalie(s) liee(s) aux  postes comptables"
+	goto ErreurAno
+end
+
+/* Comparaison du nombre de lignes entre EST_ESID0801_TESTUTISUP et #TACCSUP1 */
+/* génération d'une anomalie et sortie de la procédure, ANO 33   */
+/* ------------------------------------------------------------- */
+
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP1
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+
+if ( @nbligne_tempaccsup != @nbligne_testutisup )
+	begin
+	select @error_type = 33
+    select @MsgAnomalie = "Anomalie(s) liee(s) aux  postes comptables"
+    select @NumMsgAnomalie = @NumMsgAnomalie + '33 a '
+
+    INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+    SELECT DISTINCT CTR_NF, END_NT, SEC_NF, 1, SSD_CF, "A", @p_usr_cf, @error_type, NUMLINE_NT
+    FROM btrav..EST_ESID0801_TESTUTISUP
+    WHERE TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP1)
+      and SSD_CF       = @p_ssd_cf              -- MOD011 MDJ 21/02/2006
+      and LSTUPDUSR_CF = @p_usr_cf              -- MOD011 MDJ 21/02/2006
+	end
+
+
+-- Ajout JVDV [14839]
+
+-- II - VERIFIER
+-- Si le poste comptable est identique au poste de contrepartie, cela signifie que le poste comptable principal saisi est un poste de contre-partie
+-- (rappel le poste de contre-partie est mis à jour dans la proc à l'aide de la table bref..TDETTRS)
+--                   si pb ===> ano 50
+
+-- Purge de  #TACCSUP1 avant réutilisation
+-- ---------------------------------------
+DELETE #TACCSUP1             --[18612]
+
+INSERT into #TACCSUP1
+select
+    A.TRN_NT,A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT
+FROM	btrav..EST_ESID0801_TESTUTISUP A
+where
+        A.SSD_CF       = @p_ssd_cf
+and	    A.LSTUPDUSR_CF = @p_usr_cf
+and 	A.TRNCOD_CF   != A.DBLTRNCOD_CF   -- le poste principal doit toujours être différent du poste de contre-partie.
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur Génération TACCSUP2 - Anomalie(s) liee(s) aux postes comptables'
+	goto ErreurAno
+    end
+
+-- Comparaison du nombre de lignes entre les tables btrav..EST_ESID0801_TESTUTISUP et #TACCSUP1
+-- génération d'une anomalie ===> ANO 50 et sortie de la procédure
+-- ---------------------------------------------------------------------------------------------
+
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP1
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+
+if ( @nbligne_tempaccsup != @nbligne_testutisup )
+	begin
+	select @error_type = 50
+    select @MsgAnomalie = 'Anomalie(s) liee(s) au poste comptable principal = poste de contre-partie'
+    select @NumMsgAnomalie = @NumMsgAnomalie + '50 '
+
+    INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+    SELECT DISTINCT CTR_NF, END_NT, SEC_NF, 1, SSD_CF, "A", @p_usr_cf, @error_type, NUMLINE_NT
+    FROM btrav..EST_ESID0801_TESTUTISUP
+    WHERE TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP1)
+      and SSD_CF       = @p_ssd_cf
+      and LSTUPDUSR_CF = @p_usr_cf
+	end
+
+
+-- [18612] --------------------------------------------------------------------------
+--            AUTRE CONTROLE SUR LE POSTE COMPTABLE
+--            si pb ===> ano 49 'Poste bilan service non autorisé'
+--            les postes comptables suivants ne sont pas autorisés:
+--            - poste bilan service x5yyyyyz
+--            - poste bilan service rejet x8yyyyyz
+-- -----------------------------------------------------------------------------
+
+
+DELETE #TACCSUP1        -- Purge de  #TACCSUP1 avant réutilisation
+
+INSERT into #TACCSUP1
+select  A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF, A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT
+
+FROM	btrav..EST_ESID0801_TESTUTISUP A
+
+WHERE
+    A.SSD_CF       = @p_ssd_cf
+and A.LSTUPDUSR_CF = @p_usr_cf
+and ( substring( A.TRNCOD_CF,2,1 ) != '5'
+      AND
+      substring( A.TRNCOD_CF,2,1 ) != '8'
+    )
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur Génération TACCSUP2 - Cas de Poste bilan de service non autorisé '
+	goto ErreurAno
+    end
+
+/* Comparaison du nombre de lignes entre EST_ESID0801_TESTUTISUP et #TACCSUP1 */
+/* génération d'une anomalie et sortie de la procédure, ANO 49   */
+/* ------------------------------------------------------------- */
+
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP1
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+if ( @nbligne_tempaccsup != @nbligne_testutisup )
+	begin
+	    select @error_type = 49
+        select @MsgAnomalie = 'Anomalie(s) liee(s) aux  postes comptables service'
+        select @NumMsgAnomalie = @NumMsgAnomalie + '49'
+
+        INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+        SELECT DISTINCT CTR_NF, END_NT, SEC_NF, 1, SSD_CF, 'A', @p_usr_cf, @error_type, NUMLINE_NT
+        FROM btrav..EST_ESID0801_TESTUTISUP
+        WHERE
+            TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP1)
+        and SSD_CF       = @p_ssd_cf
+        and	LSTUPDUSR_CF = @p_usr_cf
+	end
+
+-- Purge de la table #TACCSUP1 avant réutilisation
+-- -----------------------------------------------
+DELETE #TACCSUP1
+
+-- ---------------------------------------------------------------------------------------------------------
+--              MOD004            Nouvelle ANOMALIE 46 - MOD004 11/04/2005
+-- ---------------------------------------------------------------------------------------------------------
+-- Selection du Nombre de Postes D'ouvertures Concernés
+Select @nbligne_PosteOuverture = Count(*)
+FROM btrav..EST_ESID0801_TESTUTISUP
+where SSD_CF = @p_ssd_cf
+and	LSTUPDUSR_CF = @p_usr_cf
+and (CTR_NF != NULL OR RETCTR_NF != NULL )
+and  ( substring( TRNCOD_CF, 2, 1 ) = '7' OR
+       substring( TRNCOD_CF, 2, 1 ) = '8' OR
+       substring( TRNCOD_CF, 2, 1 ) = '9'
+      )
+
+-- Selection des Postes D'ouvertures pour la Période Validité = Période Bilan
+INSERT into #TACCSUP1
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                                       -- MOD005 26/04/2005 -- MOD007
+FROM	btrav..EST_ESID0801_TESTUTISUP A
+where
+    A.SSD_CF       = @p_ssd_cf
+and	A.LSTUPDUSR_CF = @p_usr_cf
+and (CTR_NF       != NULL OR RETCTR_NF != NULL )
+and ( substring( TRNCOD_CF, 2, 1 ) = '7' or
+      substring( TRNCOD_CF, 2, 1 ) = '8' or
+      substring( TRNCOD_CF, 2, 1 ) = '9'
+    )
+and (VALPERMTH_NF = BALSHRMTH_NF and VALPERY_NF = BALSHEY_NF)     -- MOD010
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = "Erreur Génération TACCSUP1 - Anomalie(s) liee(s) aux  postes Ouvertures "
+	goto ErreurAno
+    end
+
+-- Comparaison EST_ESID0801_TESTUTISUP et #TACCSUP1
+-- Anomalie et sortie de la procédure, ANO 46
+-- -----------------------------------------------------------------------------------
+
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP1
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+
+if ( @nbligne_tempaccsup != @nbligne_PosteOuverture )
+	begin
+	    select @error_type = 46
+        select @MsgAnomalie = "Postes Ouvertures : Période Validité <> Période Bilan ! "
+        select @NumMsgAnomalie = @NumMsgAnomalie + '46 '
+
+        -- Selection Poste Ouverture ACCEPT
+        INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+        SELECT DISTINCT CTR_NF, END_NT, SEC_NF, 1, SSD_CF, "A", @p_usr_cf, @error_type, NUMLINE_NT
+        FROM btrav..EST_ESID0801_TESTUTISUP
+        WHERE TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP1)
+        and SSD_CF = @p_ssd_cf
+        and LSTUPDUSR_CF = @p_usr_cf
+        and (CTR_NF != NULL)
+        and ( substring( TRNCOD_CF, 2, 1 ) = '7' or
+              substring( TRNCOD_CF, 2, 1 ) = '8' or
+              substring( TRNCOD_CF, 2, 1 ) = '9'
+            )
+
+        -- Selection Poste Ouverture RETRO
+        INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+        SELECT DISTINCT RETCTR_NF, RETEND_NT, RETSEC_NF, 1, SSD_CF, "A", @p_usr_cf,  @error_type, NUMLINE_NT
+        FROM btrav..EST_ESID0801_TESTUTISUP
+        WHERE TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP1)
+        and SSD_CF = @p_ssd_cf
+        and LSTUPDUSR_CF = @p_usr_cf
+        and (RETCTR_NF != NULL )
+        and ( substring( TRNCOD_CF, 2, 1 ) = '7' or
+              substring( TRNCOD_CF, 2, 1 ) = '8' or
+              substring( TRNCOD_CF, 2, 1 ) = '9'
+            )
+        and NUMLINE_NT NOT IN (SELECT NUMLINE_NT FROM #TCTRANO_TMP WHERE ANO_CT = 46)
+   	end
+
+
+-- Purge de la table #TACCSUP1 avant réutilisation
+DELETE #TACCSUP1
+
+-- ---------------------------------------------------------------------------------------------------------
+--  FIN ANOMALIE 46 - MOD004 11/04/2005
+-- ---------------------------------------------------------------------------------------------------------
+
+
+/*-----------------------------------------------------------------------------*/
+/*                CONTROLE ANNEE COMPTE ACCEPTATION                            */
+/*                      si pb ano 21                                           */
+/*-----------------------------------------------------------------------------*/
+-- TRT
+INSERT into #TACCSUP1
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+       A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+       A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF, A.CLM_NF,
+       A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+       A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+       A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT, A.COMMAC_LL, A.CRE_D,
+       A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                  -- MOD005 26/04/2005 - MOD007
+FROM btrav..EST_ESID0801_TESTUTISUP A,
+     btrt..TSECTION B                                 --[019] ajout jointure TSECTION
+where A.SSD_CF       = @p_ssd_cf
+  and A.LSTUPDUSR_CF = @p_usr_cf
+  and A.CTR_NF       = B.CTR_NF                       --[019]
+  and A.END_NT       = B.END_NT                       --[019]
+  and A.SEC_NF       = B.SEC_NF                       --[019]
+  and A.UWY_NF       = B.UWY_NF                       --[019]
+  and A.UW_NT        = B.UW_NT                        --[019]
+  and A.SSD_CF       = B.SSD_CF                       --[019]
+  and (
+        ( A.CTR_NF = NULL OR A.CTR_NF = '' )
+      OR
+        ( A.CTR_NF != NULL  and ( A.ACY_NF >= A.UWY_NF or B.LOB_CF not in ( '30', '31'))     --[019]
+        )
+      )
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur Génération TACCSUP1 - Anomalie(s) liee(s) a l''annee de compte acceptation'
+	goto ErreurAno
+    end
+
+-- FAC
+INSERT into #TACCSUP1
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+       A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+       A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF, A.CLM_NF,
+       A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+       A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+       A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT, A.COMMAC_LL, A.CRE_D,
+       A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                  -- MOD005 26/04/2005 - MOD007
+FROM btrav..EST_ESID0801_TESTUTISUP A,
+     bfac..TSECTION B                           --[019] ajout jointure TSECTION
+where A.SSD_CF       = @p_ssd_cf
+  and A.LSTUPDUSR_CF = @p_usr_cf
+  and A.CTR_NF       = B.CTR_NF                       --[019]
+  and A.END_NT       = B.END_NT                       --[019]
+  and A.SEC_NF       = B.SEC_NF                       --[019]
+  and A.UWY_NF       = B.UWY_NF                       --[019]
+  and A.UW_NT        = B.UW_NT                        --[019]
+  and A.SSD_CF       = B.SSD_CF                       --[019]
+  and (
+        ( A.CTR_NF = NULL OR A.CTR_NF = '' )
+       OR
+        ( A.CTR_NF != NULL  and ( A.ACY_NF >= A.UWY_NF  or B.LOB_CF not in ( '30', '31' ) )        --[019]
+        )                                                                                          --[019]
+      )
+
+select @erreur = @@error
+if @erreur != 0
+begin
+    select @MsgAnomalie = 'Erreur Génération TACCSUP1 - Anomalie(s) liee(s) a l''annee de compte acceptation'
+	goto ErreurAno
+end
+
+-- On est toujours dans le contrôle de l'année de compte, mais il faut aussi insérer tous les contrats rétrocessions
+-- (ne sont pas pris du fait de la jointure avec la table tsection de l'acceptation)
+-- car sinon, on aura un décalage en comptant le nombre de lignes
+
+INSERT into #TACCSUP1
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT
+FROM	btrav..EST_ESID0801_TESTUTISUP A
+where
+    (A.CTR_NF = NULL OR A.CTR_NF = '')  -- ko contrat accept.
+and A.RETCTR_NF   != NULL               -- ok contrat rétro
+and A.SSD_CF       = @p_ssd_cf
+and A.LSTUPDUSR_CF = @p_usr_cf
+
+select @erreur = @@error
+if @erreur != 0
+begin
+  select @MsgAnomalie = 'Erreur Génération TACCSUP1 - Anomalie(s) liee(s) a l''annee de compte acceptation'
+	goto ErreurAno
+end
+
+-- Comparaison du nombre de lignes entre EST_ESID0801_TESTUTISUP et #TACCSUP1
+-- génération d'une anomalie et sortie de la procédure, ANO 21
+-- -------------------------------------------------------------
+
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP1
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+if ( @nbligne_tempaccsup != @nbligne_testutisup )
+	begin
+	    select @error_type     = 21
+        select @MsgAnomalie    = 'Anomalie(s) liee(s) a l''annee de compte acceptation'
+        select @NumMsgAnomalie = @NumMsgAnomalie + '21 '
+
+        INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+        SELECT DISTINCT CTR_NF, END_NT, SEC_NF, 1, SSD_CF, "A", @p_usr_cf, @error_type, NUMLINE_NT
+        FROM btrav..EST_ESID0801_TESTUTISUP
+        WHERE
+            TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP1)
+        and SSD_CF       = @p_ssd_cf              -- MOD011 MDJ 21/02/2006
+        and LSTUPDUSR_CF = @p_usr_cf              -- MOD011 MDJ 21/02/2006
+	end
+
+-- Purge de la table #TACCSUP1 avant réutilisation
+-- ------------------------------------------------
+DELETE #TACCSUP1
+
+/*-----------------------------------------------------------------------------*/
+/*                CONTROLE ANNEE COMPTE RETRO                                  */
+/*                      si pb ano 22                                           */
+/*-----------------------------------------------------------------------------*/
+INSERT into #TACCSUP1
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+       A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+       A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF, A.CLM_NF,
+       A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+       A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+       A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT, A.COMMAC_LL, A.CRE_D,
+       A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                      -- MOD005 26/04/2005 - MOD007
+FROM btrav..EST_ESID0801_TESTUTISUP A,
+     bret..TRETSEC B                              --[019] ajout jointure TRETSEC
+where
+      A.SSD_CF       = @p_ssd_cf
+  and A.LSTUPDUSR_CF = @p_usr_cf
+  and A.RETCTR_NF    = B.RETCTR_NF                 --[019]
+  and A.RETSEC_NF    = B.RETSEC_NF                 --[019]
+  and A.RTY_NF       = B.RTY_NF                    --[019]
+  and A.SSD_CF       = B.SSD_CF                    --[019]
+  and (
+        ( A.RETCTR_NF = NULL OR A.RETCTR_NF = '')
+        OR
+        ( A.RETCTR_NF != NULL  and ( A.RETACY_NF >= A.RTY_NF or B.LOB_CF not in ( '30', '31' )))       --[019]
+      )
+
+select @erreur = @@error
+if @erreur != 0
+begin
+    select @MsgAnomalie = 'Erreur Génération TACCSUP1 - Anomalie(s) liee(s) à l''année de compte rétrocession'
+    goto ErreurAno
+end
+
+-- On est toujours dans le contrôle de l'année de compte, mais il faut aussi insérer tout les contrats acceptations
+-- (ne sont pas pris du fait de la jointure avec les tables section de la rétrocession)
+-- car sinon, on aura un décalage en comptant le nombre de lignes
+
+INSERT into #TACCSUP1
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT
+FROM	btrav..EST_ESID0801_TESTUTISUP A
+where
+    (A.RETCTR_NF   = NULL OR A.RETCTR_NF = '')  -- ok contrat rétro.
+and A.CTR_NF      != NULL                       -- ko contrat accept.
+and A.SSD_CF       = @p_ssd_cf
+and A.LSTUPDUSR_CF = @p_usr_cf
+
+select @erreur = @@error
+if @erreur != 0
+begin
+  select @MsgAnomalie = 'Erreur Génération TACCSUP1 - Anomalie(s) liee(s) a l''annee de compte rétrocession'
+	goto ErreurAno
+end
+
+/* Comparaison du nombre de lignes entre EST_ESID0801_TESTUTISUP et #TACCSUP1 */
+/* génération d'une anomalie et sortie de la procédure, ANO 22   */
+/* ------------------------------------------------------------- */
+
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP1
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+
+if ( @nbligne_tempaccsup != @nbligne_testutisup )
+	begin
+	    select @error_type = 22
+        select @MsgAnomalie = "Anomalie(s) liee(s) a l'annee de compte retrocession"
+        select @NumMsgAnomalie = @NumMsgAnomalie + '22 '
+
+        INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+        SELECT DISTINCT RETCTR_NF, RETEND_NT, RETSEC_NF, 1, SSD_CF, "A", @p_usr_cf,  @error_type, NUMLINE_NT
+        FROM btrav..EST_ESID0801_TESTUTISUP
+        WHERE
+            TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP1)
+        and SSD_CF       = @p_ssd_cf              -- MOD011 MDJ 21/02/2006
+        and	LSTUPDUSR_CF = @p_usr_cf              -- MOD011 MDJ 21/02/2006
+	end
+
+
+-- -----------------------------------------------------------------------------
+-- MOD001 - GENERATION & CONTROLE DES ERREURS de NIVEAU 1
+-- -----------------------------------------------------------------------------
+select @nbligne_tctrano = 0
+select @nbligne_tctrano = count(*) FROM #TCTRANO_TMP
+if ( @nbligne_tctrano = Null ) Select @nbligne_tctrano = 0
+if ( @nbligne_tctrano > 0 )
+	begin
+	goto ErreurAno
+	end
+
+-- A PARTIR DE CE NIVEAU DU CODE, LA PROC TRAVAILLE SYSTEMATIQUEMENT A PARTIR DES TABLES TEMPO
+-- ET PLUS A PARTIR DE btrav..EST_ESID0801_TESTUTISUP, POUR DES QUESTIONS DE RAPIDITE
+-- O.GIRAUX
+
+/*-----------------------------------------------------------------------------*/
+/*                CONTROLE D'EXISTENCE DES SECTIONS ACCEPTATION                */
+/*                      si pb ano 28                                           */
+/*-----------------------------------------------------------------------------*/
+
+/* Accès à la table BFAC..TSECTION pour les affaires acceptation renseignées uniquement */
+/* ------------------------------------------------------------------------------------ */
+
+INSERT into #TACCSUP2
+select  A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF, A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                                         -- MOD005 26/04/2005 - MOD007
+FROM	#TACCSUP1 A, BFAC..TSECTION B
+where
+    A.CTR_NF != NULL
+and (A.CTR_NF like 'FA%' or substring( A.CTR_NF, 3, 1 ) between 'A' and 'M') --and A.CTR_NF like '__[A-M]%'
+and	A.CTR_NF = B.CTR_NF
+and	A.END_NT = B.END_NT
+and	A.SEC_NF = B.SEC_NF
+and	A.UWY_NF = B.UWY_NF
+and	A.UW_NT  = B.UW_NT
+and A.SSD_CF = B.SSD_CF
+and A.SSD_CF = @p_ssd_cf
+
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur Génération TACCSUP2 - CONTROLE D''EXISTENCE DES SECTIONS ACCEPTATION'
+	goto ErreurAno
+    end
+
+-- Accès à la table BTRT..TSECTION pour les affaires acceptation renseignées uniquement
+-- ------------------------------------------------------------------------------------
+
+INSERT into #TACCSUP2
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                                        -- MOD005 26/04/2005 - MOD007
+FROM	#TACCSUP1 A,
+        btrt..TSECTION B
+where
+    A.CTR_NF != NULL
+and A.CTR_NF not like 'FA%' and substring( A.CTR_NF, 3, 1 ) not between 'A' and 'M' --and A.CTR_NF not like '__[A-M]%'
+and	A.CTR_NF = B.CTR_NF
+and	A.END_NT = B.END_NT
+and	A.SEC_NF = B.SEC_NF
+and	A.UWY_NF = B.UWY_NF
+and	A.UW_NT  = B.UW_NT
+and A.SSD_CF = B.SSD_CF
+and A.SSD_CF = @p_ssd_cf
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = "Erreur Génération TACCSUP2 - Accès à la table BTRT..TSECTION "
+	goto ErreurAno
+    end
+
+-- On est ds le contrôle d'existence des sections acceptation, il faut donc insérer tt ce qui
+-- est rétro pure car sinon, on aura décallage ensuite en comptant le nbr de lignes
+
+INSERT into #TACCSUP2
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                                          -- MOD005 26/04/2005 - MOD007
+FROM	#TACCSUP1 A
+where
+    A.RETCTR_NF != NULL
+AND (A.CTR_NF = NULL OR A.CTR_NF = '')
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur Génération TACCSUP2 - Contrôle Existance Section Acceptation'
+	goto ErreurAno
+    end
+
+/* Comparaison du nombre de lignes entre EST_ESID0801_TESTUTISUP et #TACCSUP2 */
+/* génération d'une anomalie et sortie de la procédure, ANO 28   */
+/* ------------------------------------------------------------- */
+
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP2
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+if ( @nbligne_tempaccsup != @nbligne_testutisup )
+	begin
+	    -- génération d'une anomalie et sortie de la procédure
+	    SELECT @error_type = 28
+        select @MsgAnomalie = "Section acceptation inconnue"
+        select @NumMsgAnomalie = @NumMsgAnomalie + '28 '
+
+        INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+        SELECT DISTINCT CTR_NF, END_NT, SEC_NF, 1, SSD_CF, 'A', @p_usr_cf, @error_type, NUMLINE_NT
+        FROM btrav..EST_ESID0801_TESTUTISUP
+        WHERE
+            TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP2)
+        and SSD_CF       = @p_ssd_cf              -- MOD011 MDJ 21/02/2006
+        and LSTUPDUSR_CF = @p_usr_cf              -- MOD011 MDJ 21/02/2006
+	end
+
+-- Purge de la table #TACCSUP2 avant réutilisation
+-- -----------------------------------------------
+DELETE #TACCSUP2
+
+
+/*-----------------------------------------------------------------------------*/
+/*                CONTROLE D'EXISTENCE DES SECTIONS RETROCESSION               */
+/*                      si pb ano 27                                           */
+/*-----------------------------------------------------------------------------*/
+
+
+INSERT into #TACCSUP2
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                                       -- MOD005 26/04/2005 - MOD007
+FROM	#TACCSUP1 A,
+        bret..TRETSEC B
+where
+    A.RETCTR_NF != NULL
+and	A.RETCTR_NF = B.RETCTR_NF
+and	A.RETSEC_NF = B.RETSEC_NF
+and	A.RTY_NF    = B.RTY_NF
+and A.RETEND_NT = 0
+and A.RETUW_NT  = 1
+and A.SSD_CF    = B.SSD_CF
+and A.SSD_CF    = @p_ssd_cf
+
+-- On est ds le contrôle d'existence des sections rétro, il faut donc insérer tt ce qui
+-- est acceptation pure car sinon, on aura décallage ensuite en comptant le nbr de lignes
+
+INSERT into #TACCSUP2
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                                        -- MOD005 26/04/2005 - MOD007
+FROM	#TACCSUP1 A
+where
+    (A.RETCTR_NF = NULL OR A.RETCTR_NF = '')
+and A.CTR_NF != NULL
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur Génération TACCSUP2 - Contrôle Existance Section Rétro'
+	goto ErreurAno
+    end
+
+/* Comparaison du nombre de lignes entre EST_ESID0801_TESTUTISUP et #TACCSUP2 */
+/* génération d'une anomalie et sortie de la procédure, ANO 27   */
+/* ------------------------------------------------------------- */
+
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP2
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+if ( @nbligne_tempaccsup != @nbligne_testutisup )
+	 begin
+	    SELECT @error_type     = 27
+        select @MsgAnomalie    = 'Section rétro inconnue'
+        select @NumMsgAnomalie = @NumMsgAnomalie + '27 '
+
+        INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+        SELECT DISTINCT RETCTR_NF, RETEND_NT, RETSEC_NF, 1, SSD_CF, "A", @p_usr_cf,  @error_type, NUMLINE_NT
+        FROM btrav..EST_ESID0801_TESTUTISUP
+        WHERE
+            TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP2)
+        and SSD_CF       = @p_ssd_cf              -- MOD011 MDJ 21/02/2006
+        and LSTUPDUSR_CF = @p_usr_cf              -- MOD011 MDJ 21/02/2006
+	end
+
+
+-- Purge de  #TACCSUP2 avant réutilisation
+-- ---------------------------------------
+DELETE #TACCSUP2
+
+-- -----------------------------------------------------------------------------
+--           CONTROLE SUR LE STATUT DE LA SECTION des traités et des facultatives
+--                    si pb ===> ano 48
+-- -----------------------------------------------------------------------------
+
+
+/* FACS */
+INSERT into #TACCSUP2
+select  A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF, A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT
+FROM	#TACCSUP1 A,
+        bfac..TSECTION B
+
+where
+    A.SSD_CF       = @p_ssd_cf
+and A.LSTUPDUSR_CF = @p_usr_cf
+and A.CTR_NF      != NULL
+and A.CTR_NF       = B.CTR_NF
+and A.UWY_NF       = B.UWY_NF
+and A.END_NT       = B.END_NT
+and A.SEC_NF       = B.SEC_NF
+and A.UW_NT        = B.UW_NT
+and A.SSD_CF       = B.SSD_CF
+and B.SECSTS_CT in (14, 16, 17, 18, 19) -- "Accepté", "Définitif", "Renouvelé", "Expiré", ""Résilié"      MOD016
+
+select @erreur = @@error
+if @erreur != 0
+begin
+  select @MsgAnomalie = 'Erreur Génération TACCSUP2 - CONTROLE DU STATUT DE LA SECTION'
+  goto ErreurAno
+end
+
+
+/* TRAITES */
+INSERT into #TACCSUP2
+select  A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF, A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT
+FROM	#TACCSUP1 A,
+        btrt..TSECTION B
+where
+    A.SSD_CF       = @p_ssd_cf
+and A.LSTUPDUSR_CF = @p_usr_cf
+and A.CTR_NF      != NULL
+and A.CTR_NF       = B.CTR_NF
+and A.UWY_NF       = B.UWY_NF
+and A.END_NT       = B.END_NT
+and A.SEC_NF       = B.SEC_NF
+and A.UW_NT        = B.UW_NT
+and A.SSD_CF       = B.SSD_CF
+and B.SECSTS_CT    in (14, 16, 17, 18, 19) -- "Accepté", "Définitif", "Renouvelé", "Expiré", "Résilié"     MOD016
+
+select @erreur = @@error
+if @erreur != 0
+begin
+  select @MsgAnomalie = "Erreur Génération TACCSUP2 - CONTROLE DU STATUT DE LA SECTION"
+	goto ErreurAno
+end
+
+-- On est toujours dans le contrôle du statut de la section, mais il faut aussi insérer tout ce qui
+-- est rétrocession pure car sinon, on aura un décalage en comptant le nombre de lignes
+
+INSERT into #TACCSUP2
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT
+FROM	#TACCSUP1 A
+where
+    (A.CTR_NF      = NULL OR A.CTR_NF = '')
+and A.RETCTR_NF   != NULL
+and A.SSD_CF       = @p_ssd_cf
+and A.LSTUPDUSR_CF = @p_usr_cf
+
+select @erreur = @@error
+if @erreur != 0
+begin
+  select @MsgAnomalie = 'Erreur Génération TACCSUP2 - CONTROLE DU STATUT DE LA SECTION'
+	goto ErreurAno
+end
+
+-- Comparaison du nombre de lignes entre EST_ESID0801_TESTUTISUP et #TACCSUP2
+-- génération d'une anomalie ===> ANO 48
+-- -------------------------------------------------------------
+
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP2
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+if ( @nbligne_tempaccsup != @nbligne_testutisup )
+begin
+-- génération d'une anomalie et sortie de la procédure
+  SELECT @error_type     = 48
+  select @MsgAnomalie    = 'Etat section incorrect'
+  select @NumMsgAnomalie = @NumMsgAnomalie + '48 '
+
+  INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+  SELECT DISTINCT CTR_NF, END_NT, SEC_NF, 1, SSD_CF, 'A', @p_usr_cf, @error_type, NUMLINE_NT
+  FROM btrav..EST_ESID0801_TESTUTISUP
+  WHERE
+      TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP2)
+  and SSD_CF       = @p_ssd_cf
+  and LSTUPDUSR_CF = @p_usr_cf
+end
+
+-- Purge de  #TACCSUP2 avant réutilisation
+-- ---------------------------------------
+DELETE #TACCSUP2
+
+-- -----------------------------------------------------------------------------
+--            AUTRE CONTROLE SUR LE POSTE COMPTABLE /LOB
+--             On fait ceci après les contrôles concernant les sections
+--                      si pb ===> ano 18
+--                  On vérifie que lorsqu'on a saisi:
+--            - un poste du type 1xxx ou 2xxx: on est bien sur 1 lob non vie
+--            - un poste du type 3xxx ou 4xxx on est sur bien sur 1 lob vie
+-- -----------------------------------------------------------------------------
+
+-- Cas de l'acceptation pure et affaire fac
+-- ---------------------------------------------
+INSERT into #TACCSUP2
+select  A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF, A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                                           -- MOD005 26/04/2005 - MOD007
+ FROM	#TACCSUP1 A, bfac..TSECTION B
+  where A.SSD_CF=@p_ssd_cf
+    and A.LSTUPDUSR_CF=@p_usr_cf
+    and A.CTR_NF!=NULL
+    and A.RETCTR_NF in(NULL,'')
+    and EXISTS(Select 1 from BFAC..TCONTR TC where
+    TC.CTR_NF=A.CTR_NF
+    and	TC.END_NT=A.END_NT
+    and	TC.UWY_NF=A.UWY_NF
+    and	TC.UW_NT=A.UW_NT )
+    and	A.CTR_NF=B.CTR_NF
+    and	A.END_NT=B.END_NT
+    and	A.SEC_NF=B.SEC_NF
+    and	A.UWY_NF=B.UWY_NF
+    and	A.UW_NT=B.UW_NT
+    and A.SSD_CF=B.SSD_CF
+    and A.TRNCOD_CF like case when B.LOB_CF='30' and A.SPEENTNAT_CT in(4,5,6) then '3%G' --MOD029 EBS AE possible for Life LoBs only for Solvency (G suffix)
+                              when B.LOB_CF='31' and A.SPEENTNAT_CT in(4,5,6) then '1%G' --MOD029 EBS AE possible for Life LoBs only for Solvency (G suffix) -- modif 24 pas de poste comptable pour les LOB vie EBS pour le moment
+                              when B.LOB_CF='30' and A.SPEENTNAT_CT in(1,2,3) then '3%'
+                              when B.LOB_CF!='30' then '1%'
+                         end
+select @erreur = @@error
+if @erreur != 0
+begin
+  select @MsgAnomalie = 'Erreur Génération TACCSUP2 - Cas de l''acceptation pure et affaire fac'
+	goto ErreurAno
+end
+
+-- Cas de l'acceptation pure et affaire traité
+-- --------------------------------------------
+INSERT into #TACCSUP2
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                                             -- MOD005 26/04/2005 - MOD007
+ FROM	#TACCSUP1 A, BTRT..TSECTION B
+  where A.SSD_CF=@p_ssd_cf
+    and A.LSTUPDUSR_CF=@p_usr_cf
+    and A.CTR_NF!=NULL
+    and A.RETCTR_NF in(NULL,'')
+    and EXISTS(Select 1 from BTRT..TCONTR TC where TC.CTR_NF=A.CTR_NF and TC.END_NT=A.END_NT and TC.UWY_NF=A.UWY_NF and	TC.UW_NT=A.UW_NT )
+    and	A.CTR_NF=B.CTR_NF
+    and	A.END_NT=B.END_NT
+    and	A.SEC_NF=B.SEC_NF
+    and	A.UWY_NF=B.UWY_NF
+    and	A.UW_NT=B.UW_NT
+    and A.SSD_CF=B.SSD_CF
+    and A.TRNCOD_CF like case when B.LOB_CF='30' and A.SPEENTNAT_CT in(4,5,6) then '3%G' --MOD029 EBS AE possible for Life LoBs only for Solvency (G suffix)
+                              when B.LOB_CF='31' and A.SPEENTNAT_CT in(4,5,6) then '1%G' --MOD029 EBS AE possible for Life LoBs only for Solvency (G suffix) -- modif 24 pas de poste comptable pour les LOB vie EBS pour le moment
+                              when B.LOB_CF='30' and A.SPEENTNAT_CT in(1,2,3) then '3%'
+                              when B.LOB_CF!='30' then '1%'
+                         end
+select @erreur = @@error
+if @erreur != 0
+begin
+  select @MsgAnomalie = 'Erreur Génération TACCSUP2 - Cas de l''acceptation pure et affaire trt '
+	goto ErreurAno
+end
+
+-- Cas où le contrat rétro est renseigné
+-- Même si on a de l'acceptation, le fichier contient un poste de type rétrocession.
+INSERT into #TACCSUP2
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                                       -- MOD005 26/04/2005 - MOD007
+ FROM	#TACCSUP1 A, bret..TRETSEC B
+  where A.SSD_CF=@p_ssd_cf
+    and A.LSTUPDUSR_CF=@p_usr_cf
+    and A.RETCTR_NF!=NULL
+    and A.RETCTR_NF=B.RETCTR_NF
+    and A.RETSEC_NF=B.RETSEC_NF
+    and A.RTY_NF=B.RTY_NF
+    and A.SSD_CF=B.SSD_CF
+    and A.TRNCOD_CF like case when B.LOB_CF='30' and A.SPEENTNAT_CT in(4,5,6) then '4%G' --MOD029 EBS AE possible for Life LoBs only for Solvency (G suffix)
+                              when B.LOB_CF='31' and A.SPEENTNAT_CT in(4,5,6) then '2%G' --MOD029 EBS AE possible for Life LoBs only for Solvency (G suffix) -- modif 24 pas de poste comptable pour les LOB vie EBS pour le moment
+                              when B.LOB_CF='30' and A.SPEENTNAT_CT in(1,2,3) then '4%'  --[025]
+                              when B.LOB_CF!='30' then '2%'  --[025]
+                         end
+select @erreur = @@error
+if @erreur != 0
+begin
+  select @MsgAnomalie = 'Erreur Génération TACCSUP2 - Cas où le contrat rétro est renseignét'
+	goto ErreurAno
+end
+
+-- Comparaison du nombre de lignes entre EST_ESID0801_TESTUTISUP et #TACCSUP2
+-- génération d'une anomalie et sortie de la procédure en fin de contrôle, ANO 18
+-- --------------------------------------------------------------------------------
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP2
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+if ( @nbligne_tempaccsup != @nbligne_testutisup )
+	begin
+	    select @error_type = 18
+        select @MsgAnomalie = 'Anomalie(s) liee(s) aux  postes comptables'
+        select @NumMsgAnomalie = @NumMsgAnomalie + '18 '
+
+/*        INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+        SELECT DISTINCT CTR_NF, END_NT, SEC_NF, 1, SSD_CF, "A", @p_usr_cf, @error_type, NUMLINE_NT
+        FROM btrav..EST_ESID0801_TESTUTISUP
+        WHERE
+            TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP2)
+        and SSD_CF       = @p_ssd_cf              -- MOD011 MDJ 21/02/2006
+        and	LSTUPDUSR_CF = @p_usr_cf              -- MOD011 MDJ 21/02/2006       */
+
+        INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+        SELECT DISTINCT CTR_NF, END_NT, SEC_NF, 1, SSD_CF, "A", @p_usr_cf, @error_type, NUMLINE_NT
+        FROM btrav..EST_ESID0801_TESTUTISUP
+        WHERE
+            CTR_NF != NULL and ( RETCTR_NF = NULL OR RETCTR_NF = "")
+        and TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP2)
+        and SSD_CF       = @p_ssd_cf              -- MOD011 MDJ 21/02/2006
+        and	LSTUPDUSR_CF = @p_usr_cf              -- MOD011 MDJ 21/02/2006
+
+        INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+        SELECT DISTINCT RETCTR_NF, RETEND_NT, RETSEC_NF, 1, SSD_CF, 'A', @p_usr_cf,  @error_type, NUMLINE_NT
+        FROM btrav..EST_ESID0801_TESTUTISUP
+        WHERE
+            RETCTR_NF   != NULL
+        and TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP2)
+        and SSD_CF       = @p_ssd_cf              -- MOD011 MDJ 21/02/2006
+        and	LSTUPDUSR_CF = @p_usr_cf              -- MOD011 MDJ 21/02/2006
+	end
+
+/* Adaptive Server has expanded all '*' elements in the following statement */ select '#TACCSUP1', #TACCSUP1.TRN_NT, #TACCSUP1.ACCTYP_NF, #TACCSUP1.SSD_CF, #TACCSUP1.ESB_CF, #TACCSUP1.ENTPERY_NF, #TACCSUP1.ENTPERMTH_NF, #TACCSUP1.BALSHEY_NF, #TACCSUP1.BALSHRMTH_NF, #TACCSUP1.BALSHRDAY_NF, #TACCSUP1.VALPERY_NF, #TACCSUP1.VALPERMTH_NF, #TACCSUP1.TRNCOD_CF, #TACCSUP1.DBLTRNCOD_CF, #TACCSUP1.RETAUTGEN_B, #TACCSUP1.CTR_NF, #TACCSUP1.END_NT, #TACCSUP1.SEC_NF, #TACCSUP1.UWY_NF, #TACCSUP1.UW_NT, #TACCSUP1.OCCYEA_NF, #TACCSUP1.ACY_NF, #TACCSUP1.SCOSTRMTH_NF, #TACCSUP1.SCOENDMTH_NF, #TACCSUP1.CLM_NF, #TACCSUP1.CUR_CF, #TACCSUP1.AMT_M, #TACCSUP1.CED_NF, #TACCSUP1.BRK_NF, #TACCSUP1.GEMPRMPAY_NF, #TACCSUP1.GANPAYORD_NT, #TACCSUP1.RETCTR_NF, #TACCSUP1.RETEND_NT, #TACCSUP1.RETSEC_NF, #TACCSUP1.RTY_NF, #TACCSUP1.RETUW_NT, #TACCSUP1.PLC_NT, #TACCSUP1.RETOCCYEA_NF, #TACCSUP1.RETACY_NF, #TACCSUP1.RETSCOSTRMTH_NF, #TACCSUP1.RETSCOENDMTH_NF, #TACCSUP1.RCL_NF, #TACCSUP1.RETCUR_CF, #TACCSUP1.RETAMT_M, #TACCSUP1.RTO_NF, #TACCSUP1.INT_NF, #TACCSUP1.RETPAY_NF, #TACCSUP1.RETKEY_CF, #TACCSUP1.ACCTRN_NT, #TACCSUP1.COMMAC_LL, #TACCSUP1.CRE_D, #TACCSUP1.CREUSR_CF, #TACCSUP1.LSTUPD_D, #TACCSUP1.LSTUPDUSR_CF, #TACCSUP1.SPEENTTYP_CF, #TACCSUP1.SPEENTNAT_CT from #TACCSUP1      -- vde
+/* Adaptive Server has expanded all '*' elements in the following statement */ select '#TACCSUP2', #TACCSUP2.TRN_NT, #TACCSUP2.ACCTYP_NF, #TACCSUP2.SSD_CF, #TACCSUP2.ESB_CF, #TACCSUP2.ENTPERY_NF, #TACCSUP2.ENTPERMTH_NF, #TACCSUP2.BALSHEY_NF, #TACCSUP2.BALSHRMTH_NF, #TACCSUP2.BALSHRDAY_NF, #TACCSUP2.VALPERY_NF, #TACCSUP2.VALPERMTH_NF, #TACCSUP2.TRNCOD_CF, #TACCSUP2.DBLTRNCOD_CF, #TACCSUP2.RETAUTGEN_B, #TACCSUP2.CTR_NF, #TACCSUP2.END_NT, #TACCSUP2.SEC_NF, #TACCSUP2.UWY_NF, #TACCSUP2.UW_NT, #TACCSUP2.OCCYEA_NF, #TACCSUP2.ACY_NF, #TACCSUP2.SCOSTRMTH_NF, #TACCSUP2.SCOENDMTH_NF, #TACCSUP2.CLM_NF, #TACCSUP2.CUR_CF, #TACCSUP2.AMT_M, #TACCSUP2.CED_NF, #TACCSUP2.BRK_NF, #TACCSUP2.GEMPRMPAY_NF, #TACCSUP2.GANPAYORD_NT, #TACCSUP2.RETCTR_NF, #TACCSUP2.RETEND_NT, #TACCSUP2.RETSEC_NF, #TACCSUP2.RTY_NF, #TACCSUP2.RETUW_NT, #TACCSUP2.PLC_NT, #TACCSUP2.RETOCCYEA_NF, #TACCSUP2.RETACY_NF, #TACCSUP2.RETSCOSTRMTH_NF, #TACCSUP2.RETSCOENDMTH_NF, #TACCSUP2.RCL_NF, #TACCSUP2.RETCUR_CF, #TACCSUP2.RETAMT_M, #TACCSUP2.RTO_NF, #TACCSUP2.INT_NF, #TACCSUP2.RETPAY_NF, #TACCSUP2.RETKEY_CF, #TACCSUP2.ACCTRN_NT, #TACCSUP2.COMMAC_LL, #TACCSUP2.CRE_D, #TACCSUP2.CREUSR_CF, #TACCSUP2.LSTUPD_D, #TACCSUP2.LSTUPDUSR_CF, #TACCSUP2.SPEENTTYP_CF, #TACCSUP2.SPEENTNAT_CT                      from #TACCSUP2      -- vde
+
+
+-- [18612] en commentaire afin de continuer les contrôles
+--/*-----------------------------------------------------------------------------*/
+--/* MOD001 - GENERATION & CONTROLE DES ERREURS de NIVEAU 1                      */
+--/*-----------------------------------------------------------------------------*/
+--select @nbligne_tctrano = 0
+--select @nbligne_tctrano = count(*) FROM #TCTRANO_TMP
+--if ( @nbligne_tctrano = Null ) Select @nbligne_tctrano = 0
+--if ( @nbligne_tctrano > 0 )
+--	begin
+--	goto ErreurAno
+--	end
+
+
+-- Purge de la table #TACCSUP2 avant réutilisation
+-- -----------------------------------------------
+DELETE #TACCSUP2
+
+/*-----------------------------------------------------------------------------*/
+/*                CONTROLE DES PLACEMENTS                                      */
+/*                      si pb ano 23                                           */
+/*-----------------------------------------------------------------------------*/
+
+/* Un controle est déjà fait au niveau de l'appli pour n'avoir une valeur de placement
+que lorsque le contrat rétro est renseigné */
+
+INSERT into #TACCSUP2
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                                         -- MOD005 26/04/2005 - MOD007
+FROM	#TACCSUP1 A,
+        bret..TPLACEMT B
+where
+        A.PLC_NT != NULL
+  and	A.RETCTR_NF = B.RETCTR_NF
+  and	A.RTY_NF = B.RTY_NF
+  and	A.PLC_NT = B.PLC_NT
+  and	B.HIS_B = 0
+  and	B.ACCPLC_B = 1
+  and (B.PLCSTS_CT = 16 or B.PLCSTS_CT = 19)
+
+
+-- On est ds le contrôle des num de placements, il faut donc insérer tt ce qui
+-- est sans placement car sinon, on aura décallage ensuite en comptant le nbr de lignes
+
+INSERT into #TACCSUP2
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                                            -- MOD005 26/04/2005 - MOD007
+FROM	#TACCSUP1 A
+where
+  A.PLC_NT = NULL OR A.PLC_NT = 0
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur Génération TACCSUP2 - CONTROLE DES PLACEMENTS '
+	goto ErreurAno
+    end
+
+/* Comparaison du nombre de lignes entre EST_ESID0801_TESTUTISUP et #TACCSUP1 */
+/* génération d'une anomalie et sortie de la procédure, ANO 23   */
+/* ------------------------------------------------------------- */
+
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP2
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+if ( @nbligne_tempaccsup != @nbligne_testutisup )
+	begin -- ##
+	    SELECT @error_type = 23
+        select @MsgAnomalie = 'certain(s) placement(s) ne sont pas référencés dans la base rétrocession'
+        select @NumMsgAnomalie = @NumMsgAnomalie + '23 '
+
+        INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+        SELECT DISTINCT RETCTR_NF, RETEND_NT, RETSEC_NF, 1, SSD_CF, 'A', @p_usr_cf,  @error_type, NUMLINE_NT
+        FROM btrav..EST_ESID0801_TESTUTISUP
+        WHERE
+            TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP2)
+        and SSD_CF       = @p_ssd_cf              -- MOD011 MDJ 21/02/2006
+        and	LSTUPDUSR_CF = @p_usr_cf              -- MOD011 MDJ 21/02/2006
+	end
+
+
+-- Purge de la table #TACCSUP2 avant réutilisation
+-- -----------------------------------------------
+DELETE #TACCSUP2
+
+
+/*-----------------------------------------------------------------------------*/
+/*                CONTROLE DES DEVISES ACCEPTATION                             */
+/*                      si pb ano 24                                           */
+/*-----------------------------------------------------------------------------*/
+
+
+-- Accès à la table BREF..TCURQUOT ( affaire acceptation renseignée ) pour contrôler CUR_CF
+-- ----------------------------------------------------------------------------------------
+
+INSERT into #TACCSUP2
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                                           -- MOD005 26/04/2005 - MOD007
+FROM	#TACCSUP1 A
+where
+    (A.CTR_NF != NULL
+and	exists(	select 1 FROM BREF..TCURQUOT B
+	                 where	A.CUR_CF = B.CUR_CF
+	                 and 	A.SSD_CF = B.SSD_CF )
+and not exists( select 1 FROM BREF..TEUROCUR C
+                         where   A.CUR_CF = C.CUR_CF
+                         and     A.CUR_CF != 'EUR'  )
+   )
+OR   ( A.CTR_NF = NULL OR A.CTR_NF = '')
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = 'Erreur Génération TACCSUP2 - CONTROLE DES DEVISES ACCEPTATION'
+	goto ErreurAno
+    end
+
+/* Comparaison du nombre de lignes entre EST_ESID0801_TESTUTISUP et #TACCSUP2 */
+/* génération d'une anomalie et sortie de la procédure, ANO 24   */
+/* ------------------------------------------------------------- */
+
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP2
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+if ( @nbligne_tempaccsup != @nbligne_testutisup )
+	begin
+	    SELECT @error_type = 24
+        select @MsgAnomalie = 'Devise acceptation incorrecte'
+        select @NumMsgAnomalie = @NumMsgAnomalie + '24 '
+
+        INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+        SELECT DISTINCT CTR_NF, END_NT, SEC_NF, 1, SSD_CF, 'A', @p_usr_cf, @error_type, NUMLINE_NT
+        FROM btrav..EST_ESID0801_TESTUTISUP
+        WHERE
+            TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP2)
+        and SSD_CF       = @p_ssd_cf              -- MOD011 MDJ 21/02/2006
+        and	LSTUPDUSR_CF = @p_usr_cf              -- MOD011 MDJ 21/02/2006
+	end
+
+-- Purge de la table #TACCSUP2 avant réutilisation
+-- -----------------------------------------------
+DELETE #TACCSUP2
+
+/*-----------------------------------------------------------------------------*/
+/*                CONTROLE DES DEVISES RETRO                                   */
+/*                      si pb ano 25                                           */
+/*-----------------------------------------------------------------------------*/
+
+INSERT into #TACCSUP2
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT                                        -- MOD005 26/04/2005 - MOD007
+FROM	#TACCSUP1 A
+where
+    ( A.RETCTR_NF != NULL
+and	exists( select 1 FROM BREF..TCURQUOT B
+	                 where	A.RETCUR_CF = B.CUR_CF
+	                 and 	A.SSD_CF = B.SSD_CF )
+and not exists(select 1 FROM BREF..TEUROCUR C
+                        where   A.RETCUR_CF = C.CUR_CF
+                        and     A.RETCUR_CF != 'EUR'  )
+   )
+OR ( A.RETCTR_NF = NULL OR A.RETCTR_NF = "")
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+    select @MsgAnomalie = "Erreur Génération TACCSUP2 - CONTROLE DES DEVISES RETRO "
+	goto ErreurAno
+    end
+
+/* Comparaison du nombre de lignes entre EST_ESID0801_TESTUTISUP et #TACCSUP2 */
+/* génération d'une anomalie et sortie de la procédure, ANO 25   */
+/* ------------------------------------------------------------- */
+
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP2
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+if ( @nbligne_tempaccsup != @nbligne_testutisup )
+	begin -- ##
+	    SELECT @error_type = 25
+        select @MsgAnomalie = "Devise rétro incorrecte"
+        select @NumMsgAnomalie = @NumMsgAnomalie + '25 '
+
+        INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+        SELECT DISTINCT RETCTR_NF, RETEND_NT, RETSEC_NF, 1, SSD_CF, "A", @p_usr_cf,  @error_type, NUMLINE_NT
+        FROM btrav..EST_ESID0801_TESTUTISUP
+        WHERE
+            TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP2)
+        and SSD_CF       = @p_ssd_cf              -- MOD011 MDJ 21/02/2006
+        and LSTUPDUSR_CF = @p_usr_cf              -- MOD011 MDJ 21/02/2006
+	end
+
+
+-- Purge de  #TACCSUP2 avant réutilisation
+-- ---------------------------------------
+DELETE #TACCSUP2
+
+/*-----------------------------------------------------------------------------*/
+/*                    CONTROLE SI L'AFFAIRE ACCEPTATION                        */
+/*                     A LE STATUT "TERMINE COMPTABLE"                         */
+/*                              si pb ano 47                                   */
+/*-----------------------------------------------------------------------------*/
+
+
+/* FACS */
+INSERT into #TACCSUP2
+select  A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF, A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT
+FROM	#TACCSUP1 A,
+        bfac..TCONTR B
+where
+    A.SSD_CF       = @p_ssd_cf
+and	A.LSTUPDUSR_CF = @p_usr_cf
+and A.CTR_NF      != NULL
+and A.CTR_NF       = B.CTR_NF
+and	A.END_NT       = B.END_NT
+and	A.UWY_NF       = B.UWY_NF
+and	A.UW_NT        = B.UW_NT
+and B.CTRACCSTS_CT != 9  -- On exclut les contrats "Terminé comptable"
+
+select @erreur = @@error
+if @erreur != 0
+begin
+  select @MsgAnomalie = 'Erreur Génération TACCSUP2 - Cas de l''affaire FAC terminée comptable'
+	goto ErreurAno
+end
+
+
+/* TRAITES */
+INSERT into #TACCSUP2
+select  A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF, A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT
+FROM	#TACCSUP1 A,
+        btrt..TCONTR B
+where
+    A.SSD_CF        = @p_ssd_cf
+and	A.LSTUPDUSR_CF  = @p_usr_cf
+and A.CTR_NF       != NULL
+and A.CTR_NF        = B.CTR_NF
+and	A.END_NT        = B.END_NT
+and	A.UWY_NF        = B.UWY_NF
+and	A.UW_NT         = B.UW_NT
+and B.CTRACCSTS_CT != 9  -- On exclut les contrats "Terminé comptable"
+
+select @erreur = @@error
+if @erreur != 0
+begin
+  select @MsgAnomalie = 'Erreur Génération TACCSUP2 - Cas de l''affaire terminée comptable'
+	goto ErreurAno
+end
+
+-- On est toujours dans le contrôle du statut "terminé comptable", mais il faut aussi insérer tt ce qui
+-- est rétro pure car sinon, on aura décalage ensuite en comptant le nbr de lignes
+
+INSERT into #TACCSUP2
+select A.TRN_NT, A.ACCTYP_NF, A.SSD_CF, A.ESB_CF, A.ENTPERY_NF, A.ENTPERMTH_NF, A.BALSHEY_NF, A.BALSHRMTH_NF,
+	A.BALSHRDAY_NF, A.VALPERY_NF, A.VALPERMTH_NF, A.TRNCOD_CF, A.DBLTRNCOD_CF, A.RETAUTGEN_B, A.CTR_NF,
+	A.END_NT, A.SEC_NF, A.UWY_NF, A.UW_NT, A.OCCYEA_NF, A.ACY_NF, A.SCOSTRMTH_NF, A.SCOENDMTH_NF , A.CLM_NF,
+	A.CUR_CF, A.AMT_M, A.CED_NF, A.BRK_NF, A.GEMPRMPAY_NF, A.GANPAYORD_NT, A.RETCTR_NF, A.RETEND_NT, A.RETSEC_NF,
+	A.RTY_NF, A.RETUW_NT, A.PLC_NT, A.RETOCCYEA_NF, A.RETACY_NF, A.RETSCOSTRMTH_NF, A.RETSCOENDMTH_NF, A.RCL_NF,
+	A.RETCUR_CF, A.RETAMT_M, A.RTO_NF, A.INT_NF, A.RETPAY_NF, A.RETKEY_CF, A.ACCTRN_NT,	A.COMMAC_LL, A.CRE_D,
+	A.CREUSR_CF, A.LSTUPD_D, A.LSTUPDUSR_CF, A.SPEENTTYP_CF, A.SPEENTNAT_CT
+FROM	#TACCSUP1 A
+where
+    (A.CTR_NF = NULL OR A.CTR_NF =  '')
+and A.RETCTR_NF != NULL
+
+select @erreur = @@error
+if @erreur != 0
+begin
+  select @MsgAnomalie = 'Erreur Génération TACCSUP2 - Cas de l''affaire terminée comptable'
+  goto ErreurAno
+end
+
+-- Comparaison du nombre de lignes entre EST_ESID0801_TESTUTISUP et #TACCSUP2
+-- génération d'une anomalie ===>  ANO 47
+-- -----------------------------------------------------------------------------
+
+select @nbligne_tempaccsup = count(*) FROM #TACCSUP2
+if ( @nbligne_tempaccsup = Null ) Select @nbligne_tempaccsup = 0
+if ( @nbligne_tempaccsup != @nbligne_testutisup )
+begin
+  -- génération d'une anomalie et sortie de la procédure
+  SELECT @error_type     = 47
+  select @MsgAnomalie    = 'Affaire terminée comptable'
+  select @NumMsgAnomalie = @NumMsgAnomalie + '47 '
+
+  INSERT INTO #TCTRANO_TMP (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+  SELECT DISTINCT CTR_NF, END_NT, SEC_NF, 1, SSD_CF, 'A', @p_usr_cf, @error_type, NUMLINE_NT
+  FROM btrav..EST_ESID0801_TESTUTISUP
+  WHERE
+      TRN_NT NOT IN (SELECT TRN_NT FROM #TACCSUP2)
+  and SSD_CF       = @p_ssd_cf
+  and LSTUPDUSR_CF = @p_usr_cf
+end
+
+
+/************************************************************************************/
+/*                                                                                  */
+/*                     3ème ETAPE:  DETERMINATION DU TYPE D'ECRITURE                */
+/*                                                                                  */
+/************************************************************************************/
+
+
+-- Dès que le num de contrat rétro est renseigné, on écrase montant accept avec le montant rétro
+
+/* Ecritures de type 1 */
+/* Acceptation pure    */
+/* ------------------- */
+
+UPDATE #TACCSUP1
+SET	ACCTYP_NF = 1
+where	( CTR_NF != NULL AND CTR_NF != "")
+and	( RETCTR_NF = NULL OR RETCTR_NF = "")
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+      select @MsgAnomalie = "Erreur UPDATE TACCSUP1 - 3eme Etape - Ecriture de TYPE 1 "
+	  goto ErreurAno
+    end
+
+/* Ecritures de type 2 */
+/* Retro pure 100%     */
+/* ------------------- */
+
+UPDATE #TACCSUP1
+SET	ACCTYP_NF = 2,
+	AMT_M = RETAMT_M,
+	CUR_CF = RETCUR_CF
+where	( CTR_NF = NULL OR CTR_NF = "")
+and	( RETCTR_NF != NULL AND RETCTR_NF != "")
+and	( PLC_NT = NULL OR PLC_NT = 0)           -- 100%
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+      select @MsgAnomalie = "Erreur UPDATE TACCSUP1 - 3eme Etape - Ecriture de TYPE 2 "
+	  goto ErreurAno
+    end
+
+/* Ecritures de type 3 */
+/* Accept et retro 100% */
+/* ------------------- */
+
+UPDATE #TACCSUP1
+SET	ACCTYP_NF = 3,
+	AMT_M = RETAMT_M,
+	CUR_CF = RETCUR_CF
+where	( CTR_NF != NULL AND CTR_NF != "")
+and	( RETCTR_NF != NULL AND RETCTR_NF != "")
+and	( PLC_NT = NULL OR PLC_NT = 0)      -- 100%
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+      select @MsgAnomalie = "Erreur UPDATE TACCSUP1 - 3eme Etape - Ecriture de TYPE 2 "
+	  goto ErreurAno
+    end
+
+/* Ecritures de type 4 */
+/* REtro pure à la part */
+/* ------------------- */
+
+UPDATE #TACCSUP1
+SET	ACCTYP_NF = 4,
+	AMT_M = RETAMT_M,
+	CUR_CF = RETCUR_CF
+where	( CTR_NF = NULL OR CTR_NF = "")
+and	( RETCTR_NF != NULL AND RETCTR_NF != "")
+and	( PLC_NT != NULL AND PLC_NT != 0)
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+	  select @MsgAnomalie = "Erreur UPDATE TACCSUP1 - 3eme Etape - Ecriture de TYPE 4 "
+	  goto ErreurAno
+    end
+
+/* Ecritures de type 5 */
+/* Accept et rétro à la part */
+/* ------------------- */
+
+UPDATE #TACCSUP1
+SET	ACCTYP_NF = 5,
+	AMT_M = RETAMT_M,
+	CUR_CF = RETCUR_CF
+where	( CTR_NF != NULL AND CTR_NF != "")
+and	( RETCTR_NF != NULL AND RETCTR_NF != "")
+and	( PLC_NT != NULL AND PLC_NT != 0)
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+	 select @MsgAnomalie = 'Erreur UPDATE TACCSUP1 - 3eme Etape - Ecriture de TYPE 4'
+	 goto ErreurAno
+    end
+
+/*-----------------------------------------------------------------------------*/
+/* MOD001 - GENERATION & CONTROLE DES ERREURS de NIVEAU 1                      */
+/*-----------------------------------------------------------------------------*/
+select @nbligne_tctrano = 0
+select @nbligne_tctrano = count(*) FROM #TCTRANO_TMP
+if ( @nbligne_tctrano = Null ) Select @nbligne_tctrano = 0
+if ( @nbligne_tctrano > 0 )
+	begin
+	 goto ErreurAno
+	end
+
+-- ***********************************************************************************
+--
+--    ETAPE 4 - TOUT C'EST BIEN PASSE, IL N'Y A PAS EU DE DEBRANCHEMENT SUITE A ANO
+--
+-- ************************************************************************************
+
+
+/*********************************************/
+/* Gestion du compteur pour le champs TRN_NT */
+/*********************************************/
+
+-- recherche du numéro de ligne maxi dans BEST..TACCSUP
+
+select @max_trn_nt = max( TRN_NT )
+FROM 	BEST..TACCSUP
+
+
+-- INSERTion dans la #TACCSUP3
+
+INSERT into #TACCSUP3
+	( ACCTYP_NF, SSD_CF, ESB_CF, ENTPERY_NF, ENTPERMTH_NF, BALSHEY_NF, BALSHRMTH_NF, BALSHRDAY_NF,
+	VALPERY_NF, VALPERMTH_NF, TRNCOD_CF, DBLTRNCOD_CF, RETAUTGEN_B, CTR_NF, END_NT, SEC_NF,
+	UWY_NF, UW_NT, OCCYEA_NF, ACY_NF, SCOSTRMTH_NF, SCOENDMTH_NF, CLM_NF,	CUR_CF, AMT_M,
+	CED_NF, BRK_NF, GEMPRMPAY_NF, GANPAYORD_NT, RETCTR_NF, RETEND_NT, RETSEC_NF, RTY_NF,
+	RETUW_NT, PLC_NT, RETOCCYEA_NF, RETACY_NF, RETSCOSTRMTH_NF, RETSCOENDMTH_NF, RCL_NF,
+	RETCUR_CF, RETAMT_M, RTO_NF, INT_NF, RETPAY_NF, RETKEY_CF, ACCTRN_NT, COMMAC_LL, CRE_D,
+	CREUSR_CF, LSTUPD_D, LSTUPDUSR_CF, SPEENTTYP_CF, SPEENTNAT_CT)                                           -- MOD005  -- MOD007
+select ACCTYP_NF, SSD_CF, ESB_CF, ENTPERY_NF, ENTPERMTH_NF, BALSHEY_NF, BALSHRMTH_NF, BALSHRDAY_NF,
+	VALPERY_NF, VALPERMTH_NF, TRNCOD_CF, DBLTRNCOD_CF, RETAUTGEN_B, CTR_NF, END_NT, SEC_NF,
+	UWY_NF, UW_NT, OCCYEA_NF, ACY_NF, SCOSTRMTH_NF, SCOENDMTH_NF, CLM_NF,	CUR_CF, AMT_M,
+	CED_NF, BRK_NF, GEMPRMPAY_NF, GANPAYORD_NT, RETCTR_NF, RETEND_NT, RETSEC_NF, RTY_NF,
+	RETUW_NT, PLC_NT, RETOCCYEA_NF, RETACY_NF, RETSCOSTRMTH_NF, RETSCOENDMTH_NF, RCL_NF,
+	RETCUR_CF, RETAMT_M, RTO_NF, INT_NF, RETPAY_NF, RETKEY_CF, ACCTRN_NT, COMMAC_LL, CRE_D,
+	CREUSR_CF, LSTUPD_D, LSTUPDUSR_CF, SPEENTTYP_CF, SPEENTNAT_CT                                      -- MOD005 26/04/2005 -- MOD007
+FROM	#TACCSUP1
+
+select @erreur = @@error
+if @erreur != 0
+    begin
+	select @MsgAnomalie = 'Erreur generation TACCSUP3 '
+	goto ErreurAno
+    end
+
+-- ********************************************************************
+-- INSERTion dans la table BEST..TACCSUP si tous les contrôles sont OK
+-- ********************************************************************
+
+-- -------------------------------------------------------------
+-- Début de la transaction
+-- --------------------------------------------------------------
+
+if @@trancount = 0
+  begin
+   select @tran_imbr = 0
+   BEGIN TRAN
+  end
+
+
+INSERT into BEST..TACCSUP
+	( TRN_NT, ACCTYP_NF, SSD_CF, ESB_CF, ENTPERY_NF, ENTPERMTH_NF, BALSHEY_NF, BALSHRMTH_NF,
+	BALSHRDAY_NF, VALPERY_NF, VALPERMTH_NF, TRNCOD_CF, DBLTRNCOD_CF, RETAUTGEN_B, CTR_NF,
+	END_NT, SEC_NF, UWY_NF, UW_NT, OCCYEA_NF, ACY_NF, SCOSTRMTH_NF, SCOENDMTH_NF, CLM_NF,	CUR_CF, AMT_M,
+	CED_NF, BRK_NF, GEMPRMPAY_NF, GANPAYORD_NT, RETCTR_NF, RETEND_NT, RETSEC_NF, RETRTY_NF,
+	RETUW_NT, PLC_NT, RETOCCYEA_NF, RETACY_NF, RETSCOSTRMTH_NF, RETSCOENDMTH_NF, RCL_NF,
+	RETCUR_CF, RETAMT_M, RTO_NF, INT_NF, RETPAY_NF, RETKEY_CF, ACCTRN_NT, COMMAC_LL, CRE_D,
+	CREUSR_CF, LSTUPD_D, LSTUPDUSR_CF, SPEENTTYP_CF, SPEENTNAT_CT)                                     -- MOD005 26/04/2005 -- MOD007
+select TRN_NT + @max_trn_nt, ACCTYP_NF, SSD_CF, ESB_CF, ENTPERY_NF, ENTPERMTH_NF, BALSHEY_NF,
+	BALSHRMTH_NF, BALSHRDAY_NF, VALPERY_NF, VALPERMTH_NF, TRNCOD_CF, DBLTRNCOD_CF, RETAUTGEN_B,
+	CTR_NF, END_NT, SEC_NF, UWY_NF, UW_NT, OCCYEA_NF, ACY_NF, SCOSTRMTH_NF, SCOENDMTH_NF,
+	CLM_NF, CUR_CF, AMT_M, CED_NF, BRK_NF, GEMPRMPAY_NF, GANPAYORD_NT, RETCTR_NF, RETEND_NT,
+	RETSEC_NF, RTY_NF, RETUW_NT, PLC_NT, RETOCCYEA_NF, RETACY_NF, RETSCOSTRMTH_NF,
+	RETSCOENDMTH_NF, RCL_NF, RETCUR_CF, RETAMT_M, RTO_NF, INT_NF, RETPAY_NF, RETKEY_CF,
+	ACCTRN_NT, COMMAC_LL, CRE_D, CREUSR_CF, LSTUPD_D, LSTUPDUSR_CF, SPEENTTYP_CF, SPEENTNAT_CT  -- MOD005 26/04/2005 - MOD007
+FROM	#TACCSUP3
+
+select @erreur = @@error
+if @erreur != 0  goto ErreurMAJ
+
+-- *****************************************************************************************
+-- Suppression des lignes de btrav..EST_ESID0801_TESTUTISUP pour la filiale et l'utilisateur
+-- *****************************************************************************************
+
+DELETE btrav..EST_ESID0801_TESTUTISUP
+where
+    SSD_CF       = @p_ssd_cf
+and	LSTUPDUSR_CF = @p_usr_cf
+
+select @erreur = @@error
+if @erreur != 0  goto ErreurMAJ
+
+-- -----------------------------------------------------------
+--   Fin de la transaction
+-- ------------------------------------------------------------
+
+if @tran_imbr = 0
+    COMMIT TRAN
+    return 0
+
+/************************************************************************************/
+/*                     EN CAS DE DETECTION D'ANOMALIES  (MOD001                     */
+/************************************************************************************/
+
+ErreurNorm:
+    Select @MsgGlobalAnomalie = 'Derniere Anomalie : ' +  @MsgAnomalie + @NumMsgAnomalie
+    raiserror 20113 @MsgGlobalAnomalie
+    return 1
+
+
+ErreurAno:
+-- On enregistre les Erreurs dans la Tables des Anomalies.
+-- On retourne Un code Erreur Echec de la Procedure.
+-- L'ancienne Gestion des ANomalies a été remplacées (Les erreurs sont inscrites au fur et à mesure plutôt qu'un contrôle #é&~@é## en fin de procédure
+-- Il n'existe pas de ROLLBACK de PRocédure à ce niveau. (Car aucun Begin TRAN avant Etape 4)
+
+    INSERT INTO BEST..TCTRANO (CTR_NF, END_NT, SEC_NF, VRS_NF, SSD_CF, SEGTYP_CT, SEG_NF, ANO_CT, NUMLINE_NT)
+    SELECT ISNULL(CTR_NF, ''), ISNULL(END_NT, 0),
+           ISNULL(SEC_NF, 0),  ISNULL(VRS_NF, 0),
+           ISNULL(SSD_CF, 0),  ISNULL(SEGTYP_CT, ''),
+           ISNULL(SEG_NF, ''),  ISNULL(ANO_CT, 0),
+           ISNULL(NUMLINE_NT, -1)
+    FROM #TCTRANO_TMP
+    WHERE SSD_CF = @p_ssd_cf              -- MOD011 MDJ 21/02/2006
+      and SEG_NF = @p_usr_cf              -- MOD011 MDJ 21/02/2006
+
+-- [026]
+    if @p_batch_mode != 'batch'
+        BEGIN
+            Select @MsgGlobalAnomalie = 'Derniere Anomalie : ' +  @MsgAnomalie + @NumMsgAnomalie
+            raiserror 20113 @MsgGlobalAnomalie
+        END    
+    return 1
+
+ErreurMAJ:
+    if @tran_imbr = 0 ROLLBACK TRAN
+
+    Select @MsgGlobalAnomalie = 'Derniere Anomalie : ' +  @MsgAnomalie + @NumMsgAnomalie
+    raiserror 20113 @MsgGlobalAnomalie
+    return 1
+go
+EXEC sp_procxmode 'dbo.PiACCSUP_02', 'unchained'
+go
+IF OBJECT_ID('dbo.PiACCSUP_02') IS NOT NULL
+    PRINT '<<< CREATED PROCEDURE dbo.PiACCSUP_02 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING PROCEDURE dbo.PiACCSUP_02 >>>'
+go
+GRANT EXECUTE ON dbo.PiACCSUP_02 TO GOMEGA
+go
+GRANT EXECUTE ON dbo.PiACCSUP_02 TO GDBBATCH
+go

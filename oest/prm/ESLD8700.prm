@@ -1,0 +1,6 @@
+
+# Chaine parameter file
+
+MAILTO_PROD "MBRIK-EXTERNAL@scor.com,KNGORAN@scor.com,ypersee-external@scor.com,spigot@scor.com,slongeau@scor.com,fdegonzague-external@scor.com"
+MAILTO_TEST "MBRIK-EXTERNAL@scor.com,KNGORAN@scor.com,ypersee-external@scor.com,spigot@scor.com,slongeau@scor.com,fdegonzague-external@scor.com"
+MAILTO_DEV "ypersee-external@scor.com"

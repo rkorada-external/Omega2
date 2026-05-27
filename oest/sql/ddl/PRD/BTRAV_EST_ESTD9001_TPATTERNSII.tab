@@ -1,0 +1,82 @@
+use BTRAV
+go
+IF OBJECT_ID('dbo.EST_ESTD9001_TPATTERNSII') IS NOT NULL
+begin
+  drop TABLE dbo.EST_ESTD9001_TPATTERNSII
+  if object_id('dbo.EST_ESTD9001_TPATTERNSII') is not null
+    print '<<< FAILED DROPPING TABLE dbo.EST_ESTD9001_TPATTERNSII >>>'
+  else
+    print '<<< DROPPED TABLE dbo.EST_ESTD9001_TPATTERNSII >>>'
+end
+go
+create table EST_ESTD9001_TPATTERNSII
+(
+  SSD_CF     USSD_CF    null
+ ,SEG_NF     USEG_NF    null
+ ,LOB_CF     ULOB_CF    null
+ ,CUR_CF     UCUR_CF    null
+ ,NORME_CF   char(5)    null
+ ,PATTYP_CT  char(5)    not null
+ ,CRE_D      UUPD_D     not null
+ ,CREUSR_CF  UUPDUSR_CF not null
+ ,LIGNE_N    int        not null
+ ,AN1        USHA_R     not null
+ ,AN2        USHA_R     not null
+ ,AN3        USHA_R     not null
+ ,AN4        USHA_R     not null
+ ,AN5        USHA_R     not null
+ ,AN6        USHA_R     not null
+ ,AN7        USHA_R     not null
+ ,AN8        USHA_R     not null
+ ,AN9        USHA_R     not null
+ ,AN10       USHA_R     not null
+ ,AN11       USHA_R     not null
+ ,AN12       USHA_R     not null
+ ,AN13       USHA_R     not null
+ ,AN14       USHA_R     not null
+ ,AN15       USHA_R     not null
+ ,AN16       USHA_R     not null
+ ,AN17       USHA_R     not null
+ ,AN18       USHA_R     not null
+ ,AN19       USHA_R     not null
+ ,AN20       USHA_R     not null
+ ,AN21       USHA_R     not null
+ ,AN22       USHA_R     not null
+ ,AN23       USHA_R     not null
+ ,AN24       USHA_R     not null
+ ,AN25       USHA_R     not null
+ ,AN26       USHA_R     not null
+ ,AN27       USHA_R     not null
+ ,AN28       USHA_R     not null
+ ,AN29       USHA_R     not null
+ ,AN30       USHA_R     not null
+ ,AN31       USHA_R     not null
+ ,AN32       USHA_R     not null
+ ,AN33       USHA_R     not null
+ ,AN34       USHA_R     not null
+ ,AN35       USHA_R     not null
+ ,AN36       USHA_R     not null
+ ,AN37       USHA_R     not null
+ ,AN38       USHA_R     not null
+ ,AN39       USHA_R     not null
+ ,AN40       USHA_R     not null
+)
+go
+IF OBJECT_ID('dbo.EST_ESTD9001_TPATTERNSII') IS NOT NULL
+  print '<<< CREATED TABLE dbo.EST_ESTD9001_TPATTERNSII >>>'
+else
+  print '<<< FAILED CREATING TABLE dbo.EST_ESTD9001_TPATTERNSII >>>'
+go
+create unique clustered index EST_ESTD9001_TPATTERNSII_01 on EST_ESTD9001_TPATTERNSII
+(CRE_D,CREUSR_CF,LIGNE_N,SSD_CF)
+go
+GRANT DELETE ON EST_ESTD9001_TPATTERNSII TO GOMEGA
+go
+GRANT INSERT ON EST_ESTD9001_TPATTERNSII TO GOMEGA
+go
+GRANT SELECT ON EST_ESTD9001_TPATTERNSII TO GOMEGA
+go
+GRANT UPDATE ON EST_ESTD9001_TPATTERNSII TO GOMEGA
+go
+GRANT REFERENCES ON EST_ESTD9001_TPATTERNSII TO GOMEGA
+go

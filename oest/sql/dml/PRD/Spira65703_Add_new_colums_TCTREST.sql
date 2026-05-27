@@ -1,0 +1,6 @@
+Use BEST
+Go
+
+alter TABLE TCTREST 
+Add CMT_NT UCMT_NT NULL
+go

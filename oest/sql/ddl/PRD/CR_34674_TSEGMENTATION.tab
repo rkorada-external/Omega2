@@ -1,0 +1,7 @@
+use BEST
+go
+
+alter table TSEGMENTATION  add
+SEGCMT_NT int default (0) not null
+
+go

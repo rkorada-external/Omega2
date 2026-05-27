@@ -1,0 +1,58 @@
+use BEST
+go
+
+IF EXISTS (SELECT 1
+           FROM
+               sysobjects c
+               JOIN
+               sysconstraints s
+               ON (s.constrid = c.id AND
+                   s.tableid = OBJECT_ID ('BEST..TI17REQ'))
+           WHERE
+               name = 'CK_value_SAP_Posting' AND
+               type = 'R')
+BEGIN
+exec("    ALTER TABLE BEST..TI17REQ DROP CONSTRAINT CK_value_SAP_Posting")
+END
+GO
+
+
+if  exists 
+( select 1
+  from syscolumns col, sysobjects obj
+  where 
+  col.name = 'REC_CF' and 
+  obj.name = 'TI17REQ' and 
+  col.id = obj.id
+)
+begin 
+	exec("ALTER TABLE BEST..TI17REQ drop REC_CF")
+end
+go
+    
+
+if  exists 
+( select 1 
+  from syscolumns col, sysobjects obj
+  where col.name = 'SAPOSTING_CT' and obj.name = 'TI17REQ' and col.id = obj.id
+)
+begin 
+	exec("ALTER TABLE BEST..TI17REQ drop SAPOSTING_CT")
+end
+go	
+
+ 
+
+
+/*==============================================================*/
+/* Table: TI17REQ                                  */
+/*==============================================================*/
+
+ALTER TABLE BEST.dbo.TI17REQ 
+	ADD SAPOSTING_CT char DEFAULT 'N' NOT NULL,
+		REC_CF         char DEFAULT ' ' NOT NULL   
+
+ALTER TABLE BEST.dbo.TI17REQ
+    ADD CONSTRAINT CK_value_SAP_Posting CHECK (SAPOSTING_CT IN ('Y','N'))
+        
+go

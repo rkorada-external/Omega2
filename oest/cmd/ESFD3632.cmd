@@ -1,0 +1,1139 @@
+#!/bin/ksh
+#============================================================================================================
+# APPLICATION NAME          	: ESTIMATIONS - INVENTAIRE
+# MODULE NAME                  	: IFRS17 REQ 11.2 : MAINTENANCE EXPENSES CSF CALCULATION
+# JOB NAME           			: ESFD3632.cmd
+# REVISION                      : 1.0  
+# CREATION DATE             	: 07/09/2021
+# AUTOR                       	: L.ELFAHIM 
+#------------------------------------------------------------------------------------------------------------
+# DESCRIPTION : ACF/PCA: EXPENSES CALCULATION
+#------------------------------------------------------------------------------------------------------------
+# CHANGES HISTORY
+#============================================================================================================
+#	<INDIX>		<JJ/MM/AAAA>	<AUTOR>  	<SPIRA>		<MODIFICATION DESCRIPTION>
+# [000] 07/09/2021 LEL   97351  ACF/PCA: EXPENSES CALCULATION
+#	[001] 13/10/2021 LEL   99572  NO MORE IAE CALCULATION ON RETRO
+#	[002] 17/01/2022 DaD   100401 Bug Fix : reformat GLOBAL_CASHFLOW file when the contract is empty - sort record length to 2000 (RC)
+# [003] 11/03/2022 MZM   SPIRA:101825   :I17 - Expenses calculation for Granularity Individual CR (Exclude all Commercial Relationship set as "individual") Modif Annule
+# [004] 28/06/2022 MZM   SPIRA:104854   :I17 - CNV - Internal Acquisition Expense in RATECSII are incorrect
+# [005] 21/07/2022 DAD   SPIRA:104983   : Update new formula : IAE Paid = Total amount IAE FWD (R01-03) – Total amount IAE Future (R02-02)
+# [006] 27/09/2022 DAD   SPIRA:106869   : If FLAG = NO or CSF/PRACC/2090 not existe then IAE PAID = FWD/2090
+# [007] 06/01/2023 HR    SPIRA:107803   : ULAE Paid - Incorrect or Missing amounts
+# [008] 28/02/2023 MiS   SPIRA:108484   : Add PERICASE for ESFC3636
+# [009] 10/03/2023 HR    SPIRA:108847   : IAE and IME Paid - Add conversion
+# [010] 17/05/2023 HR    SPIRA:107803   : ULAE Paid - Incorrect or Missing amounts
+# [011] 22/05/2023 HR    SPIRA:109577   : I17 - Calculate IME Paid on run off contracts
+# [012] 22/05/2023 HR    SPIRA:108487   : IAE and IME Paid - Add conversion
+# [013] 31/05/2023 DAD   SPIRA:109557   : fix IME doubled when generating future at closing from INI on Onerous Q+1
+# [014] 23/08/2023 MZM   SPIRA:110422   : I17S - Transactions on unexpected ssd-esb ; Add filter PERICASES(RETRO and ASSUMES) on NDIC CSF EST_CSF_NDIC_AMOUNT 
+# [015] 30/08/2023 DAD   SPIRA:110175   : Update filter INCEPTION STATUS = 9 on TRERETFACCTR 
+# [016] 27/09/2023 MZM   SPIRA:110422   : I17S - Transactions on unexpected ssd-esb ; Add filter PERICASES(RETRO and ASSUMES) on NDIC CSF EST_CSF_NDIC_AMOUNT : Fix ON INT
+#============================================================================================================
+#set -x
+
+# Call generic functions
+. ${DUTI}/fctgen.cmd
+
+# Get input parameters
+ICLODAT_D=$1
+TYPEINV=$2
+PREV_ICLODAT_D=$3
+
+# Job Initialisation
+JOBINIT
+
+ECHO_LOG ""                                                                                  
+ECHO_LOG "#================================================================="
+ECHO_LOG "#===> NORME.........................: ${NORME}"   
+ECHO_LOG "#===> TYPEINV.......................: ${TYPEINV}"                                                                  
+ECHO_LOG "#===> NORME_CF......................: ${NORME_CF}"                                                                       
+ECHO_LOG "#===> ICLODAT_D.....................: ${ICLODAT_D}"                                                       
+ECHO_LOG "#===> PREV_ICLODAT_D.....................: ${PREV_ICLODAT_D}"                                                       
+ECHO_LOG "#....................... INPUT .................................."
+ECHO_LOG "#===> ESF_UPR.......................: ${ESF_UPR}"
+ECHO_LOG "#===> EPO_IADPERICASE...............: ${EPO_IADPERICASE}"
+ECHO_LOG "#===> ESF_RATIO_ASSUMED.............: ${ESF_RATIO_ASSUMED}"
+ECHO_LOG "#===> ESF_GTSII_ONE_STD.............: ${ESF_GTSII_ONE_STD}"
+ECHO_LOG "#===> ESF_GTSII_CASHFLOW............: ${ESF_GTSII_CASHFLOW}"   
+ECHO_LOG "#===> ESF_GTSII_DUMMY_STD...........: ${ESF_GTSII_DUMMY_STD}"
+ECHO_LOG "#===> EST_CSF_NDIC_AMOUNT...........: ${EST_CSF_NDIC_AMOUNT}"     
+ECHO_LOG "#===> ESF_FSEG_TSECIFRS_I17.........: ${ESF_FSEG_TSECIFRS_I17}"            
+ECHO_LOG "#===> EPO_GTSII_GLOBAL_CASHFLOW.....: ${EPO_GTSII_GLOBAL_CASHFLOW}" 
+ECHO_LOG "#===> ESF_TRERETFACCTR_REFORMAT.....: ${ESF_TRERETFACCTR_REFORMAT}"    
+ECHO_LOG "#===> ESF_GTSII_DSC_FWD_ESCOMPTE....: ${ESF_GTSII_DSC_FWD_ESCOMPTE}"                                       
+ECHO_LOG "#....................... OUTPUT .................................." 
+ECHO_LOG "#===> ESF_EXPENSES..................: ${ESF_EXPENSES}"
+ECHO_LOG "#===> ESF_GTSII_GLOBAL_CASHFLOW.....: ${ESF_GTSII_GLOBAL_CASHFLOW}" 
+ECHO_LOG "#===> ESF_GT_MAINT_EXPENSES_PAID....: ${ESF_GT_MAINT_EXPENSES_PAID}"            
+ECHO_LOG "#================================================================="
+
+NSTEP=${NJOB}_00
+LIBEL="TOUCH FILES NOT FOUND"
+if [  ! -f "${EST_CSF_NDIC_AMOUNT}"  ]
+then
+	ECHO_LOG "EST_CSF_NDIC_AMOUNT : DOES NOT EXIST, CREATE AN EMPTY FILE"
+	EXECKSH "touch ${EST_CSF_NDIC_AMOUNT}"
+fi
+
+if [  ! -f "${ESF_GTSII_ONE_STD}"  ]
+then
+	ECHO_LOG "ESF_GTSII_ONE_STD : DOES NOT EXIST, CREATE AN EMPTY FILE"
+	EXECKSH "touch ${ESF_GTSII_ONE_STD}"
+fi
+
+if [  ! -f "${ESF_GTSII_DUMMY_STD}"  ]
+then
+	ECHO_LOG "ESF_GTSII_DUMMY_STD : DOES NOT EXIST, CREATE AN EMPTY FILE"
+	EXECKSH "touch ${ESF_GTSII_DUMMY_STD}"
+fi
+
+#[003] DEB
+
+##NSTEP=${NJOB}_05
+###-----------------------------------------------------------------------------
+##LIBEL="Sort of EPO_IADPERICASE retrive CR set as Individual"
+##SORT_WDIR=${SORTWORK}
+##SORT_CMD=`CFTMP`
+##SORT_I="${EPO_IADPERICASE} 2000 1"
+##SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_IADPERICASE.dat 2000 1"
+##INPUT_TEXT ${SORT_CMD} <<EOF
+##/FIELDS CTR_NF       3:1 -  3:,
+##        END_NT       4:1 -  4:EN,
+##        SEC_NF       5:1 -  5:EN,
+##        UWY_NF       6:1 -  6:,
+##        UW_NT        7:1 -  7:EN, 
+##        CED_NF       12:1 - 12:,     
+##        CTRINC_D     19:1 - 19:,
+##				PORTFOLIO    119:1 - 119:,      
+##				GRPIFRSLOB_CF    244:1 - 244:,
+##				PARIFRSLOB_CF    245:1 - 245:,		
+##				LOCIFRSLOB_CF    246:1 - 246:								
+##/KEYS   CTR_NF,
+##        END_NT,
+##        SEC_NF,
+##        UWY_NF,
+##        UW_NT
+##/CONDITION  WITH_CR_INDIV_FOLIO  ( (PORTFOLIO = "901") and (GRPIFRSLOB_CF = "2" ) or (PARIFRSLOB_CF = "2" ) or (LOCIFRSLOB_CF = "2" )  )
+##/OUTFILE ${SORT_O} OVERWRITE
+##/INCLUDE WITH_CR_INDIV_FOLIO
+##exit
+##EOF
+##SORT
+
+#[003]SORT_I="${DFILT}/${NJOB}_05_${IB}_SORT_IADPERICASE.dat 2000 1" Modif Annule
+
+NSTEP=${NJOB}_05
+LIBEL="ENRICHMENT of IADPERICASE by TRERETFACCTR..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${EPO_IADPERICASE} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_IADPERICASE_ENRICHED.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	PER_CTR_NF      3:1  	-  3:,
+	PER_END_NT      4:1  	-  4:,
+	PER_SEC_NF      5:1 	-  5:,
+	PER_UWY_NF      6:1 	-  6:,
+	PER_UW_NT       7:1 	-  7:,
+	CTR_NF      	1:1  	-  1:,
+	END_NT      	2:1  	-  2:,
+	SEC_NF      	3:1 	-  3:,
+	UWY_NF      	4:1 	-  4:,
+	UW_NT       	5:1 	-  5:,
+	INI_STATUS		12:1 	- 12:,
+	FIRST_CLODAT_D	15:1 	- 15:,
+	FILLER			1:1 	- 253:	
+/JOINKEYS
+	PER_CTR_NF, 
+	PER_END_NT, 
+	PER_SEC_NF, 
+	PER_UWY_NF, 
+	PER_UW_NT  
+/INFILE  ${ESF_TRERETFACCTR_REFORMAT} 1000 1 "~"
+/JOINKEYS
+	CTR_NF,    
+	END_NT,    
+	SEC_NF,    
+	UWY_NF,
+	UW_NT    
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} overwrite
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:INI_STATUS,FIRST_CLODAT_D
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_10
+LIBEL="SORT IADPERICASE ENRICHED"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_05_${IB}_SORT_IADPERICASE_ENRICHED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_IADPERICASE.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	PER_CTR_NF          3:1 	- 3:,
+	PER_END_NT          4:1 	- 4:EN,
+	PER_SEC_NF          5:1 	- 5:EN,
+	PER_UWY_NF          6:1 	- 6:,
+	PER_UW_NT           7:1 	- 7:EN,
+	FILLER      		1:1  	- 255:            
+/KEYS   
+	PER_CTR_NF,
+	PER_END_NT,
+	PER_SEC_NF,
+	PER_UWY_NF,
+	PER_UW_NT
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+# [005]
+NSTEP=${NJOB}_15
+LIBEL="ACQUISITION EXPENSES SCOPE : FILTER (DSC/FWD/2090) and SORT ESF_GTSII_DSC_FWD_ESCOMPTE"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${ESF_GTSII_DSC_FWD_ESCOMPTE} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_GTSII_DSC_FWD_ESCOMPTE.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS	
+	NORM    		50:1 	- 50:,
+	PATCAT			52:1 	- 52:,
+	PATTYP			53:1 	- 53:,
+	ACMTRS3			124:1 	- 124:
+/CONDITION DSC_FWD NORM = "${NORME_CF}" AND PATCAT CT "DSC" AND PATTYP CT "FWD" AND ACMTRS3 = "2090"
+/OUTFILE ${SORT_O}
+/INCLUDE DSC_FWD
+/COPY
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_20
+LIBEL="ACQUISITION EXPENSES FUTURE : FILTER and SORT  GLOBAL_CASHFLOW_INI"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${ESF_GTSII_GLOBAL_CASHFLOW_INI} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_GTSII_CASHFLOW_ASSUMED_INI.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS	
+	NORM    		50:1 	- 50:,
+	PATCAT			52:1 	- 52:,
+	PATTYP			53:1 	- 53:,
+	ACMTRS3			124:1 	- 124:,
+	FILLER			1:1 	- 124:
+/CONDITION ACQ_ASSUMED NORM = "${NORME_CF}" AND PATCAT CT "CSF" AND PATTYP CT "PRACC" AND ACMTRS3 = "2090"
+/OUTFILE ${SORT_O}
+/INCLUDE ACQ_ASSUMED
+/COPY
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_30
+LIBEL="ENRICHMENT of MAINTENANCE_EXPENSES_INI by CSM RATIO"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_20_${IB}_GTSII_CASHFLOW_ASSUMED_INI.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_INI.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CUM_CTR_NF      8:1  	- 8:,
+	CUM_END_NT      9:1  	- 9:,
+	CUM_SEC_NF      10:1 	- 10:,
+	CUM_UWY_NF      11:1 	- 11:,
+	CUM_UW_NT       12:1 	- 12:,
+	CTR_NF      	1:1  	- 1:,
+	END_NT      	2:1  	- 2:,
+	SEC_NF      	3:1 	- 3:,
+	UWY_NF      	4:1 	- 4:,
+	UW_NT       	5:1 	- 5:,
+	CSM_PAT			21:1 	- 21:,
+	FILLER			1:1 	- 129:	
+/JOINKEYS
+	CUM_CTR_NF, 
+	CUM_END_NT, 
+	CUM_SEC_NF, 
+	CUM_UWY_NF, 
+	CUM_UW_NT  
+/INFILE  ${ESF_RATIO_ASSUMED} 1000 1 "~"
+/JOINKEYS
+	CTR_NF,    
+	END_NT,    
+	SEC_NF,    
+	UWY_NF,
+	UW_NT    
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} overwrite
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:CSM_PAT
+exit
+EOF
+SORT
+
+# [005]
+NSTEP=${NJOB}_31
+LIBEL="ENRICHMENT of MAINTENANCE_EXPENSES_INI by Total amount of (DSC/FWD/2090)"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_30_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_INI.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_INI.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CUM_CTR_NF      8:1  	- 8:,
+	CUM_END_NT      9:1  	- 9:,
+	CUM_SEC_NF      10:1 	- 10:,
+	CUM_UWY_NF      11:1 	- 11:,
+	CUM_UW_NT       12:1 	- 12:,
+	CTR_NF      	8:1  	- 8:,
+	END_NT      	9:1  	- 9:,
+	SEC_NF      	10:1 	- 10:,
+	UWY_NF      	11:1 	- 11:,
+	UW_NT       	12:1 	- 12:,
+	DSC_FWD			123:1 	- 123:,
+	FILLER			1:1 	- 131:	
+/JOINKEYS
+	CUM_CTR_NF, 
+	CUM_END_NT, 
+	CUM_SEC_NF, 
+	CUM_UWY_NF, 
+	CUM_UW_NT  
+/INFILE  ${DFILT}/${NJOB}_15_${IB}_GTSII_DSC_FWD_ESCOMPTE.dat 2000 1 "~"
+/JOINKEYS
+	CTR_NF,    
+	END_NT,    
+	SEC_NF,    
+	UWY_NF,
+	UW_NT    
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} overwrite
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:DSC_FWD
+exit
+EOF
+SORT
+
+## [004]
+NSTEP=${NJOB}_35
+LIBEL="SORT ON No SECTION Numeric"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_31_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_INI.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_INI.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF          8:1 	- 8:,
+	END_NT          9:1 	- 9:EN,
+	SEC_NF          10:1 	- 10:EN,
+	UWY_NF          11:1 	- 11:,
+	UW_NT           12:1 	- 12:EN,
+	GROUPING_750    42:1 	- 42:,
+	FILLER      	1:1  	- 77:            
+/KEYS   
+	CTR_NF,
+	END_NT,
+	SEC_NF,
+	UWY_NF,
+	UW_NT
+/OUTFILE ${SORT_O} OVERWRITE
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_40
+LIBEL="ACQUISITION EXPENSES FUTURE : FILTER GLOBAL_CASHFLOW_PREV"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${ESF_GTSII_GLOBAL_CASHFLOW_PREV} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_GTSII_CASHFLOW_ASSUMED_PREV.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS	
+	NORM    		50:1 	- 50:,
+	PATCAT			52:1 	- 52:,
+	PATTYP			53:1 	- 53:,
+	ACMTRS3			124:1 	- 124:,
+	FILLER			1:1 	- 124:
+/CONDITION ACQ_ASSUMED NORM = "${NORME_CF}" AND PATCAT CT "CSF" AND PATTYP CT "PRACC" AND ACMTRS3 = "2090"
+/OUTFILE ${SORT_O}
+/INCLUDE ACQ_ASSUMED
+/COPY 
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_50
+LIBEL="ENRICHMENT of MAINTENANCE_EXPENSES_PREV by CSM RATIOS..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_40_${IB}_GTSII_CASHFLOW_ASSUMED_PREV.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_PREV.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CUM_CTR_NF      8:1  	- 8:,
+	CUM_END_NT      9:1  	- 9:,
+	CUM_SEC_NF      10:1 	- 10:,
+	CUM_UWY_NF      11:1 	- 11:,
+	CUM_UW_NT       12:1 	- 12:,
+	CTR_NF      	1:1  	- 1:,
+	END_NT      	2:1  	- 2:,
+	SEC_NF      	3:1 	- 3:,
+	UWY_NF      	4:1 	- 4:,
+	UW_NT       	5:1 	- 5:,
+	CSM_PAT			21:1 	- 21:,
+	CSM_PAT_PREV	22:1 	- 22:,
+	FILLER			1:1 	- 129:	
+/JOINKEYS
+	CUM_CTR_NF, 
+	CUM_END_NT, 
+	CUM_SEC_NF, 
+	CUM_UWY_NF, 
+	CUM_UW_NT  
+/INFILE  ${ESF_RATIO_ASSUMED} 1000 1 "~"
+/JOINKEYS
+	CTR_NF,    
+	END_NT,    
+	SEC_NF,    
+	UWY_NF,
+	UW_NT    
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} overwrite
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:CSM_PAT,CSM_PAT_PREV
+exit
+EOF
+SORT
+
+# [005]
+NSTEP=${NJOB}_51
+LIBEL="ENRICHMENT of MAINTENANCE_EXPENSES_PREV by Total amount of (DSC/FWD/2090)"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_50_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_PREV.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_PREV.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CUM_CTR_NF      8:1  	- 8:,
+	CUM_END_NT      9:1  	- 9:,
+	CUM_SEC_NF      10:1 	- 10:,
+	CUM_UWY_NF      11:1 	- 11:,
+	CUM_UW_NT       12:1 	- 12:,
+	CTR_NF      	8:1  	- 8:,
+	END_NT      	9:1  	- 9:,
+	SEC_NF      	10:1 	- 10:,
+	UWY_NF      	11:1 	- 11:,
+	UW_NT       	12:1 	- 12:,
+	DSC_FWD			123:1 	- 123:,
+	FILLER			1:1 	- 131:	
+/JOINKEYS
+	CUM_CTR_NF, 
+	CUM_END_NT, 
+	CUM_SEC_NF, 
+	CUM_UWY_NF, 
+	CUM_UW_NT  
+/INFILE  ${DFILT}/${NJOB}_15_${IB}_GTSII_DSC_FWD_ESCOMPTE.dat 2000 1 "~"
+/JOINKEYS
+	CTR_NF,    
+	END_NT,    
+	SEC_NF,    
+	UWY_NF,
+	UW_NT    
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} overwrite
+/REFORMAT
+	LEFTSIDE:FILLER,
+	RIGHTSIDE:DSC_FWD
+exit
+EOF
+SORT
+
+## [004]
+
+NSTEP=${NJOB}_55
+LIBEL="SORT ON No SECTION Numeric"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_51_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_PREV.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_PREV.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF          8:1 	- 8:,
+	END_NT          9:1 	- 9:EN,
+	SEC_NF          10:1 	- 10:EN,
+	UWY_NF          11:1 	- 11:,
+	UW_NT           12:1 	- 12:EN,
+	FILLER      	1:1  	- 77:            
+/KEYS   
+	CTR_NF,
+	END_NT,
+	SEC_NF,
+	UWY_NF,
+	UW_NT
+/OUTFILE ${SORT_O} OVERWRITE
+exit
+EOF
+SORT
+
+
+NSTEP=${NJOB}_60
+LIBEL="FILTER ESF_UPR"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${ESF_UPR} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_UPR.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF          8:1 	- 8:,
+	END_NT          9:1 	- 9:EN,
+	SEC_NF          10:1 	- 10:EN,
+	UWY_NF          11:1 	- 11:,
+	UW_NT           12:1 	- 12:EN,
+	GROUPING_750    42:1 	- 42:,
+	FILLER      	1:1  	- 77:            
+/KEYS   
+	CTR_NF,
+	END_NT,
+	SEC_NF,
+	UWY_NF,
+	UW_NT
+/CONDITION COND_UPR GROUPING_750 = "103"
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE COND_UPR
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_70
+LIBEL="FILTER EPO_GTSII_GLOBAL_CASHFLOW"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${EPO_GTSII_GLOBAL_CASHFLOW} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_FUTURE_ASSUMED.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF          8:1 	- 8:,
+	END_NT          9:1 	- 9:EN,
+	SEC_NF          10:1 	- 10:EN,
+	UWY_NF          11:1 	- 11:,
+	UW_NT           12:1 	- 12:EN,
+	PATCAT_CT		52:1 	- 52:,
+	PATTYP_CT		53:1 	- 53:,
+	ACMTRS3			124:1 	- 124:,
+	FILLER      	1:1  	- 124:            
+/KEYS   
+	CTR_NF,
+	END_NT,
+	SEC_NF,
+	UWY_NF,
+	UW_NT
+/CONDITION ASSUMED PATCAT_CT CT "CSF" AND PATTYP_CT = "PRACC" AND ACMTRS3 = "1051" 
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE ASSUMED
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_80
+LIBEL="CHECK CONTRACTS HAVING FP & UPR"
+PRG=ESFC3633
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1=${DFILT}/${NJOB}_10_${IB}_SORT_IADPERICASE.dat
+export ${PRG}_I2=${DFILT}/${NJOB}_70_${IB}_SORT_FUTURE_ASSUMED.dat
+export ${PRG}_I3=${DFILT}/${NJOB}_60_${IB}_SORT_UPR.dat
+export ${PRG}_I4=${EPO_FCURQUOT}
+export ${PRG}_O1=${DFILT}/${NSTEP}_${IB}_${PRG}_IADPERICASE.dat
+EXECPRG
+
+# [006] [009]
+NSTEP=${NJOB}_90
+LIBEL="ENRICHMENT IADPERICASE FILTRED with Total amount of (DSC/FWD/2090)"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_80_${IB}_ESFC3633_IADPERICASE.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_IADPERICASE.dat 2000 1"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	PER_CTR_NF      3:1 	- 3:,
+	PER_END_NT      4:1 	- 4:,
+	PER_SEC_NF      5:1 	- 5:,
+	PER_UWY_NF      6:1 	- 6:,
+	PER_UW_NT       7:1 	- 7:,
+	PER_FILLER      1:1  	- 256:, 
+	CTR_NF      	8:1  	- 8:,
+	END_NT      	9:1  	- 9:,
+	SEC_NF      	10:1 	- 10:,
+	UWY_NF      	11:1 	- 11:,
+	UW_NT       	12:1 	- 12:,
+	DSC_FWD  	123:1 	- 123:,
+        DSCSSD_CF       1:1 - 1:,
+        DSCBALSHEY_NF   3:1 - 3:,
+        DSCCUR_CF       18:1 - 18:
+/JOINKEYS
+	PER_CTR_NF, 
+	PER_END_NT, 
+	PER_SEC_NF, 
+	PER_UWY_NF, 
+	PER_UW_NT  
+/INFILE  ${DFILT}/${NJOB}_15_${IB}_GTSII_DSC_FWD_ESCOMPTE.dat 2000 1 "~"
+/JOINKEYS
+	CTR_NF,    
+	END_NT,    
+	SEC_NF,    
+	UWY_NF,
+	UW_NT    
+/JOIN UNPAIRED LEFTSIDE
+/OUTFILE ${SORT_O} overwrite
+/REFORMAT
+	LEFTSIDE:PER_FILLER,
+	RIGHTSIDE:DSC_FWD,DSCSSD_CF,DSCBALSHEY_NF,DSCCUR_CF
+exit
+EOF
+SORT
+
+# [006] [009]
+NSTEP=${NJOB}_100
+LIBEL="SORT IADPERICASE ENRICHMENT"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_90_${IB}_SORT_IADPERICASE.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_IADPERICASE.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	PER_CTR_NF          3:1 	- 3:,
+	PER_END_NT          4:1 	- 4:EN,
+	PER_SEC_NF          5:1 	- 5:EN,
+	PER_UWY_NF          6:1 	- 6:,
+	PER_UW_NT           7:1 	- 7:EN,
+	FILLER      		1:1  	- 260:            
+/KEYS   
+	PER_CTR_NF,
+	PER_END_NT,
+	PER_SEC_NF,
+	PER_UWY_NF,
+	PER_UW_NT
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+
+##[004]export ${PRG}_I2=${DFILT}/${NJOB}_30_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_INI.dat
+##[004]export ${PRG}_I3=${DFILT}/${NJOB}_50_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_PREV.dat
+# [006] [009]
+NSTEP=${NJOB}_110
+LIBEL="INTERNAL ACQUISITION EXPENSES FUTURE"
+PRG=ESFC3632
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+CLODAT_D ${PARM_ICLODAT_D}
+NORME ${NORME_CF}
+PREV_CLODAT_D ${PARM_PREV_ICLODAT_D}
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1=${DFILT}/${NJOB}_100_${IB}_SORT_IADPERICASE.dat
+export ${PRG}_I2=${DFILT}/${NJOB}_35_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_INI.dat
+export ${PRG}_I3=${DFILT}/${NJOB}_55_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_PREV.dat
+export ${PRG}_I4=${EPO_FCURQUOT}
+export ${PRG}_O1=${DFILT}/${NSTEP}_${IB}_IAE_FUTURE_ASSUMED.dat
+export ${PRG}_O2=${DFILT}/${NSTEP}_${IB}_${PRG}_IAE_FUTURE_ASSUMED_ANO.dat
+export ${PRG}_O3=${ESF_EXPENSES}
+EXECPRG
+
+# [013]
+NSTEP=${NJOB}_190
+LIBEL="Remove duplication for GTSII ONE STD with GTSII CASHFLOW FILES"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${ESF_GTSII_ONE_STD} 2000 1"
+SORT_I2="${ESF_GTSII_CASHFLOW} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_GTSII_ONE_CASHFLOW.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS FILLER  1:1   - 124:
+/KEYS 	
+	FILLER  
+/SUMMARIZE
+/OUTFILE ${SORT_O}
+exit
+EOF
+SORT
+
+## [014] Filter EST_CSF_NDIC_AMOUNT with PERICASE 
+
+NSTEP=${NJOB}_192
+LIBEL="SPLIT EST_CSF_NDIC_AMOUNT EBS to ASSUMED & RETRO for PERICASE FILTERING PURPOSE..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${EST_CSF_NDIC_AMOUNT} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_CSF_NDIC_AMOUNT_RETRO.dat 2000 1"
+SORT_O1="${DFILT}/${NSTEP}_${IB}_CSF_NDIC_AMOUNT_ASSUMED.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	TYP_CT		49:1 	- 49:,
+	FILLER    	1:1  	- 124:
+/CONDITION COND_RETRO TYP_CT CT 'R' 
+/CONDITION COND_ASSUMED TYP_CT CT 'A'  
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE COND_RETRO
+/REFORMAT FILLER
+/OUTFILE ${SORT_O1} OVERWRITE
+/INCLUDE COND_ASSUMED
+/COPY 
+exit
+EOF
+SORT
+
+
+NSTEP=${NJOB}_194
+LIBEL="FILTER CSF_NDIC_AMOUNT_RETRO USING IRDPERICASE by NORME ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_192_${IB}_CSF_NDIC_AMOUNT_RETRO.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_CSF_NDIC_AMOUNT_RETRO_FILTRED.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	RETCTR_NF 		24:1 	- 24:,
+	RETEND_NT 		25:1 	- 25:,
+	RETSEC_NF 		26:1 	- 26:,
+	RTY_NF 			27:1 	- 27:,
+	RETUW_NT 		28:1 	- 28:,
+	PER_CTR_NF      3:1  	- 3:,
+	PER_END_NT      4:1  	- 4:,
+	PER_SEC_NF      5:1  	- 5:,
+	PER_UWY_NF      6:1  	- 6:,
+	PER_UW_NT       7:1  	- 7:,
+	FILLER        	1:1  	- 124:
+/JOINKEYS
+	RETCTR_NF,    
+	RETEND_NT,    
+	RETSEC_NF,    
+	RTY_NF,    
+	RETUW_NT
+/INFILE ${EST_IRDPERICASE} 2000 1 "~"
+/JOINKEYS
+	PER_CTR_NF,
+	PER_END_NT,
+	PER_SEC_NF,
+	PER_UWY_NF,
+	PER_UW_NT 
+/OUTFILE ${SORT_O} overwrite
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+
+# [016]
+
+
+NSTEP=${NJOB}_195
+# JOIN PERICASE With EST_CSF_NDIC_AMOUNT, Join and Fusion  
+#------------------------------------------------------------------------------
+LIBEL=" JOIN PERICASE With EST_CSF_NDIC_AMOUNT, Join and Fusion ..."
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_192_${IB}_CSF_NDIC_AMOUNT_ASSUMED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_CSF_NDIC_AMOUNT_ASSUMED_FILTRED.dat 2000 1"
+INPUT_TEXT $SORT_CMD <<EOF
+/FIELDS CTR_NF_F1        		8:1 - 8:,  
+        END_NT_F1        		9:1 - 9:,
+        SEC_NF_F1        		10:1 - 10:,
+        UWY_NF_F1        		11:1 - 11:,
+        UW_NT_F1         		12:1 - 12:,                                             
+        FIELD_1_124_F1    	 1:1 - 124:,
+        CTR_NF_F2 			 	  3:1 -  3:, 
+        END_NT_F2           4:1 -  4:,                  
+				SEC_NF_F2 			 	  5:1 -  5:,          
+				UWY_NF_F2        	 	6:1 -  6:, 
+				UW_NF_F2        	 	7:1 -  7:			       		          
+/JOINKEYS CTR_NF_F1,
+					END_NT_F1,
+          SEC_NF_F1,
+          UWY_NF_F1,
+          UW_NT_F1            
+/INFILE ${EPO_IADPERICASE} 2000 1 "~"                 
+/JOINKEYS CTR_NF_F2,
+          END_NT_F2,
+          SEC_NF_F2,
+          UWY_NF_F2,          
+          UW_NF_F2                         
+/OUTFILE ${SORT_O}
+/REFORMAT LEFTSIDE: FIELD_1_124_F1
+exit
+EOF
+SORT 
+
+
+
+# [013] # [014] SORT_I2="${EST_CSF_NDIC_AMOUNT} 2000 1"
+# SORT_I3="${ESF_GTSII_ONE_STD} 2000 1"
+# SORT_I5="${ESF_GTSII_CASHFLOW} 2000 1"
+
+
+NSTEP=${NJOB}_200
+LIBEL="MERGE IAE FUTURE CALCULATED with GLOBAL_CASHFLOW FILES"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_110_${IB}_IAE_FUTURE_ASSUMED.dat 2000 1"
+SORT_I2="${DFILT}/${NJOB}_195_${IB}_CSF_NDIC_AMOUNT_ASSUMED_FILTRED.dat 2000 1" 
+SORT_I3="${DFILT}/${NJOB}_190_${IB}_GTSII_ONE_CASHFLOW.dat 2000 1"
+SORT_I4="${ESF_GTSII_DUMMY_STD} 2000 1"
+SORT_I5="${DFILT}/${NJOB}_194_${IB}_CSF_NDIC_AMOUNT_RETRO_FILTRED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_GTSII_GLOBAL_CASHFLOW.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS CTR_NF  8:1 -  8:,
+        FILLER_1  1:1 - 7:,
+        FILLER_2  9:1 - 124:,
+        FILLER  1:1 - 124:
+/DERIVEDFIELD CTR_NFC CTR_NF COMPRESS
+/OUTFILE ${SORT_O}
+/REFORMAT FILLER_1,CTR_NFC,FILLER_2
+/COPY
+exit
+EOF
+SORT
+
+## [014] Fin Filter EST_CSF_NDIC_AMOUNT with PERICASES
+
+NSTEP=${NJOB}_210
+LIBEL="REFORMAT GLOBAL_CASHFLOW FILES"
+AWK_I="${DFILT}/${NJOB}_200_${IB}_GTSII_GLOBAL_CASHFLOW.dat"
+AWK_O="${ESF_GTSII_GLOBAL_CASHFLOW}"
+AWK_CMD=`CFTMP`
+INPUT_TEXT ${AWK_CMD} <<EOF
+BEGIN{ FS="\~"; OFS="\~" }
+  {
+    if ( \$8 == "")
+    {
+        \$8 = "";
+        \$9 = "";
+        \$10 = "";
+        \$11 = "";
+        \$12 = "";
+    }
+
+    print \$0; 
+  }
+exit
+EOF
+AWK
+
+
+# [015]
+#---------------------------
+# MAINTENANCE EXPENSES PAID
+#---------------------------
+NSTEP=${NJOB}_220
+LIBEL="FILTER ESF_TRERETFACCTR : KEEP ONLY INCEPTION STATUS 1 & 2 & 9"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${ESF_TRERETFACCTR_REFORMAT} 1000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_TRERETFACCTR_VALID.dat"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	INIT_STATUS  	12:1 	- 12:EN,
+	FILLER    		1:1  	- 26:		
+/CONDITION INIT_STS_VALID 	INIT_STATUS = 1 OR INIT_STATUS = 2 OR INIT_STATUS = 9
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE INIT_STS_VALID
+/COPY 
+exit
+EOF
+SORT
+
+NSTEP=${NJOB}_225
+LIBEL="FILTER ESF_TRERETFACCTR : KEEP ONLY ASSUMED CONTRACTS"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_220_${IB}_TRERETFACCTR_VALID.dat 1000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_TRERETFACCTR_ASSUMED.dat"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF  	1:1 	- 1:,
+	END_NT  	2:1 	- 2:EN,
+	SEC_NF  	3:1 	- 3:EN,
+	UWY_NF  	4:1 	- 4:,
+	UW_NT    	5:1 	- 5:EN,
+	TYPE_CT		9:1 	- 9:,
+	FILLER    	1:1  	- 26:
+/KEYS 	
+	CTR_NF,  
+	END_NT, 
+	SEC_NF,  
+	UWY_NF,  
+	UW_NT   	
+/CONDITION COND_ACCEPT 	TYPE_CT = 'T' OR TYPE_CT = 'F'																					
+/OUTFILE ${SORT_O} OVERWRITE
+/INCLUDE COND_ACCEPT
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+#[09]
+NSTEP=${NJOB}_226
+# Join add currency on master file
+#-----------------------------------------------------------------------------
+LIBEL="Join"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_225_${IB}_SORT_TRERETFACCTR_ASSUMED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_TRERETFACCTR_ASSUMED.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS 
+	CTR_NF      1:1  	- 1:,
+	END_NT      2:1  	- 2:,
+	SEC_NF      3:1 	- 3:,
+	UWY_NF      4:1 	- 4:,
+	UW_NT       5:1 	- 5:,
+        FILLER      1:1         - 26:,
+	P_CTR_NF      3:1  	- 3:,
+	P_END_NT      4:1  	- 4:,
+	P_SEC_NF      5:1 	- 5:,
+	P_UWY_NF      6:1 	- 6:,
+	P_UW_NT       7:1 	- 7:,
+        P_EGPCUR_CF   23:1      - 23:,
+        P_CUR_CF      6:1     - 6:
+        
+/joinkeys
+	CTR_NF,
+	END_NT,
+	SEC_NF,
+	UWY_NF,
+	UW_NT
+/INFILE ${EPO_IADPERICASE} 2000 1 "~"
+/joinkeys
+	P_CTR_NF,
+	P_END_NT,
+	P_SEC_NF,
+	P_UWY_NF,
+	P_UW_NT
+/OUTFILE ${SORT_O}
+/REFORMAT
+        leftside:FILLER
+        ,rightside:P_EGPCUR_CF
+exit
+EOF
+SORT
+
+#[07] + CURRENCY
+NSTEP=${NJOB}_230
+LIBEL="MAINTENANCE EXPENSES : FILTER and SORT GLOBAL_CASHFLOW_INI"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${ESF_GTSII_GLOBAL_CASHFLOW_INI} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_INI.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CUM_CTR_NF      8:1  	- 8:,
+	CUM_END_NT      9:1  	- 9:EN,
+	CUM_SEC_NF      10:1 	- 10:EN,
+	CUM_UWY_NF      11:1 	- 11:,
+	CUM_UW_NT       12:1 	- 12:EN,
+	CUM_CUR_CF      18:1    - 18:,
+        ACMTRS2			42:1 	- 42:,
+	NORME    		50:1 	- 50:,
+	PATCAT			52:1 	- 52:,
+	PATTYP			53:1 	- 53:,
+	FILLER			1:1 	- 124:
+/KEYS 	
+	CUM_CTR_NF,  
+	CUM_END_NT, 
+	CUM_SEC_NF,  
+	CUM_UWY_NF,  
+	CUM_UW_NT,
+        CUM_CUR_CF   	
+/CONDITION MAIN_ASSUMED NORME = "${NORME_CF}" AND PATCAT CT "CSF" AND PATTYP CT "INF" AND ACMTRS2 = "314"
+/OUTFILE ${SORT_O}
+/INCLUDE MAIN_ASSUMED
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+#[07] + CURRENCY
+NSTEP=${NJOB}_235
+LIBEL="MAINTENANCE EXPENSES : FILTER and SORT GLOBAL_CASHFLOW_INI"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${ESF_GTSII_GLOBAL_CASHFLOW_PREV} 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_PREV.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+	CUM_CTR_NF      8:1  	- 8:,
+	CUM_END_NT      9:1  	- 9:EN,
+	CUM_SEC_NF      10:1 	- 10:EN,
+	CUM_UWY_NF      11:1 	- 11:,
+	CUM_UW_NT       12:1 	- 12:EN,
+	CUM_CUR_CF      18:1    - 18:,
+	ACMTRS2			42:1 	- 42:,
+	NORME    		50:1 	- 50:,
+	PATCAT			52:1 	- 52:,
+	PATTYP			53:1 	- 53:,
+	FILLER			1:1 	- 124:
+/KEYS 	
+	CUM_CTR_NF,  
+	CUM_END_NT, 
+	CUM_SEC_NF,  
+	CUM_UWY_NF,  
+	CUM_UW_NT,   	
+        CUM_CUR_CF   	
+/CONDITION MAIN_ASSUMED NORME = "${NORME_CF}" AND PATCAT CT "CSF" AND PATTYP CT "INF" AND ACMTRS2 = "314"
+/OUTFILE ${SORT_O}
+/INCLUDE MAIN_ASSUMED
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+#[07] #[010]
+NSTEP=${NJOB}_237
+LIBEL="Merge GTASII"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_235_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_PREV.dat  2000 1"
+SORT_I2="${DFILT}/${NJOB}_230_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_INI.dat  2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_CUR.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS
+        CUM_CTR_NF      8:1     - 8:,
+        CUM_END_NT      9:1     - 9:EN,
+        CUM_SEC_NF      10:1    - 10:EN,
+        CUM_UWY_NF      11:1    - 11:,
+        CUM_UW_NT       12:1    - 12:EN,
+        CUM_CUR_CF      18:1    - 18:
+/KEYS
+        CUM_CTR_NF,
+        CUM_END_NT,
+        CUM_SEC_NF,
+        CUM_UWY_NF,
+        CUM_UW_NT,
+        CUM_CUR_CF
+/SUMMARIZE
+/OUTFILE ${SORT_O}
+/REFORMAT CUM_CTR_NF,CUM_END_NT,CUM_SEC_NF,CUM_UWY_NF,CUM_UW_NT,CUM_CUR_CF
+exit
+EOF
+SORT
+
+#[07] [009]
+NSTEP=${NJOB}_238
+# Join add currency on master file
+#-----------------------------------------------------------------------------
+LIBEL="Join"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_226_${IB}_SORT_TRERETFACCTR_ASSUMED.dat 2000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_TRERETFACCTR_ASSUMED_ENRICHED.dat 2000 1"
+INPUT_TEXT ${SORT_CMD} <<EOF
+/FIELDS 
+	CTR_NF      1:1  	- 1:,
+	END_NT      2:1  	- 2:,
+	SEC_NF      3:1 	- 3:,
+	UWY_NF      4:1 	- 4:,
+	UW_NT       5:1 	- 5:,
+        FILLER      1:1         - 27:,
+	CUM_CTR_NF      1:1  	- 1:,
+	CUM_END_NT      2:1  	- 2:,
+	CUM_SEC_NF      3:1 	- 3:,
+	CUM_UWY_NF      4:1 	- 4:,
+	CUM_UW_NT       5:1 	- 5:,
+        CUM_CUR_CF      6:1     - 6:
+        
+/joinkeys
+	CTR_NF,
+	END_NT,
+	SEC_NF,
+	UWY_NF,
+	UW_NT
+/INFILE ${DFILT}/${NJOB}_237_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_CUR.dat 2000 1 "~"
+/joinkeys
+	CUM_CTR_NF,
+	CUM_END_NT,
+	CUM_SEC_NF,
+	CUM_UWY_NF,
+	CUM_UW_NT
+/OUTFILE ${SORT_O}
+/REFORMAT
+        leftside:FILLER
+        ,rightside:CUM_CUR_CF
+exit
+EOF
+SORT
+
+#[07]
+NSTEP=${NJOB}_239
+LIBEL="SORT TRERETFACCTR"
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DFILT}/${NJOB}_238_${IB}_SORT_TRERETFACCTR_ASSUMED_ENRICHED.dat 1000 1"
+SORT_O="${DFILT}/${NSTEP}_${IB}_SORT_TRERETFACCTR_ASSUMED_ENRICHED.dat"
+SORT_NOINFILE=YES
+INPUT_TEXT ${SORT_CMD} << EOF
+/FIELDS 
+	CTR_NF  	1:1 	- 1:,
+	END_NT  	2:1 	- 2:EN,
+	SEC_NF  	3:1 	- 3:EN,
+	UWY_NF  	4:1 	- 4:,
+	UW_NT    	5:1 	- 5:EN,
+	CUR_CF		27:1 	- 27:,
+	FILLER    	1:1  	- 27:
+/KEYS 	
+	CTR_NF,  
+	END_NT, 
+	SEC_NF,  
+	UWY_NF,  
+	UW_NT,
+        CUR_CF   	
+/OUTFILE ${SORT_O} OVERWRITE
+/REFORMAT FILLER
+exit
+EOF
+SORT
+
+#[07] [009]
+NSTEP=${NJOB}_240
+LIBEL="MAINTENANCE EXPENSES PAID CALCULATION"
+PRG=ESFC3636
+FPRM=`CFTMP`
+INPUT_TEXT ${FPRM} << EOF
+CLODAT_D ${PARM_ICLODAT_D}
+NORME ${NORME_CF}
+PREV_CLODAT_D ${PARM_PREV_ICLODAT_D}
+exit
+EOF
+export ${PRG}_PRM=${FPRM}
+export ${PRG}_I1=${DFILT}/${NJOB}_239_${IB}_SORT_TRERETFACCTR_ASSUMED_ENRICHED.dat
+export ${PRG}_I2=${DFILT}/${NJOB}_230_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_INI.dat
+export ${PRG}_I3=${DFILT}/${NJOB}_235_${IB}_SORT_GTSII_GLOBAL_CSF_ASSUMED_PREV.dat
+export ${PRG}_I4=${DFILT}/${NJOB}_10_${IB}_SORT_IADPERICASE.dat
+export ${PRG}_I5=${EPO_FCURQUOT}
+export ${PRG}_O1=${ESF_GT_MAINT_EXPENSES_PAID}
+EXECPRG
+
+JOBEND

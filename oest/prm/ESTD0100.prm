@@ -1,0 +1,13 @@
+# Chaine parameter file (ESTD0100)
+
+# Modifications
+#-------------------------------------------------------------
+#[001] 23/01/2015 R. Cassis :spot:28197 Archivage et nettoyage annuel de tables supplémentaires : TRTOSTAE, TACCTRGTGT et TLIFSTADIF
+#-------------------------------------------------------------
+
+# 2 parameters
+# BLCSHT_D     ->  Min update date of movements to be kept into BEST..TACCTRNE, TRTOSTAE, TACCTRTGT
+# LAUNCH_D     ->  Min update date of movements to be kept into BSTA..TLIFSTADIF
+#
+BLCSHT_D 20131231
+LAUNCH_D 20121231

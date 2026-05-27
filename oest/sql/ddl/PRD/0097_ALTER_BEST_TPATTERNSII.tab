@@ -1,0 +1,16 @@
+/*==============================================================*/
+/* Table: BEST..TPATTERNSII - ADDING COLUMNS AN41-AN65   */
+/*==============================================================*/
+
+USE BEST
+GO
+ALTER TABLE TPATTERNSII ADD AN41 decimal(11,8)  NULL, AN42 decimal(11,8)  NULL,
+AN43 decimal(11,8)  NULL, AN44 decimal(11,8)  NULL, AN45 decimal(11,8)  NULL,
+AN46 decimal(11,8)  NULL, AN47 decimal(11,8)  NULL, AN48 decimal(11,8)  NULL,
+AN49 decimal(11,8)  NULL, AN50 decimal(11,8)  NULL, AN51 decimal(11,8)  NULL,
+AN52 decimal(11,8)  NULL, AN53 decimal(11,8)  NULL, AN54 decimal(11,8)  NULL,
+AN55 decimal(11,8)  NULL, AN56 decimal(11,8)  NULL, AN57 decimal(11,8)  NULL,
+AN58 decimal(11,8)  NULL, AN59 decimal(11,8)  NULL, AN60 decimal(11,8)  NULL,
+AN61 decimal(11,8)  NULL, AN62 decimal(11,8)  NULL, AN63 decimal(11,8)  NULL,
+AN64 decimal(11,8)  NULL, AN65 decimal(11,8)  NULL
+go

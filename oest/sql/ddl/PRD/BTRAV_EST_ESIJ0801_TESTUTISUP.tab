@@ -1,0 +1,91 @@
+USE BTRAV
+go
+
+/****************************************************
+Table            : BTRAV..EST_ESIJ0801_TESTUTISUP
+Base principale  : BTRAV
+Version          : 10.1
+Auteur           : LRAK (ASCOTT)
+Date de creation : 01/06/2012
+Fiche            :spot:23860
+Description      : - table de travail de BEST_PtSUIVINTACC_01
+                   - alimentée par ESIJ0801.cmd
+[001] 20/02/2015 R. cassis :spot:28328 - Add 2 columns EVT_NF and REVT_NF to TACCSUP
+*********************************************************/
+
+IF OBJECT_ID('EST_ESIJ0801_TESTUTISUP') IS NOT NULL
+BEGIN
+    DROP TABLE EST_ESIJ0801_TESTUTISUP
+    IF OBJECT_ID('EST_ESIJ0801_TESTUTISUP') IS NOT NULL
+        PRINT '<<< FAILED DROPPING TABLE EST_ESIJ0801_TESTUTISUP >>>'
+    ELSE
+        PRINT '<<< DROPPED TABLE EST_ESIJ0801_TESTUTISUP >>>'
+END
+go
+
+CREATE TABLE EST_ESIJ0801_TESTUTISUP
+(
+    TRN_NT          VARCHAR(50)       NULL,
+    SSD_CF          VARCHAR(50)       NULL,
+    ESB_CF          VARCHAR(50)       NULL,
+    NUMLIGNE_NT     VARCHAR(50)       NULL,
+    BALSHEY_NF      VARCHAR(50)       NULL,
+    BALSHRMTH_NF	  VARCHAR(50)       NULL,
+    BALSHRDAY_NF	  VARCHAR(50)       NULL,
+    VALPERY_NF      VARCHAR(50)       NULL,
+    VALPERMTH_NF    VARCHAR(50)       NULL,
+    TRNCOD_CF       VARCHAR(50)       NULL,
+    RETAUTGEN_B     VARCHAR(50)       NULL,
+    CTR_NF          VARCHAR(50)       NULL,
+    END_NT          VARCHAR(50)       NULL,
+    SEC_NF          VARCHAR(50)       NULL,
+    UWY_NF          VARCHAR(50)       NULL,
+    UW_NT           VARCHAR(50)       NULL,
+    OCCYEA_NF 		  VARCHAR(50)       NULL,
+    ACY_NF          VARCHAR(50)       NULL,
+    SCOSTRMTH_NF    VARCHAR(50)       NULL,
+    SCOENDMTH_NF 	  VARCHAR(50)       NULL,
+    CLM_NF          VARCHAR(50)       NULL,
+    CUR_CF          VARCHAR(50)       NULL,
+    AMT_M           VARCHAR(50)       NULL,
+    RETCTR_NF       VARCHAR(50)       NULL,
+    RETEND_NT       VARCHAR(50)       NULL,
+    RETSEC_NF       VARCHAR(50)       NULL,
+    RTY_NF          VARCHAR(50)       NULL,
+    RETUW_NT        VARCHAR(50)       NULL,
+    PLC_NT          VARCHAR(50)       NULL,
+    RETOCCYEA_NF    VARCHAR(50)       NULL,
+    RETACY_NF       VARCHAR(50)       NULL,
+    RETSCOSTRMTH_NF VARCHAR(50)       NULL,
+    RETSCOENDMTH_NF VARCHAR(50)       NULL,
+    RCL_NF          VARCHAR(50)       NULL,
+    RETCUR_CF       VARCHAR(50)       NULL,
+    RETAMT_M        VARCHAR(50)       NULL,
+    COMMAC_LL       VARCHAR(64)       NULL,
+    SPEENTTYP_CF    VARCHAR(50)       NULL,
+    SPEENTNAT_CT    tinyint           NULL,
+    EVT_NF          varchar(10)       NULL,    --[001]
+    REVT_NF         varchar(10)       NULL     --(001]
+)
+LOCK ALLPAGES
+go
+IF OBJECT_ID('EST_ESIJ0801_TESTUTISUP') IS NOT NULL
+    PRINT '<<< CREATED TABLE EST_ESIJ0801_TESTUTISUP >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE EST_ESIJ0801_TESTUTISUP >>>'
+go
+GRANT UPDATE ON EST_ESIJ0801_TESTUTISUP TO GOMEGA
+go
+GRANT SELECT ON EST_ESIJ0801_TESTUTISUP TO GOMEGA
+go
+GRANT REFERENCES ON EST_ESIJ0801_TESTUTISUP TO GOMEGA
+go
+GRANT INSERT ON EST_ESIJ0801_TESTUTISUP TO GOMEGA
+go
+GRANT DELETE ON EST_ESIJ0801_TESTUTISUP TO GOMEGA
+go
+GRANT SELECT ON EST_ESIJ0801_TESTUTISUP TO GCONSULT
+go
+GRANT ALL ON EST_ESIJ0801_TESTUTISUP TO GDBBATCH
+go
+

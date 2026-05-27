@@ -1,0 +1,13 @@
+/*==============================================================*/
+/* TRA01                                                      	*/
+/*==============================================================*/
+
+USE BEST 
+--To Alter the table BEST..TVERSION
+--The script adds 2 columns to the existing table and are used for the link to segmentation
+GO
+ALTER TABLE TVERSION ADD
+
+    SGT_NT 			USGT_NT 			null,
+    SGTVER_NT 		USGTVER_NT 			null
+GO

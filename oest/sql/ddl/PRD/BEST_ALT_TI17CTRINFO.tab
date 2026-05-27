@@ -1,0 +1,30 @@
+/* *
+* THE SCRIPT IS USED TO ALTER TABLE FOR SPIRA #94954 
+*	
+* Date 		: 30/03/2022
+* Author 	: Bhimasen Karri
+* Table 	: TI17CTRINFO
+*/
+
+use BEST
+go
+
+--**************************************
+-- TI17CTRINFO
+--**************************************
+
+if not exists (select 1 from syscolumns where id = object_id("TI17CTRINFO") and name = "EGPI_R1")
+exec("alter table TI17CTRINFO add EGPI_R1 float NULL")
+go
+
+if not exists (select 1 from syscolumns where id = object_id("TI17CTRINFO") and name = "EGPI_R2")
+exec("alter table TI17CTRINFO add EGPI_R2 float NULL")
+go
+
+if not exists (select 1 from syscolumns where id = object_id("TI17CTRINFO") and name = "EARP_RA")
+exec("alter table TI17CTRINFO add EARP_RA float NULL")
+go
+
+if not exists (select 1 from syscolumns where id = object_id("TI17CTRINFO") and name = "COMMENT_CF")
+exec("alter table TI17CTRINFO add COMMENT_CF char(125) NULL")
+go

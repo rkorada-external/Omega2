@@ -1,0 +1,20 @@
+################################################################
+# 7 parameters                                                 #
+#                                                              #
+# 1- Treatment date                                            #
+# 2- GTA file from paris file name (.dat) stored in $DFILI     # 
+# 3- GTR file from paris file name (.dat) stored in $DFILI     # 
+# 4- GTA file from singapore file name (.dat) stored in $DFILI # 
+# 5- GTR file from singapore file name (.dat) stored in $DFILI # 
+# 6- GTA file from new-york file name (.dat) stored in $DFILI  # 
+# 7- GTR file from new-york file name (.dat) stored in $DFILI  #
+# 8- MODE ( 0 = param) ( 1 = auto )                            #
+################################################################
+DATE_T        20010529
+GTAINIO_FRA1  P_ESRD0020_GTAINIO_local_20010511.dat
+GTRINIO_FRA1  P_ESRD0020_GTRINIO_local_20010511.dat
+GTAINIO_SGP1  P_ESRD0020_GTAINIO_singapore_20010525.dat
+GTRINIO_SGP1  P_ESRD0020_GTRINIO_singapore_20010525.dat
+GTAINIO_USA1  P_ESRD0020_GTAINIO_new-york_20010524.dat
+GTRINIO_USA1  P_ESRD0020_GTRINIO_new-york_20010524.dat
+MODE 1

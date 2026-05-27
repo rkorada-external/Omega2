@@ -1,0 +1,54 @@
+/*==============================================================
+Program: 0018_BTRAV_20140625
+Version: 1
+Author: K. SUGANDH
+Date of creation: 25/06/14
+Description: New column added for TRT83 evocard                 
+--------------------------------------------------------------
+Modification 001
+
+Author: Renu Tajne
+Date of creation: 05/08/2014
+Description: Changes added for 29279 
+         
+==============================================================*/
+
+use BTRAV
+GO
+
+--Modification 001 start
+if  exists
+(SELECT 1 FROM syscolumns col, sysobjects obj
+WHERE col.name in
+('MINPRVPR4_M','EXCPR4_R','PRVPRMCU4_CF','MINPRVPR5_M','EXCPR5_R','PRVPRMCU5_CF')
+AND   obj.name = 'TESTPMDCTR'
+AND   col.id   = obj.id )
+begin
+ alter table TESTPMDCTR drop
+ MINPRVPR4_M,
+ EXCPR4_R,
+ PRVPRMCU4_CF,
+ MINPRVPR5_M,
+ EXCPR5_R,
+ PRVPRMCU5_CF 
+end
+
+--Modification 001 end
+
+go
+alter table TESTPMDCTR add 
+
+          MINPRVPR4_M       UAMT_M                                    NULL, 
+          EXCPR4_R              ULNGDEC                                  NULL,
+          PRVPRMCU4_CF     UCUR_CF                                  NULL,
+          MINPRVPR5_M       UAMT_M                                    NULL,
+          EXCPR5_R              ULNGDEC                                   NULL,
+          PRVPRMCU5_CF     UCUR_CF                                   NULL
+          
+GO
+
+alter table TESTPMDCTR modify  
+    PRVPRMCU4_CF UCUR_CF NOT NULL,
+    PRVPRMCU5_CF UCUR_CF NOT NULL
+    
+go

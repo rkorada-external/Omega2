@@ -1,0 +1,30 @@
+/***************************************************
+Program:		SEGERRORSINDEX
+File script :	BSEG_SEGERRORSINDEX.tab
+Main database :	BSEG
+Version:		1
+Author:			PAV
+Creation date:	31/03/2014
+Description:
+	. Create index for segmentation error results table
+Parameters:
+	- #sgtrunNt: Segmentation run ID
+	
+Conditions:
+
+Comments:
+
+****************************************************/
+
+use BSEG
+go
+   
+CREATE UNIQUE NONCLUSTERED INDEX ISEGRUNERR_#sgtrunNt_00 ON TSEGRUNERR_#sgtrunNt (
+	CTR_NF ASC,
+	UWY_NF ASC,
+	UW_NT ASC,
+	SEC_NF ASC,
+	END_NT ASC,
+	RTO_NF ASC
+)
+go

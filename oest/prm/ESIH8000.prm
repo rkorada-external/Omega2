@@ -1,0 +1,8 @@
+# 3 parameters
+# - Treatment date
+# - Required date (manual) or null  ( en minuscules )
+# - Subsiday code
+
+DATE_T 20130926
+FORCE_DTE NULL
+SSD_CF 99

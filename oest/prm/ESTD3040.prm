@@ -1,0 +1,8 @@
+# Parameters List
+
+# BLCSHT_D         Balance sheet date
+# BALSHEY_NF       Balance sheet year
+
+BLCSHT_D 20071031
+BALSHEY_NF 2007
+

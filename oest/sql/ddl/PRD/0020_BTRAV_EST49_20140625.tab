@@ -1,0 +1,70 @@
+USE BTRAV
+GO
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('EST_ESID0851_ULAERAT')
+            and   type = 'U')
+   drop table EST_ESID0851_ULAERAT
+GO
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('EST_ESID0851_RSKMRGAMT')
+            and   type = 'U')
+   drop table EST_ESID0851_RSKMRGAMT
+GO
+
+/*==============================================================*/
+/* Table: EST_ESID0851_ULAERAT - fullfilled in EVT-EST-SOL-32488  */
+/*==============================================================*/
+create table EST_ESID0851_ULAERAT 
+(
+   SSD_CF				USSD_CF					not null,
+   ESB_CF				UESB_CF					not null,
+   RATIO_NF				USHORAT_R				null,
+   CRE_D                UUPD_D                  not null,
+   CREUSR_CF            UUPDUSR_CF              not null
+)
+LOCK DATAROWS
+GO
+
+grant all on EST_ESID0851_ULAERAT to GOMEGA
+grant all on EST_ESID0851_ULAERAT to GDBBATCH
+grant select on EST_ESID0851_ULAERAT to GCONSULT
+GO
+
+/*==============================================================*/
+/* Table: EST_ESID0851_RSKMRGAMT - fullfilled in EVT-EST-SOL-32488	*/
+/*==============================================================*/
+create table EST_ESID0851_RSKMRGAMT 
+(
+   LGENSGTVRS_NT        USGTVER_NT                      not null,
+   LGENSGMT_NF          USGMT_NF                        not null,
+   LOBSIISGMTVRS_NT     USGTVER_NT                      not null,
+   LOBSIISGMT_NF        USGMT_NF                        not null,
+   NORME_CF             UBANVAL_CT                      not null,
+   AMT_M                UAMT_M                          not null,
+   CUR_CF               UCUR_CF                         not null,
+   CREUSR_CF            UUPDUSR_CF                      not null,
+   CRE_D                UUPD_D                          not null,
+)
+LOCK DATAROWS
+GO
+
+grant all on EST_ESID0851_RSKMRGAMT to GOMEGA
+grant all on EST_ESID0851_RSKMRGAMT to GDBBATCH
+grant select on EST_ESID0851_RSKMRGAMT to GCONSULT
+GO
+
+IF OBJECT_ID('dbo.EST_ESID0851_ULAERAT') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.EST_ESID0851_ULAERAT >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.EST_ESID0851_ULAERAT >>>'
+GO
+
+IF OBJECT_ID('dbo.EST_ESID0851_RSKMRGAMT') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.EST_ESID0851_RSKMRGAMT >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.EST_ESID0851_RSKMRGAMT >>>'
+GO

@@ -1,0 +1,90 @@
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDA"
+EXTRT="Internal Acquisitions"
+
+//------------------------------------------------------------------------------------//
+// Il est possible d'utiliser une varibale VAR dans la requete QRY (sql)              //
+// Si la variable "${VAR}" n'est pas declare ici ou dans le fichier de configuration  //
+// c'est la valeur dans le fichier {EST_PARAM} qui est utilise par defaut             //
+//------------------------------------------------------------------------------------//
+QRY="
+--Internal acquisition in ttecleda
+select  'Internal Acquisition Expenses Initial Undiscounted (CSF)' Label, '43611' dettrncod_cf, ${CONSOYEA} balshey_nf into #tmpcod
+insert into #tmpcod values (  'Internal Acquisition Expenses Future Undiscounted (CSF)' , '43610', ${CONSOYEA})
+insert into #tmpcod values (  'Internal Acquisition Expenses Future OCI (DSC/DSI)' , '43613', ${CONSOYEA})
+insert into #tmpcod values (  'Internal Acquisition Expenses Future DSC (DSC/LKI)' , '43612', ${CONSOYEA})
+insert into #tmpcod values (  'Internal Acquisition Expenses Future Unwind (DSC/UWD)','43616',${CONSOYEA})
+insert into #tmpcod values (  'Internal Acquisition Expenses Paid', '43614', ${CONSOYEA})
+
+
+select b.Label,  b.dettrncod_cf ,count (a.TRNCOD_CF) as 'NB_ROWS', ISNULL(sum(AMT_M),NULL) as 'AMT_M', ssd_cf, cur_cf, a.trncod_cf, b.balshey_nf, 
+Case
+    WHEN substring(a.TRNCOD_CF, 8, 1)= 'I' THEN 'I17G'
+    WHEN substring(a.TRNCOD_CF, 8, 1)= 'K' THEN 'I17P'
+    WHEN substring(a.TRNCOD_CF, 8, 1)= 'M' THEN 'I17L'
+    else 'IFRS4'
+ END AS Norme_Label
+into #result
+from BSAR..${TTECLEDA} a right  join #tmpcod b on ((substring(a.TRNCOD_CF, 3, 5)) = b.detTRNCOD_CF  and a.BALSHEY_NF = b.balshey_nf)
+where substring(a.TRNCOD_CF, 8, 1) in ('I', 'K', 'M')
+group by ssd_cf, cur_cf, a.TRNCOD_CF, b.Label
+order by  a.TRNCOD_CF,b.label
+
+--select * from #result
+
+--convertion des montants en euro
+select a.*,mt_eur=amt_m*exc_r into #result_convert_eur 
+from #result a , bref..tcurquot b
+where b.ssd_cf = a.ssd_cf and b.cur_cf = a.cur_cf
+and b.exc_d = '${INVCONSO_D}'
+
+--select * from #result_convert_eur
+--
+
+select distinct (b.Label), Norme_Label, b.dettrncod_cf , a.trncod_cf, ISNULL(sum(a.NB_ROWS),0) as nb_rows,  ISNULL(convert(decimal(20,3), sum(mt_eur)),NULL) as 'mt_eur'
+from #result_convert_eur a right  join #tmpcod b on ((substring(a.TRNCOD_CF, 3, 5)) = b.dettrncod_cf and a.BALSHEY_NF = b.balshey_nf)
+group by Norme_Label,a.trncod_cf, b.dettrncod_cf, b.Label
+order by  Norme_Label,a.trncod_cf, B.dettrncod_cf, b.label
+
+drop table #tmpcod
+drop table #result
+drop table  #result_convert_eur
+"
+
+EOQ
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDSII"
+EXTRT="Acquisition Expenses SII"
+
+QRY="
+/* Acquisition expenses sii */
+
+select CLOTYP_CT, norme_cf, acmtrs_nt, patcat_ct, pattyp_ct, sum(acmamt_m) as 'ACMAMT', ssd_cf, cur_cf into #result 
+from BSAR..${TTECLEDSII}
+where acmtrs_nt = 209
+and  norme_cf in ('I17G', 'I17P','I17L')
+and balshey_nf =${CONSOYEA}
+group by CLOTYP_CT, norme_cf , ssd_cf, cur_cf, acmtrs_nt, patcat_ct, pattyp_ct
+order by CLOTYP_CT, norme_cf, acmtrs_nt, patcat_ct, pattyp_ct
+
+--select * from #result
+
+/*convertion all amounts in euro*/
+select a.CLOTYP_CT, a.norme_cf, a.acmtrs_nt, a.patcat_ct, a.pattyp_ct, acmamt_eur=acmamt*exc_r into #result_convert_eur 
+from #result a , bref..tcurquot b
+where b.ssd_cf = a.ssd_cf and b.cur_cf = a.cur_cf
+and b.exc_d = '${INVCONSO_D}'
+
+/* acmtrs label*/
+select c.CLOTYP_CT, c.norme_cf, a.acmtrs_nt, a.acmtrs_gl , patcat_ct, pattyp_ct, ISNULL(convert(decimal(20,3), sum(acmamt_eur)),NULL) as acmamt_eur
+from #result_convert_eur c, bref..TACMTRS a 
+where a.acmtrs_nt= c.acmtrs_nt
+and prs_cf =750
+group by c.CLOTYP_CT, c.norme_cf, a.acmtrs_nt, a.acmtrs_gl ,patcat_ct, pattyp_ct
+order by c.CLOTYP_CT, c.norme_cf, a.acmtrs_nt, a.acmtrs_gl ,patcat_ct, pattyp_ct
+
+drop table #result 
+drop table #result_convert_eur
+"

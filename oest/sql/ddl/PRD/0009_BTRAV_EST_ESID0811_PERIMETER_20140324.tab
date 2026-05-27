@@ -1,0 +1,54 @@
+USE BTRAV
+go
+
+if exists (select 1 from sysobjects where id = object_id('EST_ESID0811_PERIMETER') and type = 'U') drop table EST_ESID0811_PERIMETER
+go
+
+/*==============================================================*/
+/* Table: EST_ESID0811_PERIMETER                                               */
+/*==============================================================*/
+CREATE TABLE EST_ESID0811_PERIMETER
+(
+    CTR_NF        UCTR_NF       NOT NULL,
+    SEC_NF        USEC_NF       NOT NULL,
+    UWY_NF        UUWY_NF       NOT NULL,
+    NUMLINE_NT    int           DEFAULT 0 NULL,
+    END_NT        UEND_NT       NOT NULL,
+    UW_NT         UUW_NT        NOT NULL,
+    SSD_CF        USSD_CF       NOT NULL,
+    ESB_CF        UESB_CF       NOT NULL,
+    USR_CF        UUSR_CF       NOT NULL,
+    ACCADMTYP_CT  UACCADMTYP_CT NULL,
+    RETRO_B       bit           DEFAULT 0 NOT NULL,
+    PROCE         smallint      NOT NULL,
+    MAXUWY_NF     UUWY_NF       NULL,
+    EXISTSINDB_CT int           NULL,
+    SECTIONSSD_CF USSD_CF       NULL,
+    SECTIONESB_CF UESB_CF       NULL,
+    ERRORCODE_CT  int           NULL
+)
+go
+
+/*==============================================================*/
+/* Index: IEST_ESID0811_PERIMETER_00                                        */
+/*==============================================================*/
+create unique clustered index IEST_ESID0811_PERIMETER_00 on EST_ESID0811_PERIMETER(
+CTR_NF ASC, 
+SEC_NF ASC, 
+UWY_NF ASC,
+SSD_CF ASC,
+ESB_CF ASC,
+USR_CF ASC
+)
+
+go
+grant all on    EST_ESID0811_PERIMETER to GOMEGA
+grant all on    EST_ESID0811_PERIMETER to GDBBATCH
+grant select on EST_ESID0811_PERIMETER to GCONSULT
+go
+
+IF OBJECT_ID('BTRAV.dbo.EST_ESID0811_PERIMETER') IS NOT NULL
+    PRINT '<<< CREATED TABLE BTRAV.dbo.EST_ESID0811_PERIMETER >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE BTRAV.dbo.EST_ESID0811_PERIMETER >>>'
+go

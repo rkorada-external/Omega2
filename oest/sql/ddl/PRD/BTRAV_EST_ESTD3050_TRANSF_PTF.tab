@@ -1,0 +1,31 @@
+use BTRAV
+go
+
+/***************************************************
+[000] 21/08/2015 R. Cassis   :spot:29223 - Table de translation des postes pour Transfert de portefeuille
+*****************************************************/
+
+if object_id('EST_ESTD3050_TRANSF_PTF') is not null
+begin
+  drop TABLE EST_ESTD3050_TRANSF_PTF
+  print '<<< DROPPED TABLE EST_ESTD3050_TRANSF_PTF >>>'
+end
+go
+CREATE TABLE EST_ESTD3050_TRANSF_PTF
+(
+   POSTEFROM    UDETTRS_CF DEFAULT '' NOT NULL,
+   POSTETOIN    UDETTRS_CF DEFAULT '' NOT NULL,
+   POSTETOOUT   UDETTRS_CF DEFAULT '' NOT NULL
+)
+go
+if object_id('EST_ESTD3050_TRANSF_PTF') is not null
+  print '<<< CREATED TABLE EST_ESTD3050_TRANSF_PTF >>>'
+else
+  print '<<< FAILED CREATING TABLE EST_ESTD3050_TRANSF_PTF >>>'
+go
+grant ALL on EST_ESTD3050_TRANSF_PTF TO GOMEGA
+go
+grant ALL on EST_ESTD3050_TRANSF_PTF TO GDBBATCH
+go
+grant select on EST_ESTD3050_TRANSF_PTF TO GCONSULT
+go

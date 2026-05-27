@@ -1,0 +1,65 @@
+-------------------------------
+--mapping of  ESID3820
+
+	----------   Clean tables   ---------------------
+
+	delete BEST..TI17PERMFIL where IDF_CT in  ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESID3820')
+	delete BEST..TI17REQFNC where     IDF_CT  in ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESID3820')
+	delete BEST..TI17FNC where CHAIN_CT='ESID3820'
+	delete BEST..TI17CHN  where CHAIN_CT='ESID3820'
+
+	insert into BEST..TI17CHN values ('ESID3820',  'deltaposting granularity')
+
+	----------IDF_CT:   I4I_ESID3820_INV ------------------
+
+		insert into BEST..TI17FNC values ('I4I_ESID3820_INV','deltaposting granularity','ESID3820',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_INV',  'EST_FTECLEDA_MVT_PREV','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_INV',  'ESF_FCTRI17PRD','${DFILP}/${ENV_PREFIX}_ESFD0040_FCTRI17PRD.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_INV',  'EST_FTECLEDA_MVT','${DFILP}/${ENV_PREFIX}_ESPD3910_I4I_FTECLEDA_MVT_${TYPEINV}_${PARM_ICLODAT_D}_${PARAM_LOCALSIT}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_INV',  'ESF_FCTRI17PRD_OVR','${DFILP}/${ENV_PREFIX}_ESID3820_FCTRI17PRD_OVR_INV.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_INV',  'ESF_FI17PRODUCT_OVR','${DFILP}/${ENV_PREFIX}_ESID3820_FI17PRODUCT_OVR_INV.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_INV',  'EST_FTECLEDA_MVT_POSTING','${DFILP}/${ENV_PREFIX}_ESID3800_FTECLEDA_MVT_I4I_POSTING_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_INV',  'EST_FTECLEDA_MVT_QTD','${DFILP}/${ENV_PREFIX}_ESID3820_FTECLEDA_MVT_I4I_${TYPEINV}_QTD_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_INV',  'EST_FTECLEDA_MVT_OPN_CAN','${DFILI}/${ENV_PREFIX}_ESID3820_FTECLEDA_MVT_I4I_${TYPEINV}_OPN_CAN_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_INV',  'EST_FTECLEDA_MVT_QTD_TMP','${DFILI}/${ENV_PREFIX}_ESID3820_FTECLEDA_MVT_I4I_${TYPEINV}_QTD_TMP_${PARM_ICLODAT_D}.dat','O','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I4IQINV',  'I4I_ESID3820_INV','')
+			insert into BEST..TI17REQFNC values ('I4IYINVB',  'I4I_ESID3820_INV','')
+			insert into BEST..TI17REQFNC values ('I4IMINV',  'I4I_ESID3820_INV','')
+			insert into BEST..TI17REQFNC values ('I4IMINVB',  'I4I_ESID3820_INV','')
+			insert into BEST..TI17REQFNC values ('I4IQINVB',  'I4I_ESID3820_INV','')
+			insert into BEST..TI17REQFNC values ('I4IYINV',  'I4I_ESID3820_INV','')
+
+	----------IDF_CT:   I4I_ESID3820_POS_POC ------------------
+
+		insert into BEST..TI17FNC values ('I4I_ESID3820_POS_POC','deltaposting granularity','ESID3820',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_POS_POC',  'ESF_FCTRI17PRD','${DFILP}/${ENV_PREFIX}_ESFD0040_FCTRI17PRD.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_POS_POC',  'EST_FTECLEDA_MVT_PREV','${DFILP}/${ENV_PREFIX}_ESID3800_FTECLEDA_MVT_I4I_POSTING_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_POS_POC',  'ESF_FCTRI17PRD_OVR','${DFILP}/${ENV_PREFIX}_ESID3820_FCTRI17PRD_OVR_POS_POC.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_POS_POC',  'ESF_FI17PRODUCT_OVR','${DFILP}/${ENV_PREFIX}_ESID3820_FI17PRODUCT_OVR_POS_POC.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_POS_POC',  'EST_FTECLEDA_MVT_POSTING','${DFILP}/${ENV_PREFIX}_ESPD3800_FTECLEDA_MVT_I4I_POSTING_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_POS_POC',  'EST_FTECLEDA_MVT_QTD','${DFILP}/${ENV_PREFIX}_ESID3820_FTECLEDA_MVT_I4I_${TYPEINV}_QTD_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_POS_POC',  'EST_FTECLEDA_MVT','${DFILP}/${ENV_PREFIX}_ESPD3910_I4I_FTECLEDA_MVT_${TYPEINV}_${PARM_ICLODAT_D}_${PARAM_LOCALSIT}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_POS_POC',  'EST_FTECLEDA_MVT_OPN_CAN','${DFILI}/${ENV_PREFIX}_ESID3820_FTECLEDA_MVT_I4I_${TYPEINV}_OPN_CAN_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESID3820_POS_POC',  'EST_FTECLEDA_MVT_QTD_TMP','${DFILI}/${ENV_PREFIX}_ESID3820_FTECLEDA_MVT_I4I_${TYPEINV}_QTD_TMP_${PARM_ICLODAT_D}.dat','O','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I4IQPOS',  'I4I_ESID3820_POS_POC','')
+			insert into BEST..TI17REQFNC values ('I4IYPOS',  'I4I_ESID3820_POS_POC','')
+			insert into BEST..TI17REQFNC values ('I4IYPOSB',  'I4I_ESID3820_POS_POC','')
+			insert into BEST..TI17REQFNC values ('I4IQPOSB',  'I4I_ESID3820_POS_POC','')
+			insert into BEST..TI17REQFNC values ('I4IQPOSP',  'I4I_ESID3820_POS_POC','')
+			insert into BEST..TI17REQFNC values ('I4IYPOSP',  'I4I_ESID3820_POS_POC','')
+go
+

@@ -1,0 +1,75 @@
+-------------------------------
+--mapping of  ESPD3900 
+
+	----------   Clean tables   ---------------------
+
+	delete BEST..TI17PERMFIL where IDF_CT in  ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESPD3900')
+	delete BEST..TI17REQFNC where     IDF_CT  in ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESPD3900')
+	delete BEST..TI17FNC where CHAIN_CT='ESPD3900'
+	delete BEST..TI17CHN  where CHAIN_CT='ESPD3900'
+
+	insert into BEST..TI17CHN values ('ESPD3900',  '')
+
+	----------IDF_CT:   EBS_ESPD3900 ------------------
+
+		insert into BEST..TI17FNC values ('EBS_ESPD3900',' ','ESPD3900',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EPO_FCPLACC','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCPLACC.dat','I','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EPO_FDETTRS','${DFILP}/${ENV_PREFIX}_ESCJ0660_FDETTRS.dat','I','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EPO_FTRSLNK','${DFILP}/${ENV_PREFIX}_ESCJ0660_FTRSLNK.dat','I','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EPO_FCURQUOT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCURQUOT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EST_ARCSTATGTA','${DFILP}/${ENV_PREFIX}_ESIX7000_ARCSTATGTA.dat','I','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EST_CURGTA','${DFILP}/${ENV_PREFIX}_ESFD4050_FTECLEDA_I4I_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EPO_DLRGTAA','${DFILP}/${ENV_PREFIX}_ESPD2550_DLRGTAA_EBS_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EPO_DLSGTAASO','${DFILP}/${ENV_PREFIX}_ESPD1800_DLSGTAA_EBS_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EPO_DLDGTAASIISO','${DFILP}/${ENV_PREFIX}_ESFD2230_DLDGTAA_EBS_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EPO_DLSGTAASIISO','${DFILP}/${ENV_PREFIX}_ESPD1800_DLSGTAA_EBS_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EPO_FCTRSTAT','${DFILP}/${ENV_PREFIX}_ES${PARM_FTECLED}D3900_FCTRSTAT_I4I_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EPO_FSEGSTAT','${DFILP}/${ENV_PREFIX}_ES${PARM_FTECLED}D3900_FSEGSTAT_I4I_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EPO_IADPERICASE','${DFILP}/${ENV_PREFIX}_ESFD5040_IADPERICASE_STD_EBS_${PARM_TYPEINV2}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EPO_FSEGEST_SOLVENCYSO','${DFILP}/${ENV_PREFIX}_ESPD0060_FSEGEST_SOLVENCY_EBS_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EPO_FCTRSTATSO','${DFILP}/${ENV_PREFIX}_ESPD3900_FCTRSTAT_EBS_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESPD3900',  'EPO_FSEGSTATSO','${DFILP}/${ENV_PREFIX}_ESPD3900_FSEGSTAT_EBS_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('EBSEMINV',  'EBS_ESPD3900','')
+			insert into BEST..TI17REQFNC values ('EBSEQINV',  'EBS_ESPD3900','')
+			insert into BEST..TI17REQFNC values ('EBSEQPOS',  'EBS_ESPD3900','')
+			insert into BEST..TI17REQFNC values ('EBSEYINV',  'EBS_ESPD3900','')
+			insert into BEST..TI17REQFNC values ('EBSEYPOS',  'EBS_ESPD3900','')
+
+	----------IDF_CT:   I4I_ESPD3900 ------------------
+
+		insert into BEST..TI17FNC values ('I4I_ESPD3900',' ','ESPD3900',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I4I_ESPD3900',  'EPO_DLDGTAASIISO','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESPD3900',  'EST_CURGTA','${DFILP}/${ENV_PREFIX}_ESIX7000_CURGTA.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESPD3900',  'EPO_FDETTRS','${DFILP}/${ENV_PREFIX}_ESCJ0060_FDETTRS.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESPD3900',  'EPO_FTRSLNK','${DFILP}/${ENV_PREFIX}_ESCJ0060_FTRSLNK.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESPD3900',  'EPO_FCURQUOT','${DFILP}/${ENV_PREFIX}_ESCJ0060_FCURQUOT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESPD3900',  'EST_ARCSTATGTA','${DFILP}/${ENV_PREFIX}_ESIX7000_ARCSTATGTA.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESPD3900',  'EPO_FCPLACC','${DFILP}/${ENV_PREFIX}_ESID0560_FCPLACC_INV_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESPD3900',  'EPO_FCTRSTAT','${DFILP}/${ENV_PREFIX}_ESID3900_FCTRSTAT_I4I_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESPD3900',  'EPO_FSEGSTAT','${DFILP}/${ENV_PREFIX}_ESID3900_FSEGSTAT_I4I_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESPD3900',  'EPO_IADPERICASE','${DFILP}/${ENV_PREFIX}_ESID0560_IADPERICASE_INV_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESPD3900',  'EPO_DLRGTAA','${DFILP}/${ENV_PREFIX}_ESPD2550_DLRGTAA_I4I_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESPD3900',  'EPO_DLSGTAASO','${DFILP}/${ENV_PREFIX}_ESPD1800_DLSGTAA_I4I_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESPD3900',  'EPO_DLSGTAASIISO','${DFILP}/${ENV_PREFIX}_ESPD1800_DLSGTAA_I4I_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESPD3900',  'EPO_FCTRSTATSO','${DFILP}/${ENV_PREFIX}_ESPD3900_FCTRSTAT_I4I_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I4I_ESPD3900',  'EPO_FSEGSTATSO','${DFILP}/${ENV_PREFIX}_ESPD3900_FSEGSTAT_I4I_${PARM_ICLODAT_D}.dat','O','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I4IYPOSB',  'I4I_ESPD3900','')
+			insert into BEST..TI17REQFNC values ('I4IQPOSB',  'I4I_ESPD3900','')
+			insert into BEST..TI17REQFNC values ('I4IQPOS',  'I4I_ESPD3900','')
+			insert into BEST..TI17REQFNC values ('I4IYPOS',  'I4I_ESPD3900','')
+go
+

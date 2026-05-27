@@ -1,0 +1,180 @@
+USE BTRAV
+go
+
+IF OBJECT_ID('TGTSII_CUMUL') IS NOT NULL
+BEGIN
+    DROP TABLE TGTSII_CUMUL
+	PRINT '<<< TGTSII_CUMUL EXISTS. DROPPED. >>>'
+END
+GO
+
+CREATE TABLE TGTSII_CUMUL
+(
+	SSD_CF				USSD_CF			NOT NULL,
+	ESB_CF				UESB_CF			NOT NULL,
+	BALSHEY_NF			smallint		NOT NULL,
+	BALSHRMTH_NF		tinyint			NOT NULL,
+	BALSHRDAY_NF		tinyint			NOT NULL,
+	TRNCOD_CF			UDETTRS_CF		NOT NULL,
+	DBLTRNCOD_CF		UDETTRS_CF		NULL,
+	CTR_NF				UCTR_NF			NULL,
+	END_NT				UEND_NT			NULL,
+	SEC_NF				USEC_NF			NULL,
+	UWY_NF				UUWY_NF			NULL,
+	UW_NT				UUW_NT			NULL,
+	OCCYEA_NF			smallint		NULL,
+	ACY_NF				smallint		NULL,
+	SCOSTRMTH_NF		tinyint			NULL,
+	SCOENDMTH_NF		tinyint			NULL,
+	CLM_NF				int				NULL,
+	CUR_CF				UCUR_CF			NULL,
+	AMT_MC				decimal(18, 3)	NULL,
+	CED_NF				UCLI_NF			NULL,
+	BRK_NF				UCLI_NF			NULL,
+	PAY_NF				UCLI_NF			NULL,
+	KEY_CF				varchar(2)		NULL,
+	RETCTR_NF			URETCTR_NF		NULL,
+	RETEND_NT			tinyint			NULL,
+	RETSEC_NF			URETSEC_NF		NULL,
+	RTY_NF				UUWY_NF			NULL,
+	RETUW_NT			tinyint			NULL,
+	RETOCCYEA_NF		smallint		NULL,
+	RETACY_NF			smallint		NULL,
+	RETSCOSTRMTH_NF		tinyint			NULL,
+	RETSCOENDMTH_NF		tinyint			NULL,
+	RCLM_NF				int				NULL,
+	RETCUR_CF			UCUR_CF			NULL,
+	RETAMT_MC			decimal(18, 3)	NULL,
+	PLC_NT				UPLC_NT			NULL,
+	RTO_NF				UCLI_NF			NULL,
+	INT_NF				UCLI_NF			NULL,
+	RETPAY_NF			UCLI_NF			NULL,
+	RETKEY_CF			varchar(2)		NULL,
+	RETINTAMT_MC		decimal(18, 3)	NULL,
+	ACMTRS_NT			smallint		NULL,
+	ACMAMT_MC			decimal(18, 3)	NULL,
+	ACMCUR_CF			UCUR_CF			NULL,
+	PRS_CF				smallint		NULL,
+	SEG_NF				USEG_NF			NULL,
+	LOB_CF				ULOB_CF			NULL,
+	NAT_CF				UCTRNAT_CF		NULL,
+	CTRTYP_CT			UCTRNAT_CF		NULL,
+	NORME_CF			varchar(14)		NULL,
+	RATING_CF  			char(5)       	NULL,
+    PATCAT_CT  			char(5)       	NULL,
+	PATTYP_CT			varchar(5)		NULL,
+    PATTERN_ID			varchar(21)   	NULL,
+    AN1        			decimal(18, 3) 	DEFAULT 0.000,		-- Amounts to be set as 0 by default because they might be NULL in input file and would impact calculations.
+    AN2        			decimal(18, 3) 	DEFAULT 0.000,
+    AN3        			decimal(18, 3) 	DEFAULT 0.000,
+    AN4        			decimal(18, 3) 	DEFAULT 0.000,
+    AN5        			decimal(18, 3) 	DEFAULT 0.000,
+    AN6        			decimal(18, 3) 	DEFAULT 0.000,
+    AN7        			decimal(18, 3) 	DEFAULT 0.000,
+    AN8        			decimal(18, 3) 	DEFAULT 0.000,
+    AN9        			decimal(18, 3) 	DEFAULT 0.000,
+    AN10       			decimal(18, 3) 	DEFAULT 0.000,
+    AN11       			decimal(18, 3) 	DEFAULT 0.000,
+    AN12       			decimal(18, 3) 	DEFAULT 0.000,
+    AN13       			decimal(18, 3) 	DEFAULT 0.000,
+    AN14       			decimal(18, 3) 	DEFAULT 0.000,
+    AN15       			decimal(18, 3) 	DEFAULT 0.000,
+    AN16       			decimal(18, 3) 	DEFAULT 0.000,
+    AN17       			decimal(18, 3) 	DEFAULT 0.000,
+    AN18       			decimal(18, 3) 	DEFAULT 0.000,
+    AN19       			decimal(18, 3) 	DEFAULT 0.000,
+    AN20       			decimal(18, 3) 	DEFAULT 0.000,
+    AN21       			decimal(18, 3) 	DEFAULT 0.000,
+    AN22       			decimal(18, 3) 	DEFAULT 0.000,
+    AN23       			decimal(18, 3) 	DEFAULT 0.000,
+    AN24       			decimal(18, 3) 	DEFAULT 0.000,
+    AN25       			decimal(18, 3) 	DEFAULT 0.000,
+    AN26       			decimal(18, 3) 	DEFAULT 0.000,
+    AN27       			decimal(18, 3) 	DEFAULT 0.000,
+    AN28       			decimal(18, 3) 	DEFAULT 0.000,
+    AN29       			decimal(18, 3) 	DEFAULT 0.000,
+    AN30       			decimal(18, 3) 	DEFAULT 0.000,
+    AN31       			decimal(18, 3) 	DEFAULT 0.000,
+    AN32       			decimal(18, 3) 	DEFAULT 0.000,
+    AN33       			decimal(18, 3) 	DEFAULT 0.000,
+    AN34       			decimal(18, 3) 	DEFAULT 0.000,
+    AN35       			decimal(18, 3) 	DEFAULT 0.000,
+    AN36       			decimal(18, 3) 	DEFAULT 0.000,
+    AN37       			decimal(18, 3) 	DEFAULT 0.000,
+    AN38       			decimal(18, 3) 	DEFAULT 0.000,
+    AN39       			decimal(18, 3) 	DEFAULT 0.000,
+    AN40       			decimal(18, 3) 	DEFAULT 0.000,
+    AN41       			decimal(18, 3) 	DEFAULT 0.000,
+    AN42       			decimal(18, 3) 	DEFAULT 0.000,
+    AN43       			decimal(18, 3) 	DEFAULT 0.000,
+    AN44       			decimal(18, 3) 	DEFAULT 0.000,
+    AN45       			decimal(18, 3) 	DEFAULT 0.000,
+    AN46       			decimal(18, 3) 	DEFAULT 0.000,
+    AN47       			decimal(18, 3) 	DEFAULT 0.000,
+    AN48       			decimal(18, 3) 	DEFAULT 0.000,
+    AN49       			decimal(18, 3) 	DEFAULT 0.000,
+    AN50       			decimal(18, 3) 	DEFAULT 0.000,
+    AN51       			decimal(18, 3) 	DEFAULT 0.000,
+    AN52       			decimal(18, 3) 	DEFAULT 0.000,
+    AN53       			decimal(18, 3) 	DEFAULT 0.000,
+    AN54       			decimal(18, 3) 	DEFAULT 0.000,
+    AN55       			decimal(18, 3) 	DEFAULT 0.000,
+    AN56       			decimal(18, 3) 	DEFAULT 0.000,
+    AN57       			decimal(18, 3) 	DEFAULT 0.000,
+    AN58       			decimal(18, 3) 	DEFAULT 0.000,
+    AN59       			decimal(18, 3) 	DEFAULT 0.000,
+    AN60       			decimal(18, 3) 	DEFAULT 0.000,
+    AN61       			decimal(18, 3) 	DEFAULT 0.000,
+    AN62       			decimal(18, 3) 	DEFAULT 0.000,
+    AN63       			decimal(18, 3) 	DEFAULT 0.000,
+    AN64       			decimal(18, 3) 	DEFAULT 0.000,
+    AN65       			decimal(18, 3) 	DEFAULT 0.000,
+	EXT1				decimal(18, 3)	NULL,
+	EXT2				varchar(25)		NULL,
+	EXT3				varchar(25)		NULL,
+	TOTAL       		decimal(18, 3) 	NULL
+)
+LOCK DATAROWS
+go
+IF OBJECT_ID('TGTSII_CUMUL') IS NOT NULL
+    PRINT '<<< CREATED TABLE TGTSII_CUMUL >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE TGTSII_CUMUL >>>'
+go
+GRANT REFERENCES ON TGTSII_CUMUL TO GOMEGA
+go
+GRANT REFERENCES ON TGTSII_CUMUL TO GDBBATCH
+go
+GRANT SELECT ON TGTSII_CUMUL TO GCONSULT
+go
+GRANT SELECT ON TGTSII_CUMUL TO GOMEGA
+go
+GRANT SELECT ON TGTSII_CUMUL TO GDBBATCH
+go
+GRANT INSERT ON TGTSII_CUMUL TO GOMEGA
+go
+GRANT INSERT ON TGTSII_CUMUL TO GDBBATCH
+go
+GRANT DELETE ON TGTSII_CUMUL TO GOMEGA
+go
+GRANT DELETE ON TGTSII_CUMUL TO GDBBATCH
+go
+GRANT UPDATE ON TGTSII_CUMUL TO GOMEGA
+go
+GRANT UPDATE ON TGTSII_CUMUL TO GDBBATCH
+go
+GRANT DELETE STATISTICS ON TGTSII_CUMUL TO GOMEGA
+go
+GRANT DELETE STATISTICS ON TGTSII_CUMUL TO GDBBATCH
+go
+GRANT TRUNCATE TABLE ON TGTSII_CUMUL TO GOMEGA
+go
+GRANT TRUNCATE TABLE ON TGTSII_CUMUL TO GDBBATCH
+go
+GRANT UPDATE STATISTICS ON TGTSII_CUMUL TO GOMEGA
+go
+GRANT UPDATE STATISTICS ON TGTSII_CUMUL TO GDBBATCH
+go
+GRANT TRANSFER TABLE ON TGTSII_CUMUL TO GDBBATCH
+go
+	

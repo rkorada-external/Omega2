@@ -1,0 +1,17 @@
+# Chaine parameter file (ESID7100)
+# 7 parameters
+# - Creation Date         aaaammjj
+# - BALSHTYEA_NF Year     aaaa
+# - BALSHTMTH_NF Month    mm
+# - Clodat Max Date       aaaammjj
+# - Clodat Date           aaaammjj
+# - Dbclodat Date         aaaammjj
+# - EST_VARIANTE          Always equal to 6
+#
+CRE_D 20110330
+BALSHTYEA_NF 2011
+BALSHTMTH_NF 3
+CLODATMAX_D 20110331
+CLODAT_D 20110331
+DBCLO_D 20110331
+EST_VARIANTE 6

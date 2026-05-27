@@ -1,0 +1,44 @@
+USE BTRAV
+go
+
+
+if exists (select * from sysobjects where id = object_id('EST_ESID0814_TLIFMOD2') and type = 'U') drop table EST_ESID0814_TLIFMOD2
+go 
+
+CREATE TABLE EST_ESID0814_TLIFMOD2
+(
+    CTR_NF         UCTR_NF    NOT NULL,
+    SEC_NF         USEC_NF    NOT NULL,
+    CRE_D          datetime   NOT NULL,
+    BALSHEY_NF     smallint   NOT NULL,
+    BALSHTMTH_NF   tinyint    NOT NULL,
+    ACY_NF         UACCYER_NF NOT NULL,
+    COMACC_B       bit        NOT NULL,
+    PRIPRMAMT_M    UAMT_M     NOT NULL,
+    AFTPRMAMT_M    UAMT_M     NOT NULL,
+    PRIRESTECAMT_M UAMT_M     NOT NULL,
+    AFTRESTECAMT_M UAMT_M     NOT NULL,
+    PRIRESDACAMT_M UAMT_M     NOT NULL,
+    AFTRESDACAMT_M UAMT_M     NOT NULL,
+    PRIRESFINAMT_M UAMT_M     NOT NULL,
+    AFTRESFINAMT_M UAMT_M     NOT NULL,
+    CREUSR_CF      UUSR_CF    NOT NULL,
+    LSTUPD_D       datetime   NOT NULL,
+    LSTUPDUSR_CF   UUSR_CF    NOT NULL,
+    TIMESTAMP    timestamp  NULL,
+    GAAP_NT        tinyint    NOT NULL,
+	SSD_CF       USSD_CF       NOT NULL,
+    ESB_CF       UESB_CF       NOT NULL,
+    USR_CF       UUSR_CF       NOT NULL
+)
+go
+grant all on    EST_ESID0814_TLIFMOD2 to GOMEGA
+grant all on    EST_ESID0814_TLIFMOD2 to GDBBATCH
+grant select on EST_ESID0814_TLIFMOD2 to GCONSULT
+go
+
+IF OBJECT_ID('BTRAV.dbo.EST_ESID0814_TLIFMOD2') IS NOT NULL
+    PRINT '<<< CREATED TABLE BTRAV.dbo.EST_ESID0814_TLIFMOD2 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE BTRAV.dbo.EST_ESID0814_TLIFMOD2 >>>'
+go

@@ -1,0 +1,121 @@
+-------------------------------
+--mapping of  ESFD5030 
+
+	----------   Clean tables   ---------------------
+
+	delete BEST..TI17PERMFIL where IDF_CT in  ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESFD5030')
+	delete BEST..TI17REQFNC where     IDF_CT  in ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESFD5030')
+	delete BEST..TI17FNC where CHAIN_CT='ESFD5030'
+	delete BEST..TI17CHN  where CHAIN_CT='ESFD5030'
+
+	insert into BEST..TI17CHN values ('ESFD5030',  'Future Q+1 Contract')
+	
+	----------IDF_CT:   EBS_ESFD5030 ------------------
+	
+		insert into BEST..TI17FNC values ('EBS_ESFD5030','EBS - FAC Accepted Contract','ESFD5030',0)
+		
+		----------  Perms---------------------
+			insert into BEST..TI17PERMFIL values ('EBS_ESFD5030',  'EST_FCESSION0','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCESSION0.dat','I','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESFD5030',  'EST_IADPERICASE_STD_EBS','${DFILP}/${ENV_PREFIX}_ESFD5030_IADPERICASE_STD_EBS_${PARM_TYPEINV2}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('EBS_ESFD5030',  'EST_FCES','${DFILP}/${ENV_PREFIX}_ESFD5030_FCES_EBS_${PARM_TYPEINV2}_${PARM_ICLODAT_D}.dat','O','')
+
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('EBSEQPOS',  'EBS_ESFD5030','')
+			insert into BEST..TI17REQFNC values ('EBSEYPOS',  'EBS_ESFD5030','')
+		
+
+	----------IDF_CT:   I17G_TMP_PER_FUT ------------------
+
+		insert into BEST..TI17FNC values ('I17G_TMP_PER_FUT','Group - Future Q+1 Contract','ESFD5030',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17G_TMP_PER_FUT',  'EST_FCURQUOT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCURQUOT_TXT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_TMP_PER_FUT',  'ESF_FCES','${DFILI}/${ENV_PREFIX}_ESFD5030_I17G_TMP_PER_FUT_FCES_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17G_TMP_PER_FUT',  'ESF_FCTRGRO','${DFILI}/${ENV_PREFIX}_ESFD5030_I17G_TMP_PER_FUT_FCTRGRO_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17G_TMP_PER_FUT',  'ESF_IADPERIFR','${DFILI}/${ENV_PREFIX}_ESFD5030_I17G_TMP_PER_FUT_IADPERIFR_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17G_TMP_PER_FUT',  'ESF_IADPERIFCI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17G_TMP_PER_FUT_IADPERIFCI_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17G_TMP_PER_FUT',  'ESF_IADPERIFCT','${DFILI}/${ENV_PREFIX}_ESFD5030_I17G_TMP_PER_FUT_IADPERIFCT_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17G_TMP_PER_FUT',  'EST_IADPERICASE_INI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17G_TMP_PER_FUT_IADPERICASE_INI_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17G_TMP_PER_FUT',  'EST_IADPERICASE0_INI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17G_TMP_PER_FUT_IADPERICASE0_INI_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17G_TMP_PER_FUT',  'EST_IADPERICASE_DUMMY_INI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17G_TMP_PER_FUT_IADPERICASE_DUMMY_INI_${PARM_ICLODAT_D}.dat','O','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17GQPOS',  'I17G_TMP_PER_FUT','')
+			insert into BEST..TI17REQFNC values ('I17GYPOS',  'I17G_TMP_PER_FUT','')
+
+	----------IDF_CT:   I17L_TMP_PER_FUT ------------------
+
+		insert into BEST..TI17FNC values ('I17L_TMP_PER_FUT','Local - Future Q+1 Contract','ESFD5030',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17L_TMP_PER_FUT',  'EST_FCURQUOT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCURQUOT_TXT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_TMP_PER_FUT',  'ESF_FCES','${DFILI}/${ENV_PREFIX}_ESFD5030_I17L_TMP_PER_FUT_FCES_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17L_TMP_PER_FUT',  'ESF_FCTRGRO','${DFILI}/${ENV_PREFIX}_ESFD5030_I17L_TMP_PER_FUT_FCTRGRO_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17L_TMP_PER_FUT',  'ESF_IADPERIFR','${DFILI}/${ENV_PREFIX}_ESFD5030_I17L_TMP_PER_FUT_IADPERIFR_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17L_TMP_PER_FUT',  'ESF_IADPERIFCI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17L_TMP_PER_FUT_IADPERIFCI_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17L_TMP_PER_FUT',  'ESF_IADPERIFCT','${DFILI}/${ENV_PREFIX}_ESFD5030_I17L_TMP_PER_FUT_IADPERIFCT_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17L_TMP_PER_FUT',  'EST_IADPERICASE_INI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17L_TMP_PER_FUT_IADPERICASE_INI_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17L_TMP_PER_FUT',  'EST_IADPERICASE0_INI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17L_TMP_PER_FUT_IADPERICASE0_INI_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17L_TMP_PER_FUT',  'EST_IADPERICASE_DUMMY_INI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17L_TMP_PER_FUT_IADPERICASE_DUMMY_INI_${PARM_ICLODAT_D}.dat','O','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17LQPOS',  'I17L_TMP_PER_FUT','')
+			insert into BEST..TI17REQFNC values ('I17LYPOS',  'I17L_TMP_PER_FUT','')
+			insert into BEST..TI17REQFNC values ('I17LQPOSX',  'I17L_TMP_PER_FUT','')
+			insert into BEST..TI17REQFNC values ('I17LYPOSX',  'I17L_TMP_PER_FUT','')
+
+	----------IDF_CT:   I17P_TMP_PER_FUT ------------------
+
+		insert into BEST..TI17FNC values ('I17P_TMP_PER_FUT','Parent - Future Q+1 Contract','ESFD5030',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17P_TMP_PER_FUT',  'EST_FCURQUOT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCURQUOT_TXT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_TMP_PER_FUT',  'ESF_FCES','${DFILI}/${ENV_PREFIX}_ESFD5030_I17P_TMP_PER_FUT_FCES_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17P_TMP_PER_FUT',  'ESF_FCTRGRO','${DFILI}/${ENV_PREFIX}_ESFD5030_I17P_TMP_PER_FUT_FCTRGRO_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17P_TMP_PER_FUT',  'ESF_IADPERIFR','${DFILI}/${ENV_PREFIX}_ESFD5030_I17P_TMP_PER_FUT_IADPERIFR_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17P_TMP_PER_FUT',  'ESF_IADPERIFCI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17P_TMP_PER_FUT_IADPERIFCI_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17P_TMP_PER_FUT',  'ESF_IADPERIFCT','${DFILI}/${ENV_PREFIX}_ESFD5030_I17P_TMP_PER_FUT_IADPERIFCT_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17P_TMP_PER_FUT',  'EST_IADPERICASE_INI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17P_TMP_PER_FUT_IADPERICASE_INI_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17P_TMP_PER_FUT',  'EST_IADPERICASE0_INI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17P_TMP_PER_FUT_IADPERICASE0_INI_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17P_TMP_PER_FUT',  'EST_IADPERICASE_DUMMY_INI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17P_TMP_PER_FUT_IADPERICASE_DUMMY_INI_${PARM_ICLODAT_D}.dat','O','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17PQPOS',  'I17P_TMP_PER_FUT','')
+			insert into BEST..TI17REQFNC values ('I17PYPOS',  'I17P_TMP_PER_FUT','')
+			insert into BEST..TI17REQFNC values ('I17PQPOSX',  'I17P_TMP_PER_FUT','')
+			insert into BEST..TI17REQFNC values ('I17PYPOSX',  'I17P_TMP_PER_FUT','')
+
+	----------IDF_CT:   I17S_TMP_PER_FUT ------------------
+
+		insert into BEST..TI17FNC values ('I17S_TMP_PER_FUT','Simulation - Future Q+1 Contract','ESFD5030',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17S_TMP_PER_FUT',  'EST_FCURQUOT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCURQUOT_TXT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_TMP_PER_FUT',  'ESF_FCES','${DFILI}/${ENV_PREFIX}_ESFD5030_I17S_TMP_PER_FUT_FCES_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17S_TMP_PER_FUT',  'ESF_FCTRGRO','${DFILI}/${ENV_PREFIX}_ESFD5030_I17S_TMP_PER_FUT_FCTRGRO_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17S_TMP_PER_FUT',  'ESF_IADPERIFR','${DFILI}/${ENV_PREFIX}_ESFD5030_I17S_TMP_PER_FUT_IADPERIFR_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17S_TMP_PER_FUT',  'ESF_IADPERIFCI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17S_TMP_PER_FUT_IADPERIFCI_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17S_TMP_PER_FUT',  'ESF_IADPERIFCT','${DFILI}/${ENV_PREFIX}_ESFD5030_I17S_TMP_PER_FUT_IADPERIFCT_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17S_TMP_PER_FUT',  'EST_IADPERICASE_INI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17S_TMP_PER_FUT_IADPERICASE_INI_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17S_TMP_PER_FUT',  'EST_IADPERICASE0_INI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17S_TMP_PER_FUT_IADPERICASE0_INI_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17S_TMP_PER_FUT',  'EST_IADPERICASE_DUMMY_INI','${DFILI}/${ENV_PREFIX}_ESFD5030_I17S_TMP_PER_FUT_IADPERICASE_DUMMY_INI_${PARM_ICLODAT_D}.dat','O','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17SQPOS',  'I17S_TMP_PER_FUT','')
+			insert into BEST..TI17REQFNC values ('I17SYPOS',  'I17S_TMP_PER_FUT','')
+go
+

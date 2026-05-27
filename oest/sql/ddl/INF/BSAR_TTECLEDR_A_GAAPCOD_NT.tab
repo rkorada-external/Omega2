@@ -1,0 +1,31 @@
+USE BSAR
+go
+set nocount on
+go
+
+
+setuser 'dbo'
+go
+
+if not exists (select name from systypes where name='UGAAPCOD_NT')
+begin
+
+	exec sp_addtype 'UGAAPCOD_NT', 'numeric(18, 0)', 'null'
+end	
+else
+	print 'datatype UGAAPCOD_NT existe'
+	
+
+go
+
+if not exists(select 1 from syscolumns col, sysobjects obj where col.name='GAAPCOD_NT' and obj.name = 'TTECLEDR_A' and col.id = obj.id)
+begin
+   	alter table BSAR.dbo.TTECLEDR_A modify NEWCOLS2_NF UGAAPCOD_NT
+end	
+go
+
+if not exists(select 1 from syscolumns col, sysobjects obj where col.name='GAAPCOD_NT' and obj.name = 'TTECLEDR_A' and col.id = obj.id)
+begin
+	execute sp_rename "TTECLEDR_A.NEWCOLS2_NF", "GAAPCOD_NT"
+end
+go

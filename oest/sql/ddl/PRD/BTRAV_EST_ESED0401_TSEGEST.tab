@@ -1,0 +1,61 @@
+use BTRAV
+go
+-- UAT 1b btrav changes Sam Mansour Feb 03 2014
+--  Removed d b o references and added grant for GDBBATCH added the ubgl
+/* UBGL_ON */
+if object_id('EST_ESED0401_TSEGEST') is not null
+begin
+  drop TABLE EST_ESED0401_TSEGEST
+  if object_id('EST_ESED0401_TSEGEST') is not null
+    print '<<< FAILED DROPPING TABLE EST_ESED0401_TSEGEST >>>'
+  else
+    print '<<< DROPPED TABLE EST_ESED0401_TSEGEST >>>'
+end
+go
+--01 Florent 05/10/2012 :spot:24041 importation des segments U et T
+--02 Florent 01/06/2015 :spot:28694 Segmentation VIE
+create TABLE EST_ESED0401_TSEGEST
+(
+  SSD_CF  USSD_CF  NOT null,
+  SEGTYP_CT USEGTYP_CT DEFAULT '' NOT null,
+  SEG_NF  USEG_NF  DEFAULT '' NOT null,
+  UWY_NF  UUWY_NF  NOT null,
+  SEG_LL  UL64    null,
+  CUR_CF  UCUR_CF  NOT null,
+  SEGNAT_CT char(1)  null,
+  CTRRET_B bit    DEFAULT 0 NOT null,
+  PRMAMT_M UAMT_M   null,
+  CLMAMT_M UAMT_M   null,
+  LOSRAT_R USHORAT_R null,
+  AMORAT_CT char(1)  DEFAULT '' NOT null,
+  ACY_NF  UUWY_NF DEFAULT 0 NOT NULL,
+)
+go
+if object_id('EST_ESED0401_TSEGEST') is not null
+  print '<<< CREATED TABLE EST_ESED0401_TSEGEST >>>'
+else
+  print '<<< FAILED CREATING TABLE EST_ESED0401_TSEGEST >>>'
+go
+if EXISTS (select * from sysindexes where id=object_id('EST_ESED0401_TSEGEST') and name='ISEGEST_00')
+begin
+  drop index EST_ESED0401_TSEGEST.ISEGEST_00
+  if EXISTS (select * from sysindexes where id=object_id('EST_ESED0401_TSEGEST') and name='ISEGEST_00')
+    print '<<< FAILED DROPPING index EST_ESED0401_TSEGEST.ISEGEST_00 >>>'
+  else
+    print '<<< DROPPED index EST_ESED0401_TSEGEST.ISEGEST_00 >>>'
+end
+go
+create UNIQUE clustered index ISEGEST_00
+  on EST_ESED0401_TSEGEST(SSD_CF,SEGTYP_CT,SEG_NF,UWY_NF)
+go
+if EXISTS (select * from sysindexes where id=object_id('EST_ESED0401_TSEGEST') and name='ISEGEST_00')
+  print '<<< CREATED index EST_ESED0401_TSEGEST.ISEGEST_00 >>>'
+else
+  print '<<< FAILED CREATING index EST_ESED0401_TSEGEST.ISEGEST_00 >>>'
+go
+grant select on EST_ESED0401_TSEGEST TO GCONSULT
+go
+grant select on EST_ESED0401_TSEGEST TO GOMEGA
+go
+grant ALL on EST_ESED0401_TSEGEST TO GDBBATCH
+go

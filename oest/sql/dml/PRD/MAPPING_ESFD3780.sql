@@ -1,0 +1,133 @@
+-------------------------------
+--mapping of  ESFD3780 
+
+	----------   Clean tables   ---------------------
+
+	delete BEST..TI17PERMFIL where IDF_CT in  ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESFD3780')
+	delete BEST..TI17REQFNC where     IDF_CT  in ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESFD3780')
+	delete BEST..TI17FNC where CHAIN_CT='ESFD3780'
+	delete BEST..TI17CHN  where CHAIN_CT='ESFD3780'
+
+	insert into BEST..TI17CHN values ('ESFD3780',  'IFRS17 - CSM/LC booking')
+
+	----------IDF_CT:   I17G_CSM_ACC_STD ------------------
+
+		insert into BEST..TI17FNC values ('I17G_CSM_ACC_STD','IFRS17 Group  - CSM/LC booking','ESFD3780',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17G_CSM_ACC_STD',  'EST_DLSGTR','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_CSM_ACC_STD',  'EST_DLSGTAA','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_CSM_ACC_STD',  'EST_DLSGTAR','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_CSM_ACC_STD',  'ESF_FCURQUOT_TXT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCURQUOT_TXT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_CSM_ACC_STD',  'EST_FBOPRSLNK_TXT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FBOPRSLNK_TXT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_CSM_ACC_STD',  'ESF_FTECLEDA','${DFILP}/${ENV_PREFIX}_ESFD3740_I17G_SII_GLT_STD_FTECLEDA_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_CSM_ACC_STD',  'ESF_FTECLEDR','${DFILP}/${ENV_PREFIX}_ESFD3740_I17G_SII_GLT_STD_FTECLEDR_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_CSM_ACC_STD',  'ESF_CSM_PROF','${DFILP}/${ENV_PREFIX}_ESFD3750_I17G_CSM_ALL_STD_PROF_BY_CTR_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_CSM_ACC_STD',  'ESF_CSM_PROF_CUR','${DFILP}/${ENV_PREFIX}_ESFD3760_I17G_UOA_PRO_STD_CSM_PROF_CUR_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_CSM_ACC_STD',  'ESF_GTSII_CSM_CASHFLOW','${DFILP}/${ENV_PREFIX}_ESFD3760_I17G_UOA_PRO_STD_GTSII_CSM_CASHFLOW_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_CSM_ACC_STD',  'ESF_CSM_LC_FTECLEDA','${DFILP}/${ENV_PREFIX}_ESFD3780_I17G_CSM_ACC_STD_CSM_LC_FTECLEDA_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17G_CSM_ACC_STD',  'ESF_CSM_LC_FTECLEDR','${DFILP}/${ENV_PREFIX}_ESFD3780_I17G_CSM_ACC_STD_CSM_LC_FTECLEDR_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17G_CSM_ACC_STD',  'ESF_OIRDVPERICASE','${DFILP}/${ENV_PREFIX}_ESFD5020_OIRDVPERICASE_I17G_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17GMINV',  'I17G_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17GQINV',  'I17G_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17GQPOS',  'I17G_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17GYINV',  'I17G_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17GYPOS',  'I17G_CSM_ACC_STD','')
+
+	----------IDF_CT:   I17L_CSM_ACC_STD ------------------
+
+		insert into BEST..TI17FNC values ('I17L_CSM_ACC_STD','IFRS17 Local  - CSM/LC booking','ESFD3780',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17L_CSM_ACC_STD',  'EST_DLSGTR','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_CSM_ACC_STD',  'EST_DLSGTAA','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_CSM_ACC_STD',  'EST_DLSGTAR','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_CSM_ACC_STD',  'ESF_FCURQUOT_TXT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCURQUOT_TXT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_CSM_ACC_STD',  'EST_FBOPRSLNK_TXT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FBOPRSLNK_TXT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_CSM_ACC_STD',  'ESF_FTECLEDA','${DFILP}/${ENV_PREFIX}_ESFD3740_I17L_SII_GLT_STD_FTECLEDA_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_CSM_ACC_STD',  'ESF_FTECLEDR','${DFILP}/${ENV_PREFIX}_ESFD3740_I17L_SII_GLT_STD_FTECLEDR_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_CSM_ACC_STD',  'ESF_CSM_PROF','${DFILP}/${ENV_PREFIX}_ESFD3750_I17L_CSM_ALL_STD_PROF_BY_CTR_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_CSM_ACC_STD',  'ESF_CSM_PROF_CUR','${DFILP}/${ENV_PREFIX}_ESFD3760_I17L_UOA_PRO_STD_CSM_PROF_CUR_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_CSM_ACC_STD',  'ESF_GTSII_CSM_CASHFLOW','${DFILP}/${ENV_PREFIX}_ESFD3760_I17L_UOA_PRO_STD_GTSII_CSM_CASHFLOW_${TYPEINV}_${PARM_ICLODAT_D}${PARM_POSX}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_CSM_ACC_STD',  'ESF_CSM_LC_FTECLEDR','${DFILP}/${ENV_PREFIX}_ESFD3780_I17L_CSM_ACC_STD_CSM_LC_FTECLEDR_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17L_CSM_ACC_STD',  'ESF_CSM_LC_FTECLEDA','${DFILP}/${ENV_PREFIX}_ESFD3780_I17L_CSM_ACC_STD_CSM_LC_FTECLEDA_${TYPEINV}_${PARM_ICLODAT_D}${PARM_POSX}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17L_CSM_ACC_STD',  'ESF_OIRDVPERICASE','${DFILP}/${ENV_PREFIX}_ESFD5020_OIRDVPERICASE_I17L_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17LMINV',  'I17L_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17LQINV',  'I17L_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17LQPOS',  'I17L_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17LYINV',  'I17L_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17LYPOS',  'I17L_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17LYPOSX',  'I17L_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17LQPOSX',  'I17L_CSM_ACC_STD','')
+
+	----------IDF_CT:   I17P_CSM_ACC_STD ------------------
+
+		insert into BEST..TI17FNC values ('I17P_CSM_ACC_STD','IFRS17 Parent  - CSM/LC booking','ESFD3780',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17P_CSM_ACC_STD',  'EST_DLSGTR','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_CSM_ACC_STD',  'EST_DLSGTAA','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_CSM_ACC_STD',  'EST_DLSGTAR','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_CSM_ACC_STD',  'ESF_FCURQUOT_TXT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCURQUOT_TXT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_CSM_ACC_STD',  'EST_FBOPRSLNK_TXT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FBOPRSLNK_TXT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_CSM_ACC_STD',  'ESF_FTECLEDA','${DFILP}/${ENV_PREFIX}_ESFD3740_I17P_SII_GLT_STD_FTECLEDA_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_CSM_ACC_STD',  'ESF_FTECLEDR','${DFILP}/${ENV_PREFIX}_ESFD3740_I17P_SII_GLT_STD_FTECLEDR_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_CSM_ACC_STD',  'ESF_CSM_PROF','${DFILP}/${ENV_PREFIX}_ESFD3750_I17P_CSM_ALL_STD_PROF_BY_CTR_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_CSM_ACC_STD',  'ESF_CSM_PROF_CUR','${DFILP}/${ENV_PREFIX}_ESFD3760_I17P_UOA_PRO_STD_CSM_PROF_CUR_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_CSM_ACC_STD',  'ESF_GTSII_CSM_CASHFLOW','${DFILP}/${ENV_PREFIX}_ESFD3760_I17P_UOA_PRO_STD_GTSII_CSM_CASHFLOW_${TYPEINV}_${PARM_ICLODAT_D}${PARM_POSX}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_CSM_ACC_STD',  'ESF_CSM_LC_FTECLEDR','${DFILP}/${ENV_PREFIX}_ESFD3780_I17P_CSM_ACC_STD_CSM_LC_FTECLEDR_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17P_CSM_ACC_STD',  'ESF_CSM_LC_FTECLEDA','${DFILP}/${ENV_PREFIX}_ESFD3780_I17P_CSM_ACC_STD_CSM_LC_FTECLEDA_${TYPEINV}_${PARM_ICLODAT_D}${PARM_POSX}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17P_CSM_ACC_STD',  'ESF_OIRDVPERICASE','${DFILP}/${ENV_PREFIX}_ESFD5020_OIRDVPERICASE_I17P_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17PYINV',  'I17P_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17PYPOS',  'I17P_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17PMINV',  'I17P_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17PQINV',  'I17P_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17PQPOS',  'I17P_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17PYPOSX',  'I17P_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17PQPOSX',  'I17P_CSM_ACC_STD','')
+
+	----------IDF_CT:   I17S_CSM_ACC_STD ------------------
+
+		insert into BEST..TI17FNC values ('I17S_CSM_ACC_STD','IFRS17 Simulation  - CSM/LC booking','ESFD3780',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17S_CSM_ACC_STD',  'EST_DLSGTR','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_CSM_ACC_STD',  'EST_DLSGTAA','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_CSM_ACC_STD',  'EST_DLSGTAR','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_CSM_ACC_STD',  'ESF_FCURQUOT_TXT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCURQUOT_TXT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_CSM_ACC_STD',  'EST_FBOPRSLNK_TXT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FBOPRSLNK_TXT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_CSM_ACC_STD',  'ESF_FTECLEDA','${DFILP}/${ENV_PREFIX}_ESFD3740_I17S_SII_GLT_STD_FTECLEDA_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_CSM_ACC_STD',  'ESF_FTECLEDR','${DFILP}/${ENV_PREFIX}_ESFD3740_I17S_SII_GLT_STD_FTECLEDR_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_CSM_ACC_STD',  'ESF_CSM_PROF','${DFILP}/${ENV_PREFIX}_ESFD3750_I17S_CSM_ALL_STD_PROF_BY_CTR_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_CSM_ACC_STD',  'ESF_CSM_PROF_CUR','${DFILP}/${ENV_PREFIX}_ESFD3760_I17S_UOA_PRO_STD_CSM_PROF_CUR_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_CSM_ACC_STD',  'ESF_GTSII_CSM_CASHFLOW','${DFILP}/${ENV_PREFIX}_ESFD3760_I17S_UOA_PRO_STD_GTSII_CSM_CASHFLOW_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_CSM_ACC_STD',  'ESF_CSM_LC_FTECLEDA','${DFILP}/${ENV_PREFIX}_ESFD3780_I17S_CSM_ACC_STD_CSM_LC_FTECLEDA_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17S_CSM_ACC_STD',  'ESF_CSM_LC_FTECLEDR','${DFILP}/${ENV_PREFIX}_ESFD3780_I17S_CSM_ACC_STD_CSM_LC_FTECLEDR_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17S_CSM_ACC_STD',  'ESF_OIRDVPERICASE','${DFILP}/${ENV_PREFIX}_ESFD5020_OIRDVPERICASE_I17S_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17SMINV',  'I17S_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17SQINV',  'I17S_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17SQPOS',  'I17S_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17SYINV',  'I17S_CSM_ACC_STD','')
+			insert into BEST..TI17REQFNC values ('I17SYPOS',  'I17S_CSM_ACC_STD','')
+go
+

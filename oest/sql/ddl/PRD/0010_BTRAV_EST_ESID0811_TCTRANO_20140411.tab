@@ -1,0 +1,37 @@
+USE BTRAV
+go
+
+if exists (select 1 from sysobjects where id = object_id('EST_ESID0811_TCTRANO') and type = 'U') drop table EST_ESID0811_TCTRANO
+go
+
+CREATE TABLE EST_ESID0811_TCTRANO
+(
+    CTR_NF     UCTR_NF       NOT NULL,
+    END_NT     UEND_NT       NOT NULL,
+    SEC_NF     USEC_NF       NOT NULL,
+    VRS_NF     numeric(10,0) NOT NULL,
+    SSD_CF     USSD_CF       NOT NULL,
+    SEGTYP_CT  USEGTYP_CT    NOT NULL,
+    SEG_NF     USEG_NF       NOT NULL,
+    ANO_CT     tinyint       NOT NULL,
+    NUMLINE_NT int           DEFAULT 0 NOT NULL,
+    UWY_NF     UUWY_NF       NULL,
+    ACY_NF     smallint      NULL,
+    BLOCKING_B UBOOLEAN_B    NULL,
+    ESB_CF 	   UESB_CF  	 NOT NULL,
+    USR_CF     UUSR_CF       NOT NULL
+)
+
+go
+
+grant all on    EST_ESID0811_TCTRANO to GOMEGA
+grant all on    EST_ESID0811_TCTRANO to GDBBATCH
+grant select on EST_ESID0811_TCTRANO to GCONSULT
+go
+
+
+IF OBJECT_ID('dbo.BTRAV..EST_ESID0811_TCTRANO') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.[BTRAV..EST_ESID0811_TCTRANO] >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.[BTRAV..EST_ESID0811_TCTRANO] >>>'
+go

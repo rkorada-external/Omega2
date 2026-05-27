@@ -1,0 +1,86 @@
+USE BTRAV
+go
+drop table   TCPTACCTRN1
+go
+CREATE TABLE TCPTACCTRN1
+(
+    ctr_nf       char(9)       NULL,
+    uwy_nf       smallint      NULL,
+    uw_nt        tinyint       NULL,
+    end_nt       tinyint       NULL,
+    sec_nf       tinyint       NULL,
+    scostrmth_nf tinyint       NULL,
+    scoendmth_nf tinyint       NULL,
+    acy_nf       smallint      NULL,
+    bilan_d      datetime      NULL,
+    trncod1_cf   char(8)       NULL,
+    trncod2_cf   char(8)       NULL,
+    trncod3_cf   char(8)       NULL,
+    trncod4_cf   char(8)       NULL,
+    ctrncod1_cf  char(8)       NULL,
+    ctrncod2_cf  char(8)       NULL,
+    ctrncod3_cf  char(8)       NULL,
+    ctrncod4_cf  char(8)       NULL,
+    primenreg_m  decimal(18,3) NULL,
+    pna_m        decimal(18,3) NULL,
+    aliment_m    decimal(18,3) NULL,
+    charges_r    decimal(9,8)  NULL,
+    lob_cf       char(2)       NULL,
+    sob_cf       char(2)       NULL,
+    top_cf       char(3)       NULL,
+    nat_cf       char(2)       NULL,
+    subnat_cf    char(2)       NULL,
+    gar_cf       char(3)       NULL,
+    ctrcod_ct    tinyint       NULL,
+    ctrval_lm    varchar(32)   NULL,
+    prmlin_nt    smallint      NULL,
+    ced_nf       int           NULL,
+    alimcur_cf   char(3)       NULL,
+    primerpcc_m  decimal(18,3) NULL,
+    alimrpcc_m   decimal(18,3) NULL,
+    phasenbr_n   smallint      NULL,
+    pnarpcc_m    decimal(18,3) NULL
+)
+LOCK DATAROWS
+go
+IF OBJECT_ID('TCPTACCTRN1') IS NOT NULL
+    PRINT '<<< CREATED TABLE TCPTACCTRN1 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE TCPTACCTRN1 >>>'
+go
+CREATE NONCLUSTERED INDEX ICPTACCTRN1_00
+    ON TCPTACCTRN1(ctr_nf,uwy_nf,uw_nt,end_nt,sec_nf)
+go
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('TCPTACCTRN1') AND name='ICPTACCTRN1_00')
+    PRINT '<<< CREATED INDEX TCPTACCTRN1.ICPTACCTRN1_00 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING INDEX TCPTACCTRN1.ICPTACCTRN1_00 >>>'
+go
+GRANT DELETE ON TCPTACCTRN1 TO GOMEGA
+go
+GRANT DELETE ON TCPTACCTRN1 TO GDBBATCH
+go
+GRANT DELETE STATISTICS ON TCPTACCTRN1 TO GDBBATCH
+go
+GRANT INSERT ON TCPTACCTRN1 TO GOMEGA
+go
+GRANT INSERT ON TCPTACCTRN1 TO GDBBATCH
+go
+GRANT REFERENCES ON TCPTACCTRN1 TO GDBBATCH
+go
+GRANT SELECT ON TCPTACCTRN1 TO GCONSULT
+go
+GRANT SELECT ON TCPTACCTRN1 TO GOMEGA
+go
+GRANT SELECT ON TCPTACCTRN1 TO GDBBATCH
+go
+GRANT TRANSFER TABLE ON TCPTACCTRN1 TO GDBBATCH
+go
+GRANT TRUNCATE TABLE ON TCPTACCTRN1 TO GDBBATCH
+go
+GRANT UPDATE ON TCPTACCTRN1 TO GOMEGA
+go
+GRANT UPDATE ON TCPTACCTRN1 TO GDBBATCH
+go
+GRANT UPDATE STATISTICS ON TCPTACCTRN1 TO GDBBATCH
+go

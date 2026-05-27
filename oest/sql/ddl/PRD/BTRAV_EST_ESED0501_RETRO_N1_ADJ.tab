@@ -1,0 +1,37 @@
+USE BTRAV
+go
+
+if exists (select 1 from sysobjects where id = object_id('EST_ESED0501_RETRO_N1_ADJ') and type = 'U') drop table EST_ESED0501_RETRO_N1_ADJ
+go
+
+CREATE TABLE EST_ESED0501_RETRO_N1_ADJ
+(
+    RETCTR_NF  UCTR_NF       NOT NULL,
+    RETEND_NT  UEND_NT       NOT NULL,
+    RETSEC_NF  USEC_NF       NOT NULL,
+	RTY_NF     UUWY_NF       NOT NULL,
+	RETUW_NT   UUW_NT        NOT NULL,
+    NUMLINE_NT int           DEFAULT 0 NOT NULL,
+    CLODAT_D   datetime      NULL,
+    LNCH_D     datetime      NULL, 
+    CRE_D        UUPD_D     DEFAULT getdate() NOT NULL,
+    CREUSR_CF    UUPDUSR_CF DEFAULT user      NOT NULL,
+    LSTUPD_D     UUPD_D     DEFAULT getdate() NOT NULL,
+    LSTUPDUSR_CF UUPDUSR_CF DEFAULT user      NOT NULL,
+	ANO_CT     int   DEFAULT 0 NOT NULL,
+	ERRTYP_CT  UL16   NULL
+)
+
+go
+
+grant all on    EST_ESED0501_RETRO_N1_ADJ to GOMEGA
+grant all on    EST_ESED0501_RETRO_N1_ADJ to GDBBATCH
+grant select on EST_ESED0501_RETRO_N1_ADJ to GCONSULT
+go
+
+
+IF OBJECT_ID('dbo.BTRAV..EST_ESED0501_RETRO_N1_ADJ') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.[BTRAV..EST_ESED0501_RETRO_N1_ADJ] >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.[BTRAV..EST_ESED0501_RETRO_N1_ADJ] >>>'
+go

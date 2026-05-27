@@ -1,0 +1,11 @@
+#=========================================
+# Chain: ESIJ0810
+# Author: L. Wernert
+# Date: 08/04/2020
+# Parameters:
+#		$1: recipient
+#=========================================
+
+RECIPIENT1 kngoran@scor.com
+RECIPIENT2 MMindAdminSupport@scor.com
+RECIPIENT3 mbrik-external@scor.com,sbehague-external@scor.com,mzanguim-external@scor.com,mlitov-external@scor.com,ypersee-external@scor.com

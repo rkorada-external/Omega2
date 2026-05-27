@@ -1,0 +1,35 @@
+USE BSEG
+go
+
+/* 1) Ajouter la colonne si elle n'existe pas déjà */
+IF EXISTS (SELECT 1 FROM syscolumns WHERE id = object_id('TSEGRUNAGG') AND name = 'SGTRUL_NT')
+BEGIN
+    PRINT '<<< COLUMN SGTRUL_NT ALREADY EXISTS >>>'
+END
+ELSE
+BEGIN
+    EXEC ('ALTER TABLE TSEGRUNAGG ADD SGTRUL_NT INT NULL')
+    PRINT '<<< COLUMN SGTRUL_NT ADDED ON BSEG..TSEGRUNAGG >>>'
+END
+go
+
+/* 2) Drop de l’index existant s’il est présent */
+IF EXISTS (SELECT 1 FROM sysindexes WHERE id   = object_id('TSEGRUNAGG') AND name = 'ISEGRUNAGG_00')
+BEGIN
+    PRINT '<<< DROPPING INDEX TSEGRUNAGG.ISEGRUNAGG_00 >>>'
+    DROP INDEX TSEGRUNAGG.ISEGRUNAGG_00
+END
+ELSE
+BEGIN
+    PRINT '<<< INDEX TSEGRUNAGG.ISEGRUNAGG_00 NOT FOUND >>>'
+END
+go
+
+/* 3) Recréation de l’index unique avec la colonne supplémentaire */
+PRINT '<<< CREATING UNIQUE INDEX ISEGRUNAGG_00 ON (SGTRUN_NT, SGMT_NF, SGTRUL_NT) >>>'
+CREATE UNIQUE INDEX ISEGRUNAGG_00 ON TSEGRUNAGG (SGTRUN_NT, SGMT_NF, SGTRUL_NT)
+go
+
+/* 4) Vérification (optionnelle) */
+EXEC sp_helpindex 'TSEGRUNAGG'
+go

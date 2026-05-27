@@ -1,0 +1,7 @@
+USE BEST
+GO
+/*==============================================================*/
+/* Table: TSIILOAD - MODIFY COLUMN ORIFILNAM_LL TO UL255        */
+/*==============================================================*/
+ALTER TABLE dbo.TSIILOAD MODIFY ORIFILNAM_LL UL255
+GO

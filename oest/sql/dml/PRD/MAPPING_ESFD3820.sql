@@ -1,0 +1,203 @@
+-------------------------------
+--mapping of  ESFD3820
+
+	----------   Clean tables   ---------------------
+
+	delete BEST..TI17PERMFIL where IDF_CT in  ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESFD3820')
+	delete BEST..TI17REQFNC where     IDF_CT  in ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESFD3820')
+	delete BEST..TI17FNC where CHAIN_CT='ESFD3820'
+	delete BEST..TI17CHN  where CHAIN_CT='ESFD3820'
+
+	insert into BEST..TI17CHN values ('ESFD3820',  'IO management in cashflow and discount calculation')
+
+	----------IDF_CT:   I17G_SII_IOR_DUM ------------------
+
+		insert into BEST..TI17FNC values ('I17G_SII_IOR_DUM','IFRS17 Group - IO management in cashflow and discount calculatio','ESFD3820',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'ESF_GTSII_ICR','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'NDIC_CASHFLOW','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'ESF_GTSII_ONE_STD','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'ESF_GTSII_DUMMY_STD','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'ESF_GTSII_GLOBAL_CASHFLOW','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'EST_FCLIENT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCLIENT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'EST_FDETTRS','${DFILP}/${ENV_PREFIX}_ESCJ0660_FDETTRS.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'EST_FSSDACTR','${DFILP}/${ENV_PREFIX}_ESCJ0660_FSSDACTR.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'EST_FPLC','${DFILP}/${ENV_PREFIX}_ESFD5010_I17G_MRG_PER_INI_FPLC_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'EPO_FPLATXCUM','${DFILP}/${ENV_PREFIX}_ESFD5010_I17G_MRG_PER_INI_FPLATXCUM_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			--insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'ESF_FTECLEDSII','${DFILP}/${ENV_PREFIX}_ESFD3830_I17G_SII_MRG_INI_GTSII_DUMMY_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'ESF_FTECLEDSII','${DFILP}/${ENV_PREFIX}_ESFD3610_I17G_CSF_MRG_INI_GTSII_DUMMY_ALL_MRG_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')			
+			
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'ESF_IADPERICASE_I17_MERGE','${DFILP}/${ENV_PREFIX}_ESPD1800_I17G_AET_RPO_I17_IADPERICASE_I17_MERGE_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'ESF_FTECLEDSII_IFRS17','${DFILP}/${ENV_PREFIX}_ESFD3820_I17G_SII_IOR_DUM_GTSII_ALL_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'ESF_DLEIFTECLEDSIIEI','${DFILP}/${ENV_PREFIX}_ESFD3820_I17G_SII_IOR_DUM_DLEIFTECLEDSIIEI${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_DUM',  'ESF_DLEIFTECLEDSIIEP','${DFILP}/${ENV_PREFIX}_ESFD3820_I17G_SII_IOR_DUM_DLEIFTECLEDSIIEP${TYPEINV}_${PARM_ICLODAT_D}.dat','U','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17GMINV',  'I17G_SII_IOR_DUM','')
+			insert into BEST..TI17REQFNC values ('I17GQINV',  'I17G_SII_IOR_DUM','')
+			insert into BEST..TI17REQFNC values ('I17GQPOS',  'I17G_SII_IOR_DUM','')
+			insert into BEST..TI17REQFNC values ('I17GYINV',  'I17G_SII_IOR_DUM','')
+			insert into BEST..TI17REQFNC values ('I17GYPOS',  'I17G_SII_IOR_DUM','')
+
+	----------IDF_CT:   I17G_SII_IOR_INI ------------------
+
+		insert into BEST..TI17FNC values ('I17G_SII_IOR_INI','IFRS17 Group - IO management in cashflow and discount calculatio','ESFD3820',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_INI',  'ESF_GTSII_ICR','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_INI',  'NDIC_CASHFLOW','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_INI',  'ESF_GTSII_ONE_STD','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_INI',  'ESF_GTSII_DUMMY_STD','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_INI',  'ESF_GTSII_GLOBAL_CASHFLOW','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_INI',  'EST_FCLIENT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCLIENT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_INI',  'EST_FDETTRS','${DFILP}/${ENV_PREFIX}_ESCJ0660_FDETTRS.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_INI',  'EST_FSSDACTR','${DFILP}/${ENV_PREFIX}_ESCJ0660_FSSDACTR.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_INI',  'EST_FPLC','${DFILP}/${ENV_PREFIX}_ESFD5010_I17G_MRG_PER_INI_FPLC_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_INI',  'EPO_FPLATXCUM','${DFILP}/${ENV_PREFIX}_ESFD5010_I17G_MRG_PER_INI_FPLATXCUM_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_INI',  'ESF_FTECLEDSII','${DFILP}/${ENV_PREFIX}_ESFD3830_I17G_SII_MRG_INI_GTSII_CASHFLOW_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_INI',  'ESF_IADPERICASE_I17_MERGE','${DFILP}/${ENV_PREFIX}_ESPD1800_I17G_AET_RPO_I17_IADPERICASE_I17_MERGE_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_INI',  'ESF_FTECLEDSII_IFRS17','${DFILP}/${ENV_PREFIX}_ESFD3820_I17G_SII_IOR_INI_GTSII_ALL_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_INI',  'ESF_DLEIFTECLEDSIIEI','${DFILP}/${ENV_PREFIX}_ESFD3820_I17G_SII_IOR_INI_DLEIFTECLEDSIIEI${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17G_SII_IOR_INI',  'ESF_DLEIFTECLEDSIIEP','${DFILP}/${ENV_PREFIX}_ESFD3820_I17G_SII_IOR_INI_DLEIFTECLEDSIIEP${TYPEINV}_${PARM_ICLODAT_D}.dat','U','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17GMINV',  'I17G_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17GQINV',  'I17G_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17GQPOS',  'I17G_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17GYINV',  'I17G_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17GYPOS',  'I17G_SII_IOR_INI','')
+
+	----------IDF_CT:   I17L_SII_IOR_INI ------------------
+
+		insert into BEST..TI17FNC values ('I17L_SII_IOR_INI','IFRS17 Local - IO management in cashflow and discount calculatio','ESFD3820',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17L_SII_IOR_INI',  'ESF_FTECLEDSII','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_SII_IOR_INI',  'ESF_GTSII_ONE_STD','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_SII_IOR_INI',  'ESF_GTSII_DUMMY_STD','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_SII_IOR_INI',  'EST_FCLIENT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCLIENT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_SII_IOR_INI',  'EST_FDETTRS','${DFILP}/${ENV_PREFIX}_ESCJ0660_FDETTRS.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_SII_IOR_INI',  'EST_FSSDACTR','${DFILP}/${ENV_PREFIX}_ESCJ0660_FSSDACTR.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_SII_IOR_INI',  'EST_FPLC','${DFILP}/${ENV_PREFIX}_ESFD5010_I17L_MRG_PER_INI_FPLC_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_SII_IOR_INI',  'ESF_GTSII_ICR','${DFILP}/${ENV_PREFIX}_ESFD3610_I17L_CSF_ALL_INI_GTSII_ICR${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_SII_IOR_INI',  'EPO_FPLATXCUM','${DFILP}/${ENV_PREFIX}_ESFD5010_I17L_MRG_PER_INI_FPLATXCUM_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_SII_IOR_INI',  'NDIC_CASHFLOW','${DFILP}/${ENV_PREFIX}_ESFD3970_I17L_NDC_CSF_INI_ACC_NDIC_AMOUNT${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_SII_IOR_INI',  'ESF_GTSII_GLOBAL_CASHFLOW','${DFILP}/${ENV_PREFIX}_ESFD3610_I17L_CSF_ALL_INI_GTSII_GLOBAL_CASHFLOW${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_SII_IOR_INI',  'ESF_IADPERICASE_I17_MERGE','${DFILP}/${ENV_PREFIX}_ESPD1800_I17L_AET_RPO_I17_IADPERICASE_I17_MERGE_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17L_SII_IOR_INI',  'ESF_FTECLEDSII_IFRS17','${DFILP}/${ENV_PREFIX}_ESFD3820_I17L_SII_IOR_INI_GTSII_ALL_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17L_SII_IOR_INI',  'ESF_DLEIFTECLEDSIIEI','${DFILP}/${ENV_PREFIX}_ESFD3820_I17L_SII_IOR_INI_DLEIFTECLEDSIIEI${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17L_SII_IOR_INI',  'ESF_DLEIFTECLEDSIIEP','${DFILP}/${ENV_PREFIX}_ESFD3820_I17L_SII_IOR_INI_DLEIFTECLEDSIIEP${TYPEINV}_${PARM_ICLODAT_D}.dat','U','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17LMINV',  'I17L_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17LQINV',  'I17L_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17LQPOS',  'I17L_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17LYINV',  'I17L_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17LYPOS',  'I17L_SII_IOR_INI','')
+
+	----------IDF_CT:   I17P_SII_IOR_INI ------------------
+
+		insert into BEST..TI17FNC values ('I17P_SII_IOR_INI','IFRS17 Parent - IO management in cashflow and discount calculati','ESFD3820',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17P_SII_IOR_INI',  'ESF_FTECLEDSII','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_SII_IOR_INI',  'ESF_GTSII_ONE_STD','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_SII_IOR_INI',  'ESF_GTSII_DUMMY_STD','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_SII_IOR_INI',  'EST_FCLIENT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCLIENT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_SII_IOR_INI',  'EST_FDETTRS','${DFILP}/${ENV_PREFIX}_ESCJ0660_FDETTRS.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_SII_IOR_INI',  'EST_FSSDACTR','${DFILP}/${ENV_PREFIX}_ESCJ0660_FSSDACTR.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_SII_IOR_INI',  'EST_FPLC','${DFILP}/${ENV_PREFIX}_ESFD5010_I17P_MRG_PER_INI_FPLC_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_SII_IOR_INI',  'ESF_GTSII_ICR','${DFILP}/${ENV_PREFIX}_ESFD3610_I17P_CSF_ALL_INI_GTSII_ICR${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_SII_IOR_INI',  'EPO_FPLATXCUM','${DFILP}/${ENV_PREFIX}_ESFD5010_I17P_MRG_PER_INI_FPLATXCUM_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_SII_IOR_INI',  'NDIC_CASHFLOW','${DFILP}/${ENV_PREFIX}_ESFD3970_I17P_NDC_CSF_INI_ACC_NDIC_AMOUNT${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_SII_IOR_INI',  'ESF_GTSII_GLOBAL_CASHFLOW','${DFILP}/${ENV_PREFIX}_ESFD3610_I17P_CSF_ALL_INI_GTSII_GLOBAL_CASHFLOW${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_SII_IOR_INI',  'ESF_IADPERICASE_I17_MERGE','${DFILP}/${ENV_PREFIX}_ESPD1800_I17P_AET_RPO_I17_IADPERICASE_I17_MERGE_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17P_SII_IOR_INI',  'ESF_FTECLEDSII_IFRS17','${DFILP}/${ENV_PREFIX}_ESFD3820_I17P_SII_IOR_INI_GTSII_ALL_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17P_SII_IOR_INI',  'ESF_DLEIFTECLEDSIIEI','${DFILP}/${ENV_PREFIX}_ESFD3820_I17P_SII_IOR_INI_DLEIFTECLEDSIIEI${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17P_SII_IOR_INI',  'ESF_DLEIFTECLEDSIIEP','${DFILP}/${ENV_PREFIX}_ESFD3820_I17P_SII_IOR_INI_DLEIFTECLEDSIIEP${TYPEINV}_${PARM_ICLODAT_D}.dat','U','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17PMINV',  'I17P_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17PQINV',  'I17P_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17PQPOS',  'I17P_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17PYINV',  'I17P_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17PYPOS',  'I17P_SII_IOR_INI','')
+
+	----------IDF_CT:   I17S_SII_IOR_DUM ------------------
+
+		insert into BEST..TI17FNC values ('I17S_SII_IOR_DUM','IFRS17 Simulation - IO management in cashflow and discount calcu','ESFD3820',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'ESF_GTSII_ICR','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'NDIC_CASHFLOW','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'ESF_GTSII_ONE_STD','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'ESF_GTSII_DUMMY_STD','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'ESF_GTSII_GLOBAL_CASHFLOW','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'EST_FCLIENT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCLIENT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'EST_FDETTRS','${DFILP}/${ENV_PREFIX}_ESCJ0660_FDETTRS.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'EST_FSSDACTR','${DFILP}/${ENV_PREFIX}_ESCJ0660_FSSDACTR.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'EST_FPLC','${DFILP}/${ENV_PREFIX}_ESFD5010_I17S_MRG_PER_INI_FPLC_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'EPO_FPLATXCUM','${DFILP}/${ENV_PREFIX}_ESFD5010_I17S_MRG_PER_INI_FPLATXCUM_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+--			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'ESF_FTECLEDSII','${DFILP}/${ENV_PREFIX}_ESFD3830_I17S_SII_MRG_INI_GTSII_DUMMY_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'ESF_FTECLEDSII','${DFILP}/${ENV_PREFIX}_ESFD3610_I17S_CSF_MRG_INI_GTSII_DUMMY_ALL_MRG_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')			
+
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'ESF_IADPERICASE_I17_MERGE','${DFILP}/${ENV_PREFIX}_ESPD1800_I17S_AET_RPO_I17_IADPERICASE_I17_MERGE_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'ESF_FTECLEDSII_IFRS17','${DFILP}/${ENV_PREFIX}_ESFD3820_I17S_SII_IOR_DUM_GTSII_ALL_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'ESF_DLEIFTECLEDSIIEI','${DFILP}/${ENV_PREFIX}_ESFD3820_I17S_SII_IOR_DUM_DLEIFTECLEDSIIEI${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_DUM',  'ESF_DLEIFTECLEDSIIEP','${DFILP}/${ENV_PREFIX}_ESFD3820_I17S_SII_IOR_DUM_DLEIFTECLEDSIIEP${TYPEINV}_${PARM_ICLODAT_D}.dat','U','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17SMINV',  'I17S_SII_IOR_DUM','')
+			insert into BEST..TI17REQFNC values ('I17SQINV',  'I17S_SII_IOR_DUM','')
+			insert into BEST..TI17REQFNC values ('I17SQPOS',  'I17S_SII_IOR_DUM','')
+			insert into BEST..TI17REQFNC values ('I17SYINV',  'I17S_SII_IOR_DUM','')
+			insert into BEST..TI17REQFNC values ('I17SYPOS',  'I17S_SII_IOR_DUM','')
+
+	----------IDF_CT:   I17S_SII_IOR_INI ------------------
+
+		insert into BEST..TI17FNC values ('I17S_SII_IOR_INI','IFRS17 Simulation - IO management in cashflow and discount calcu','ESFD3820',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_INI',  'ESF_GTSII_ICR','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_INI',  'NDIC_CASHFLOW','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_INI',  'ESF_GTSII_ONE_STD','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_INI',  'ESF_GTSII_DUMMY_STD','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_INI',  'ESF_GTSII_GLOBAL_CASHFLOW','${DFILP}/empty.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_INI',  'EST_FCLIENT','${DFILP}/${ENV_PREFIX}_ESCJ0660_FCLIENT.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_INI',  'EST_FDETTRS','${DFILP}/${ENV_PREFIX}_ESCJ0660_FDETTRS.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_INI',  'EST_FSSDACTR','${DFILP}/${ENV_PREFIX}_ESCJ0660_FSSDACTR.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_INI',  'EST_FPLC','${DFILP}/${ENV_PREFIX}_ESFD5010_I17S_MRG_PER_INI_FPLC_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_INI',  'EPO_FPLATXCUM','${DFILP}/${ENV_PREFIX}_ESFD5010_I17S_MRG_PER_INI_FPLATXCUM_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_INI',  'ESF_FTECLEDSII','${DFILP}/${ENV_PREFIX}_ESFD3830_I17S_SII_MRG_INI_GTSII_CASHFLOW_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_INI',  'ESF_IADPERICASE_I17_MERGE','${DFILP}/${ENV_PREFIX}_ESPD1800_I17S_AET_RPO_I17_IADPERICASE_I17_MERGE_${TYPEINV}_${PARM_ICLODAT_D}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_INI',  'ESF_FTECLEDSII_IFRS17','${DFILP}/${ENV_PREFIX}_ESFD3820_I17S_SII_IOR_INI_GTSII_ALL_${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_INI',  'ESF_DLEIFTECLEDSIIEI','${DFILP}/${ENV_PREFIX}_ESFD3820_I17S_SII_IOR_INI_DLEIFTECLEDSIIEI${TYPEINV}_${PARM_ICLODAT_D}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('I17S_SII_IOR_INI',  'ESF_DLEIFTECLEDSIIEP','${DFILP}/${ENV_PREFIX}_ESFD3820_I17S_SII_IOR_INI_DLEIFTECLEDSIIEP${TYPEINV}_${PARM_ICLODAT_D}.dat','U','')
+
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('I17SMINV',  'I17S_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17SQINV',  'I17S_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17SQPOS',  'I17S_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17SYINV',  'I17S_SII_IOR_INI','')
+			insert into BEST..TI17REQFNC values ('I17SYPOS',  'I17S_SII_IOR_INI','')
+go
+

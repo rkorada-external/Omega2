@@ -1,0 +1,153 @@
+/* TRA01 - Segmentation
+ *
+ * Segmentation results in BSEG
+ */
+use BSEG
+go
+
+if not exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGBATCHPLAN')
+            and   type = 'U')
+begin
+	/*==============================================================*/
+	/* Table: TSEGBATCHPLAN                                         */
+	/*==============================================================*/
+	exec ("create table TSEGBATCHPLAN (
+	   SGTSCOPE_CT          UBANVAL_CT                     not null,
+	   SGT_NT               USGT_NT                        not null,
+	   SGTVER_NT            USGTVER_NT                     not null,
+	   SGTRUN_NT            USGTRUN_NT                     not null,
+	   LASTSGTRUN_NT        USGTRUN_NT                     null,
+	   GROUPRUN_B           bit                            not null,
+	   CRE_D                UUPD_D                         not null
+	)")
+
+	/*==============================================================*/
+	/* Index: ISEGBATCHPLAN_00                                      */
+	/*==============================================================*/
+	exec ("create unique clustered index ISEGBATCHPLAN_00 on TSEGBATCHPLAN (
+	SGTSCOPE_CT ASC,
+	SGT_NT ASC,
+	SGTVER_NT ASC
+	)")
+
+	exec ("grant all    on TSEGBATCHPLAN to GDBBATCH
+	grant select on TSEGBATCHPLAN to GOMEGA
+	grant select on TSEGBATCHPLAN to GCONSULT")
+end
+go
+
+if not exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUN')
+            and   type = 'U')
+begin
+	/*==============================================================*/
+	/* Table: TSEGRUN                                               */
+	/*==============================================================*/
+	exec ("create table TSEGRUN (
+	   SGTRUN_NT            USGTRUN_NT                     not null,
+	   SGT_NT               USGT_NT                        not null,
+	   SGTVER_NT            USGTVER_NT                     not null,
+	   SGTRUNDAT_D          date                           not null,
+	   PRDSIT_CF            char(4)                        null,
+	   SGTSCOPE_CT          UBANVAL_CT                     null,
+	   SGTRUNSTS_CT         UBANVAL_CT                     null,
+	   SGTEVAL_B            UBOOLEAN_B                     null,
+	   SGTEVALMOD_CT        UBANVAL_CT                     null,
+	   SGTSIMU_B            UBOOLEAN_B                     null,
+	   SGTSNAP_B            UBOOLEAN_B                     null,
+	   SCHEDULED_B          UBOOLEAN_B                     null,
+	   SGTOBSOLETE_B        UBOOLEAN_B                     default 0 not null,
+	   SGTRUNERR_CT         char(12)                       null,
+	   SGTRUNERR_LL         UL255                          null,
+	   SGTRESTABNME_LL      UL64                           not null,
+	   SGTERRTABNME_LL      UL64                           not null,
+	   CRE_D                UUPD_D                         not null,
+	   CREUSR_CF            UUPDUSR_CF                     not null,
+	   LSTUPD_D             UUPD_D                         not null,
+	   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+	   timestamp            timestamp                      null
+	)")
+
+	/*==============================================================*/
+	/* Index: ISEGRUN_00                                            */
+	/*==============================================================*/
+	exec ("create unique clustered index ISEGRUN_00 on TSEGRUN (
+	SGTRUN_NT ASC
+	)")
+
+	exec ("grant all    on TSEGRUN to GDBBATCH
+	grant all    on TSEGRUN to GOMEGA
+	grant select on TSEGRUN to GCONSULT")
+end
+go
+
+if not exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUNAGG')
+            and   type = 'U')
+begin
+	/*==============================================================*/
+	/* Table: TSEGRUNAGG                                               */
+	/*==============================================================*/
+	exec ("create table TSEGRUNAGG (
+	   SGTRUN_NT            USGTRUN_NT                     not null,
+	   SGMT_NF              USGMT_NF                       not null,
+	   ROWCOUNT_NT          int                            not null
+	)")
+
+	/*==============================================================*/
+	/* Index: ISEGRUNAGG_00                                            */
+	/*==============================================================*/
+	exec ("create unique clustered index ISEGRUNAGG_00 on TSEGRUNAGG (
+	SGTRUN_NT ASC,
+	SGMT_NF ASC
+	)")
+
+	exec ("grant all on    TSEGRUNAGG to GDBBATCH
+	grant select on TSEGRUNAGG to GOMEGA
+	grant select on TSEGRUNAGG to GCONSULT")
+end
+go
+
+	
+if not exists (select 1
+            from  sysobjects
+            where id = object_id('TSEGRUNSCHED')
+            and   type = 'U')
+begin
+	/*==============================================================*/
+	/* Table: TSEGRUNSCHED                                          */
+	/*==============================================================*/
+	exec ("create table TSEGRUNSCHED (
+	   SGT_NT               USGT_NT                        not null,
+	   SGTRUNDAT_D          date                           not null,
+	   SGTEVAL_B            UBOOLEAN_B                     null,
+	   SGTEVALMOD_CT        UBANVAL_CT                     null,
+	   SGTSNAP_B            UBOOLEAN_B                     null,
+	   SGTRUNSTS_CT         UBANVAL_CT                     null,
+	   CRE_D                UUPD_D                         not null,
+	   CREUSR_CF            UUPDUSR_CF                     not null,
+	   LSTUPD_D             UUPD_D                         not null,
+	   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+	   timestamp            timestamp                      null
+	)")
+
+	/*==============================================================*/
+	/* Index: ISEGRUNSCHED_00                                       */
+	/*==============================================================*/
+	exec ("create unique clustered index ISEGRUNSCHED_00 on TSEGRUNSCHED (
+	SGT_NT ASC,
+	SGTRUNDAT_D ASC
+	)")
+
+	exec ("grant all    on TSEGRUNSCHED to GDBBATCH
+	grant select on TSEGRUNSCHED to GOMEGA
+	grant insert on TSEGRUNSCHED to GOMEGA
+	grant update on TSEGRUNSCHED to GOMEGA
+	grant delete on TSEGRUNSCHED to GOMEGA
+	grant select on TSEGRUNSCHED to GCONSULT")
+end
+go

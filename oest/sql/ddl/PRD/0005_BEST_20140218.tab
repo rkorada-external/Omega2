@@ -1,0 +1,65 @@
+/*======================================================================*/
+/* TRT 29 - Attachment Treaty,Technical & Cash balance Interest Panel   */
+/*======================================================================*/
+
+-----Table created for Attachment Treaty
+
+use BEST
+GO
+
+/*
+ * Script for creating table TRATTACHEVOL
+ */
+ 
+if exists(
+   select 1 from sysobjects
+   where id = object_id('TRATTACHEVOL')  
+    and   type = 'U' 
+) 
+    drop table TRATTACHEVOL
+GO
+
+
+/*==============================================================*/
+/* Table: TRATTACHEVOL                                          */
+/*==============================================================*/
+create table TRATTACHEVOL 
+(
+   CTR_NF               UCTR_NF                         not null,
+   UWY_NF               UUWY_NF                         not null,
+   UW_NT                UUW_NT                          not null,
+   SEC_NF               USEC_NF                         not null,
+   END_NT               UEND_NT                         not null,
+   ESTCTR_NF            UCTR_NF                         not null,
+   ESTSEC_NF            USEC_NF                         null,
+   SEG_NF               USEG_NF                         null,
+   CRE_D                UUPD_D                          not null,
+   CREUSR_CF            UUPDUSR_CF                      not null,
+   LSTUPD_D             UUPD_D                          not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                      not null
+
+)
+GO
+
+/*==============================================================*/
+/* Index: IRATTACHEVOL_00                                        */
+/*==============================================================*/
+create unique clustered index IRATTACHEVOL_00 on TRATTACHEVOL(
+CTR_NF ASC, 
+UWY_NF ASC, 
+UW_NT ASC, 
+SEC_NF ASC, 
+END_NT ASC
+)
+
+GO
+grant all on  TRATTACHEVOL to GOMEGA
+grant all on  TRATTACHEVOL to GDBBATCH
+grant select on  TRATTACHEVOL to GCONSULT
+GO
+
+IF OBJECT_ID('dbo.TRATTACHEVOL') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.TRATTACHEVOL >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.TRATTACHEVOL>>>'
+GO

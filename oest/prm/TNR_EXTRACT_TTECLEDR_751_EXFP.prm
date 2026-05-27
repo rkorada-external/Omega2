@@ -1,0 +1,74 @@
+BASE="BSAR"
+SRVT="INF"
+TABLE="TTECLEDR"
+EXTRT="TNR_EXTRACT_TTECLEDR_751"
+
+
+//------------------------------------------------------------------------------------//
+// Il est possible d'utiliser une varibale VAR dans la requete QRY (sql)              //
+// Si la variable "${VAR}" n'est pas declare ici ou dans le fichier de configuration  //
+// c'est la valeur dans le fichier {EST_PARAM} qui est utilise par defaut             //
+//------------------------------------------------------------------------------------//
+QRY="
+select d.SSD_CF ,d.CUR_CF,round(d.EXC_R/A.EXC_R,6) as 'EXC_R' 
+into #Rates
+from BREF..TCURQUOT d, (
+        select E.SSD_CF,  E.EXC_R
+        from BREF..TCURQUOT E
+        where E.SSD_CF in ( ${SSDCLO_LL} )
+        and E.CUR_CF = 'EUR'
+        and E.Exc_d=(select max(Exc_d) from BREF..TCURQUOT c where c.SSD_CF = E.SSD_CF and c.CUR_CF = E.CUR_CF group by c.SSD_CF,c.CUR_CF)
+        ) A
+where d.SSD_CF in ( ${SSDCLO_LL} )
+and d.SSD_CF = A.SSD_CF
+and d.Exc_d=(select max(Exc_d) from BREF..TCURQUOT c where c.SSD_CF = d.SSD_CF and c.CUR_CF = d.CUR_CF group by c.SSD_CF,c.CUR_CF)
+
+select distinct a.DETTRS_CF, b. ACMTRS_NT, b.ACMTRS_GL 
+into #tcode751
+from BREF..TTRSLNK a, BREF..TACMTRS b
+where a.ACMTRS_NT = b.ACMTRS_NT and a.PRS_CF = b.PRS_CF
+and a.PRS_CF=751
+
+select distinct a.DETTRS_CF, b.ACMTRS_NT, 
+  case 
+    when b.ACMTRS_NT in (100,200,201,202) then 'IFRS4' 
+    when b.ACMTRS_NT in (300) then 'IFRS17 Group'
+    when b.ACMTRS_NT in (301,302) then b.ACMTRS_GL
+  else 'EBS'
+  end as 'ACMTRS_GL'
+into #tcode640
+from BREF..TTRSLNK a, BREF..TACMTRS b
+where a.ACMTRS_NT = b.ACMTRS_NT and a.PRS_CF = b.PRS_CF
+and a.PRS_CF=640
+
+select distinct a.DETTRS_CF, a.ACMTRS_GL as 'ACMTRS_GL_640', b.ACMTRS_NT, b.ACMTRS_GL as 'ACMTRS_GL_751'
+into #tcode
+ from #tcode640 a, #tcode751 b
+where a.DETTRS_CF=b.DETTRS_CF 
+
+SELECT DISTINCT SSD_CF,TRNCOD_CF,RETCUR_CF,sum(RETAMT_M)as TOTAL, count(*) as 'NB_ROWS'
+into #ResInterm
+FROM BSAR..${TTECLEDR}
+WHERE SSD_CF in ( ${SSDCLO_LL} )
+GROUP BY SSD_CF,TRNCOD_CF,RETCUR_CF
+
+select b.ACMTRS_NT,c.SSD_CF,b.ACMTRS_GL_640,b.ACMTRS_GL_751,a.RETCUR_CF,c.EXC_R,sum(TOTAL) as 'TOTAL',sum(NB_ROWS) as 'NB_ROWS'
+into #ResBrut
+from #ResInterm a,#tcode b,#Rates c
+where a.SSD_CF=c.SSD_CF
+and   a.RETCUR_CF=c.CUR_CF
+and   a.TRNCOD_CF=b.DETTRS_CF
+group by b.ACMTRS_NT,c.SSD_CF,b.ACMTRS_GL_640,b.ACMTRS_GL_751,a.RETCUR_CF,c.EXC_R
+order by b.ACMTRS_NT,a.RETCUR_CF
+
+select ACMTRS_GL_640,ACMTRS_NT,ACMTRS_GL_751, cast(round(sum(convert(float, TOTAL)*convert (float , EXC_R)),0)as NUMERIC(26,0)) as 'TOTAL', sum(NB_ROWS) as 'NB_ROWS' from #ResBrut
+group by ACMTRS_GL_640,ACMTRS_NT,ACMTRS_GL_751
+order by ACMTRS_GL_640,ACMTRS_NT,ACMTRS_GL_751 ASC
+
+drop table #Rates
+drop table #tcode
+drop table #tcode640
+drop table #tcode751
+drop table #ResInterm
+drop table #ResBrut
+"

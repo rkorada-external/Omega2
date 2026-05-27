@@ -1,0 +1,56 @@
+USE BTRAVI
+go
+
+/****************************************************
+Table            : BTRAVI..BSTA_TSUIVINTACC
+Base principale  : BTRAV
+Version          : 10.1
+Auteur           : LRAK (ASCOTT)
+Date de creation : 26/07/2012
+                 :spot:23860    LRAK 
+Fiche spot       : 23860
+Description      : - table de travail de BSTA..PuTSUIVINTACC_06.prc
+
+-----------------
+MODIFICATION     : [001]
+Auteur           : 
+Date             : 
+Version          : 
+Description      : remove "dbo."
+[002] 13/11/2013 R. Cassis :spot:25427  Ajout grant pour centralization
+*********************************************************/
+
+IF OBJECT_ID('BSTA_TSUIVINTACC') IS NOT NULL
+BEGIN
+    DROP TABLE BSTA_TSUIVINTACC
+    IF OBJECT_ID('BSTA_TSUIVINTACC') IS NOT NULL
+        PRINT '<<< FAILED DROPPING TABLE BSTA_TSUIVINTACC >>>'
+    ELSE
+        PRINT '<<< DROPPED TABLE BSTA_TSUIVINTACC >>>'
+END
+go
+
+CREATE TABLE BSTA_TSUIVINTACC
+(
+    POSAMT_M      UAMT_M        DEFAULT 0 NOT NULL,
+    NEGAMT_M      UAMT_M        DEFAULT 0 NOT NULL,
+    BLCSHT_D      datetime      NULL,
+    MESSTHM_C     UMESSTHM_C    NULL,
+    SSD_CF        USSD_CF       NULL,
+    ESB_CF        UESB_CF       NULL,
+    NUMFIC_NT     UUWENTNBR_NT  NULL
+)
+LOCK ALLPAGES
+go
+IF OBJECT_ID('BSTA_TSUIVINTACC') IS NOT NULL
+    PRINT '<<< CREATED TABLE BSTA_TSUIVINTACC >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE BSTA_TSUIVINTACC >>>'
+go
+GRANT ALL ON BSTA_TSUIVINTACC TO GOMEGA
+go
+GRANT SELECT ON BSTA_TSUIVINTACC TO GCONSULT
+go
+GRANT ALL ON BSTA_TSUIVINTACC TO GDBBATCH
+go
+

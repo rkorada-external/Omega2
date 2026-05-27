@@ -1,0 +1,33 @@
+use best
+go
+
+select '===================== > debut de script', getdate()
+go
+
+-- Drop primary key index
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TSEGANO') AND name='ISEGANO_00')
+BEGIN
+	DROP INDEX TSEGANO.ISEGANO_00
+	if @@error!=0 select syb_quit()
+	IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TSEGANO') AND name='ISEGANO_00')
+		PRINT '<<< FAILED DROPPING INDEX dbo.TSEGANO.ISEGANO_00 >>>'
+END
+go
+
+alter table TSEGANO   add
+    ACY_NF    UUWY_NF       DEFAULT 0 NOT NULL
+go
+if @@error!=0 select syb_quit()
+go
+
+CREATE UNIQUE CLUSTERED INDEX ISEGANO_00
+    ON dbo.TSEGANO(VRS_NF,SSD_CF,SEGTYP_CT,SEG_NF,UWY_NF,ACY_NF)
+go
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TSEGANO') AND name='ISEGANO_00')
+    PRINT '<<< CREATED INDEX dbo.ISEGANO_00 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING INDEX dbo.ISEGANO_00 >>>'
+go
+
+select '===================== > fin de script', getdate()
+go

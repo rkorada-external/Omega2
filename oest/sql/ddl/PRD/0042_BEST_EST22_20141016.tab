@@ -1,0 +1,16 @@
+use BEST
+go
+
+/*==============================================================*/
+/* Table: TLIFDRI                                            */
+/*==============================================================*/
+
+ALTER TABLE dbo.TLIFDRI MODIFY RESPROPAG_B  bit NOT NULL
+go
+
+
+ALTER TABLE dbo.TLIFDRI replace RESPROPAG_B default 0
+go
+
+update dbo.TLIFDRI SET RESPROPAG_B=0 WHERE RESPROPAG_B IS NULL
+go

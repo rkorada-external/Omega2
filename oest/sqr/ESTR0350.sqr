@@ -1,0 +1,269 @@
+!******************************************************************************
+!nom de l'application          : EST                          
+!nom du source                 : ESTR0350.sqr
+!revision                      : $Revision:   1.0  $
+!date de creation              : 12/05/1997
+!auteur                        : Philippe HOUEE
+!references des specifications : ##########
+!------------------------------------------------------------------------------
+!description : Liste des anomalies par segment
+!------------------------------------------------------------------------------
+!historique des modifications :
+!   <jj/mm/aaaa>   <auteur>    <description de la modification>
+!       ...           ...            ...              ...
+!    12/05/1997     HOUEE ph	Création.
+!    
+!******************************************************************************
+
+!--------------------------------------------------
+! inclusion des interfaces des composants importes
+!--------------------------------------------------
+
+#include 'ESTR0350.sqh'
+
+#include  'UtSetup.sqh'
+#include  'Util.sqh'
+#include  'UtForm.sqh'
+
+!---------------------------------------------
+! definition des constantes et macros privees
+!---------------------------------------------
+#define Base       BEST
+
+!**********************************************************************
+! objet:
+!    Entete de page pour le rapport courant
+! remarque:
+!    Les (+) dans les commentaires indiquent qu'il y a saut de ligne
+! retour:
+!**********************************************************************
+begin-heading 3
+
+!>>>(+) Date ----------------------------------------------------------
+{DATE_FCT} ($prm_lag_cf,$prm_day_d)
+print $DATEMASK_FCT (+1, 1)
+
+!>>> Page -------------------------------------------------------------
+print #page-count (  , 15) edit {msk_PAGE} 
+print '/'         (  ,  )
+last-page 	  (  ,  )
+
+print '001'       (  , 45)
+print $prm_lag_cf (  , +1) 
+
+!>>> Filiale (lib), Type de segment (lib), Version (code + lib) -------
+print $g_ssd_ls     (+1, 1 ) 
+print $g_segtyp_ls  (  , +16) 
+print #g_vrs_nf     (  , +16) edit 9999999999
+print $g_vrs_lm     (  , +10) 
+
+
+end-heading
+
+!**********************************************************************
+! objet:
+!    Point d'entree du programme
+!
+! retour:
+!    En cas de probleme, la sortie s'effectue par le fonction P_ExitPgm()
+!**********************************************************************
+begin-program
+   let $PgmName   = 'ESTR0350'
+   let $PgmLabel  = 'programme d edition de la liste des anomalies par segment'
+
+   do P_Parameters(#retour)
+   if #retour = {ERR}
+      do C_ExitPgm({ERR_XX},'')
+   end-if
+
+  ! Initialisation de la working 
+   {WORKING} ($prm_lag_cf)
+
+   do P_BeginPgm(#retour)
+   if #retour = {ERR}
+      do C_ExitPgm({ERR_XX},'')
+   end-if
+
+   do P_Processing(#retour)
+   if #retour = {ERR}
+      do C_ExitPgm({ERR_XX},'')
+   end-if
+
+   do P_EndProcessing(#retour)
+   if #retour = {ERR}
+      do C_ExitPgm({ERR_XX},'')
+   end-if
+
+   do P_EndPgm(#retour)
+   if #retour = {ERR}
+      do C_ExitPgm({ERR_XX},'')
+   end-if
+end-program
+
+!**********************************************************************
+! objet: - Reception des parametres 
+!
+! retour:
+!    OK --> traitement correctement effectue
+!    ERR -> probleme rencontre
+!**********************************************************************
+begin-procedure P_Parameters(:#status)
+    {DEBUT_FCT} 'P_Parameters')
+
+   
+    input  $segtyp_ct MAXLEN=1 status = #ret_stat
+    if #ret_stat != 0 
+       goto echec
+    end-if
+    
+   
+    input  $ssd_cf  MAXLEN=3 status = #ret_stat
+    if #ret_stat != 0 
+       goto echec
+    end-if
+    
+
+    input  $vrs_nf  MAXLEN=10 status = #ret_stat
+    if #ret_stat != 0 
+       goto echec
+    end-if
+
+    input  $lag_cf  MAXLEN=1 status = #ret_stat
+    if #ret_stat != 0 
+       goto echec
+    end-if
+ 
+    input $day_d MAXLEN=8 status=#ret_stat
+    if #ret_stat !=0
+       goto echec
+    end-if
+
+    let    $_prm_segtyp_ct = $segtyp_ct
+    let    #_prm_ssd_cf    = $ssd_cf
+    let    #_prm_vrs_nf    = $vrs_nf
+    let    $_prm_lag_cf    = $lag_cf   
+    let    $_prm_day_d     = $day_d        
+
+    {RETURN_VAL} {OK}
+    goto fin
+
+    echec:
+    {RETURN_VAL} {ERR}
+    
+    fin:
+    {FIN_FCT} 'P_Parameters')
+end-procedure
+
+!**********************************************************************
+! objet: - extraction de la base 
+!
+! retour:
+!    OK --> traitement correctement effectue
+!    ERR -> probleme rencontre
+!**********************************************************************
+begin-procedure P_Processing(:#status)
+   {DEBUT_FCT} 'P_Processing')
+
+!>>> Initialisations diverses
+!----------------------------
+move 0 		To #_g_enreg
+
+   execute do = P_mise_en_page (
+        &seg_nf,
+        &seg_ll,
+        &ano_ct,
+        &ano_lm,
+        &uwy_nf,
+        &ssd_ls,
+        &segtyp_ls,
+        &vrs_nf,
+        &vrs_lm )
+        @#ret_stat = {Base}..PsSEGANO_30
+		@p_segtyp_ct = $_prm_segtyp_ct,
+       		@p_ssd_cf    = #_prm_ssd_cf,
+       		@p_vrs_nf    = #_prm_vrs_nf,
+       		@p_lag_cf    = $_prm_lag_cf
+                
+	into
+		&seg_nf		varchar(10),
+		&seg_ll         varchar(64),
+        	&ano_ct		tinyint,
+        	&ano_lm		varchar(32),
+                &uwy_nf         smallint,
+        	&ssd_ls         varchar(16),
+        	&segtyp_ls      varchar(16),
+                &vrs_nf         decimal(10),
+        	&vrs_lm         varchar(32)
+
+
+   {FIN_FCT} 'P_Processing')
+end-procedure
+
+!**********************************************************************
+! objet: gestion mise en page (soulignement, police),
+!        ecriture de la ligne
+!   
+! retour:
+!    OK --> traitement correctement effectue
+!    ERR -> probleme rencontre
+!**********************************************************************
+begin-procedure P_mise_en_page (
+        $seg_nf,
+        $seg_ll,
+        #ano_ct,
+        $ano_lm,
+        #uwy_nf,
+        $ssd_ls,
+        $segtyp_ls,
+        #vrs_nf,
+        $vrs_lm
+        ) 
+
+   {DEBUT_FCT} 'P_mise_en_page')
+
+   !>>> stockage des parametres dans des variables globales 
+   !>>> de stockage 
+	move $ssd_ls      to $_g_ssd_ls
+        move $segtyp_ls   to $_g_segtyp_ls
+	move #vrs_nf      to #_g_vrs_nf
+        move $vrs_lm      to $_g_vrs_lm
+	move 1		  To #_g_enreg
+	
+
+!******************************************************************
+! objet: - ligne detail                     
+!******************************************************************
+
+	!>>>(+)|N° de segment | Nom du segment | Anomalie
+
+	let $lastpage=edit(#_page-count,'9999999') 
+	
+	print	 $seg_nf (+1, 1)
+        print    $seg_ll ( , 15)
+        print	 $ano_lm ( , 80)
+	
+
+   {FIN_FCT} 'P_mise_en_page')
+end-procedure
+
+!**********************************************************************
+! objet: - cas aucun enregistrement a traiter                     
+!
+! retour:
+!    OK --> traitement correctement effectue
+!    ERR -> probleme rencontre
+!**********************************************************************
+begin-procedure P_EndProcessing(:#status)
+   {DEBUT_FCT} 'P_EndProcessing')
+
+   !*** si pas d'enregistrement a traiter (on ne passe pas dans P_Processing)
+   !*** on ecrit un message pour le signaler et on sort du programme
+
+   if #_g_enreg = 0
+      print $_bold          (+3,2)
+      print $_msk_NODATA    (,)
+      print $_end_bold      (,)
+   end-if
+
+   {FIN_FCT} 'P_EndProcessing')
+end-procedure

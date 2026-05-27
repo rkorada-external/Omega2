@@ -1,0 +1,186 @@
+USE BEST
+GO
+
+--Start of BEST..TCRLOAD
+
+IF OBJECT_ID('TCTRLOAD') IS NOT NULL
+BEGIN
+    DROP TABLE TCTRLOAD
+    IF OBJECT_ID('TCTRLOAD') IS NOT NULL
+       PRINT '<<<  FAILED DROPPING TABLE TCTRLOAD >>>'
+    ELSE
+       PRINT '<<< TABLE DROPPED TCTRLOAD >>>'
+END
+go
+
+/*==============================================================*/
+/* Table: TCTRLOAD                                              */
+/*==============================================================*/
+create table TCTRLOAD 
+(
+   UPLID_NT             UUWENTNBR_NT                   not null primary key,
+   UPLFILNAM_LL         varchar (128)                  null,
+   UPLSTS_CT            UBANVAL_CT                     null,
+   CTRUPLTYP_CT         UCTRTYP_CT                     null,
+   CTRUPLFAM_CT         tinyint                        null,
+   ORIFILNAM_LL         varchar(64)                    null,
+   NBLGTOT_NT           int default 0                  null,
+   NBLGKO_NT            int                            null,
+   NBANO_NT             int                            null,
+   CREUSR_CF            UUPDUSR_CF                     not null,
+   CRE_D                UUPD_D                         not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                     not null,
+   LSTUPD_D             UUPD_D                         not null,
+   TIMESTAMP            timestamp                      not null
+)
+go
+
+
+/*==============================================================*/
+/* Index: ICTRLOAD_00                                           */
+/*==============================================================*/
+
+CREATE INDEX ICTRLOAD_00
+    ON TCTRLOAD(UPLID_NT,CTRUPLTYP_CT,CTRUPLFAM_CT)
+go
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('TCTRLOAD') AND name='ICTRLOAD_00')
+    PRINT '<<< CREATED INDEX ON TCTRLOAD >>>'
+ELSE
+    PRINT '<<< FAILED CREATING INDEX ON TCTRLOAD >>>'
+go
+
+GRANT REFERENCES ON TCTRLOAD TO GOMEGA
+go
+GRANT REFERENCES ON TCTRLOAD TO GDBBATCH
+go
+GRANT SELECT ON TCTRLOAD TO GCONSULT
+go
+GRANT SELECT ON TCTRLOAD TO GOMEGA
+go
+GRANT SELECT ON TCTRLOAD TO GDBBATCH
+go
+GRANT INSERT ON TCTRLOAD TO GOMEGA
+go
+GRANT INSERT ON TCTRLOAD TO GDBBATCH
+go
+GRANT DELETE ON TCTRLOAD TO GOMEGA
+go
+GRANT DELETE ON TCTRLOAD TO GDBBATCH
+go
+GRANT UPDATE ON TCTRLOAD TO GOMEGA
+go
+GRANT UPDATE ON TCTRLOAD TO GDBBATCH
+go
+GRANT DELETE STATISTICS ON TCTRLOAD TO GOMEGA
+go
+GRANT DELETE STATISTICS ON TCTRLOAD TO GDBBATCH
+go
+GRANT TRUNCATE TABLE ON TCTRLOAD TO GOMEGA
+go
+GRANT TRUNCATE TABLE ON TCTRLOAD TO GDBBATCH
+go
+GRANT UPDATE STATISTICS ON TCTRLOAD TO GOMEGA
+go
+GRANT UPDATE STATISTICS ON TCTRLOAD TO GDBBATCH
+go
+GRANT TRANSFER TABLE ON TCTRLOAD TO GOMEGA
+go
+GRANT TRANSFER TABLE ON TCTRLOAD TO GDBBATCH
+go
+
+--End of BEST..TCTRLOAD 
+
+--Start of BEST..TCRLOADERR
+
+IF OBJECT_ID('TCTRLOADERR') IS NOT NULL
+BEGIN
+    DROP TABLE TCTRLOADERR
+    IF OBJECT_ID('TCTRLOADERR') IS NOT NULL
+       PRINT '<<<  FAILED DROPPING TABLE TCTRLOADERR >>>'
+    ELSE
+       PRINT '<<< TABLE DROPPED TCTRLOADERR >>>'
+END
+go
+
+/*==============================================================*/
+/* Table: TCTRLOADERR                                           */
+/*==============================================================*/
+create table TCTRLOADERR 
+(
+   UPLID_NT             UUWENTNBR_NT                 not null,
+   ERRROW_NF            int                          not null,
+   MESS_N               int                          null,
+   ERRTYP_CT            UBANVAL_CT                   null,
+   MESSTHM_C            UMESSTHM_C                   null,
+   ERRCOL_LM            varchar(32)                  not null,
+   CREUSR_CF            UUPDUSR_CF                   not null,
+   CRE_D                UUPD_D                       not null,
+   LSTUPDUSR_CF         UUPDUSR_CF                   not null,
+   LSTUPD_D             UUPD_D                       not null,
+   TIMESTAMP            timestamp                    not null,
+   
+    foreign key (UPLID_NT) REFERENCES TCTRLOAD(UPLID_NT)
+)
+
+go
+IF OBJECT_ID('TCTRLOADERR') IS NOT NULL
+    PRINT '<<< CREATED TABLE TCTRLOADERR >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE TCTRLOADERR >>>'
+go
+
+CREATE UNIQUE CLUSTERED INDEX ICTRLOADERR_00
+    ON TCTRLOADERR(UPLID_NT,ERRROW_NF,ERRCOL_LM)
+go
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('TCTRLOADERR') AND name='ICTRLOADERR_00')
+    PRINT '<<< CREATED INDEX ON TCTRLOADERR >>>'
+ELSE
+    PRINT '<<< FAILED CREATING INDEX ON TCTRLOADERR >>>'
+go
+
+
+
+GRANT REFERENCES ON TCTRLOADERR TO GOMEGA
+go
+GRANT REFERENCES ON TCTRLOADERR TO GDBBATCH
+go
+GRANT SELECT ON TCTRLOADERR TO GCONSULT
+go
+GRANT SELECT ON TCTRLOADERR TO GOMEGA
+go
+GRANT SELECT ON TCTRLOADERR TO GDBBATCH
+go
+GRANT INSERT ON TCTRLOADERR TO GOMEGA
+go
+GRANT INSERT ON TCTRLOADERR TO GDBBATCH
+go
+GRANT DELETE ON TCTRLOADERR TO GOMEGA
+go
+GRANT DELETE ON TCTRLOADERR TO GDBBATCH
+go
+GRANT UPDATE ON TCTRLOADERR TO GOMEGA
+go
+GRANT UPDATE ON TCTRLOADERR TO GDBBATCH
+go
+GRANT DELETE STATISTICS ON TCTRLOADERR TO GOMEGA
+go
+GRANT DELETE STATISTICS ON TCTRLOADERR TO GDBBATCH
+go
+GRANT TRUNCATE TABLE ON TCTRLOADERR TO GOMEGA
+go
+GRANT TRUNCATE TABLE ON TCTRLOADERR TO GDBBATCH
+go
+GRANT UPDATE STATISTICS ON TCTRLOADERR TO GOMEGA
+go
+GRANT UPDATE STATISTICS ON TCTRLOADERR TO GDBBATCH
+go
+GRANT TRANSFER TABLE ON TCTRLOADERR TO GOMEGA
+go
+GRANT TRANSFER TABLE ON TCTRLOADERR TO GDBBATCH
+go
+
+--End of BEST..TCTRLOADERR
+
+
+
+

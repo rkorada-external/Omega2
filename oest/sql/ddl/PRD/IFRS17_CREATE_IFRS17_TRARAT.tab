@@ -1,0 +1,88 @@
+USE BEST
+go
+
+IF OBJECT_ID('dbo.TRARAT') IS NOT NULL
+BEGIN
+    DROP TABLE dbo.TRARAT
+    IF OBJECT_ID('dbo.TRARAT') IS NOT NULL
+       PRINT '<<<  FAILED DROPPING TABLE dbo.TRARAT >>>'
+    ELSE
+       PRINT '<<< TABLE DROPPED dbo.TRARAT >>>'
+END
+go
+
+/*==============================================================*/
+/* Table: dbo.TRARAT                                                */
+/*==============================================================*/
+create table dbo.TRARAT 
+(
+   SSD_CF               USSD_CF                        not null,
+   ESB_CF               UESB_CF                        not null,
+   SEG_NF               USGMT_NF                       not null,
+   NORME_CF             char(5)                        not null,
+   CTRNAT_CT            char(1)                        not null,
+   DOMAIN_CF            CHAR(7)                        null,
+   PRMRAT_R             USHA_R                         null,
+   RSRVRAT_R            USHA_R                         null,
+   CLODAT_D             datetime                       not null,
+   PER_CF               char(10)                       not null,
+   CREUSR_CF            UUPDUSR_CF        					NOT NULL,
+   CRE_D                UUPD_D            					NOT NULL,
+   LSTUPDUSR_CF         UUPDUSR_CF        					NOT NULL,
+   LSTUPD_D             UUPD_D            					NOT NULL
+)
+go
+
+IF OBJECT_ID('dbo.TRARAT') IS NOT NULL
+    PRINT '<<< CREATED TABLE dbo.TRARAT >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE dbo.TRARAT >>>'
+go
+
+CREATE UNIQUE CLUSTERED INDEX TRARAT
+    ON TRARAT(SSD_CF, ESB_CF ,SEG_NF ,NORME_CF ,CTRNAT_CT, DOMAIN_CF, CLODAT_D, PER_CF)
+go
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('TRARAT') AND name='TRARAT')
+    PRINT '<<< CREATED INDEX ON TRARAT >>>'
+ELSE
+    PRINT '<<< FAILED CREATING INDEX ON TRARAT >>>'
+go
+
+GRANT REFERENCES ON dbo.TRARAT TO GOMEGA
+go
+GRANT REFERENCES ON dbo.TRARAT TO GDBBATCH
+go
+GRANT SELECT ON dbo.TRARAT TO GCONSULT
+go
+GRANT SELECT ON dbo.TRARAT TO GOMEGA
+go
+GRANT SELECT ON dbo.TRARAT TO GDBBATCH
+go
+GRANT INSERT ON dbo.TRARAT TO GOMEGA
+go
+GRANT INSERT ON dbo.TRARAT TO GDBBATCH
+go
+GRANT DELETE ON dbo.TRARAT TO GOMEGA
+go
+GRANT DELETE ON dbo.TRARAT TO GDBBATCH
+go
+GRANT UPDATE ON dbo.TRARAT TO GOMEGA
+go
+GRANT UPDATE ON dbo.TRARAT TO GDBBATCH
+go
+GRANT DELETE STATISTICS ON dbo.TRARAT TO GOMEGA
+go
+GRANT DELETE STATISTICS ON dbo.TRARAT TO GDBBATCH
+go
+GRANT TRUNCATE TABLE ON dbo.TRARAT TO GOMEGA
+go
+GRANT TRUNCATE TABLE ON dbo.TRARAT TO GDBBATCH
+go
+GRANT UPDATE STATISTICS ON dbo.TRARAT TO GOMEGA
+go
+GRANT UPDATE STATISTICS ON dbo.TRARAT TO GDBBATCH
+go
+GRANT TRANSFER TABLE ON dbo.TRARAT TO GOMEGA
+go
+GRANT TRANSFER TABLE ON dbo.TRARAT TO GDBBATCH
+go

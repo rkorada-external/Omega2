@@ -1,0 +1,73 @@
+
+/* Position des champs dans le fichier Liste des affaires */
+
+#define AFF_CTR_NF		0
+#define AFF_UWY_NF		1
+#define AFF_UW_NT		2
+#define AFF_END_NT		3
+#define AFF_SEC_NF		4
+#define AFF_DIV_NT		5
+#define AFF_UWRSPUSR_CF		6
+#define AFF_ADMUSR_CF		7
+#define AFF_SECLAB_LM		8
+#define AFF_SSD_CF		9	
+#define AFF_SECACCSTS_CT	10
+#define AFF_ESTEND_B		11
+#define AFF_EVTCOD_NF		12
+#define AFF_CTRNAT_CT		13
+#define AFF_ESTUPDTYP_CT	14
+#define AFF_LOB_CF		15
+#define AFF_SOB_CF		16
+#define AFF_PCPRSKTRY_CF	17
+#define AFF_ACCADMTYP_CT	18
+#define AFF_SCOORGEGP_M		19
+#define AFF_SCOGLOEGP_M		20
+#define AFF_EGPCUR_CF		21
+#define AFF_PMLRAT_R		22
+#define AFF_CUTSHA_R		23
+#define AFF_RIDSHA_R		24
+#define AFF_LIARIDSHA_B		25
+#define AFF_SCOEGPCAL_B		26
+#define AFF_EGPLESSCO_M		27
+#define AFF_PRMFLCRAT_B		28
+#define AFF_PRMFIXEFF_R		29
+#define AFF_PRMMINEFF_R		30
+#define AFF_PRMMAXEFF_R		31
+#define AFF_SUPLOATYP_CT	32
+#define AFF_PRMEFFLOA_M		33
+#define AFF_PRMEFFLOA_R		34
+#define AFF_SBJPRMCUR_CF	35
+#define AFF_ESTSBJPRM_M		36
+#define AFF_DEFSBJPRM_M		37
+#define AFF_SBJPRMCPT_M		38
+#define AFF_REIEXI_B		39
+#define AFF_REIUNL_B		40
+#define AFF_REIFRE_B		41
+#define AFF_REINBR_N		42
+#define AFF_LAYCAP_M		43
+#define AFF_FLAPRM_B		44
+#define AFF_SBJCPTDEF_B		45
+#define AFF_PMDEGPCUR_M		46
+#define AFF_CPLACCY_NF		47
+#define AFF_SCOLSTMTH_NF	48
+
+
+/* Position des champs dans le fichier Mouvements comptables */
+
+#define MVT_SSD_CF 		0
+#define MVT_ESB_CF 		1
+#define MVT_BALSHEY_NF 		2
+#define MVT_CTR_NF 		3
+#define MVT_END_NT 		4
+#define MVT_SEC_NF 		5
+#define MVT_UWY_NF 		6
+#define MVT_UW_NT 		7
+#define MVT_ACY_NF 		8	
+#define MVT_SCOENDMTH_NF 	9
+#define MVT_TRNCOD_CF 		10
+#define MVT_CUR_CF		11 
+#define MVT_AMT_M 		12
+#define MVT_CTRNAT_CT		13
+#define MVT_CPLACCY_NF		14
+#define MVT_SCOLSTMTH_NF	15
+#define MVT_EGPCUR_CF		16

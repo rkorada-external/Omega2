@@ -1,0 +1,253 @@
+USE
+BEST
+
+/*==============================================================*/
+/* DBMS name:      Sybase AS Enterprise 15.7                    */
+/* Created on:     28/08/2018 11:51:10                          */
+/*==============================================================*/
+
+
+if exists (select 1 
+            from  sysobjects c 
+            join  sysconstraints s on (s.constrid = c.id and s.tableid = object_id('TIfrs17ContextRequest'))
+            where name = 'FK_CONTEXT__REF_REQ' and type = 'RI')
+   alter table TIfrs17ContextRequest
+      drop constraint FK_CONTEXT__REF_REQ
+go
+
+if exists (select 1 
+            from  sysobjects c 
+            join  sysconstraints s on (s.constrid = c.id and s.tableid = object_id('TIfrs17ContextRequest'))
+            where name = 'FK_CONTEXT__REF_TIFRS17Context' and type = 'RI')
+   alter table TIfrs17ContextRequest
+      drop constraint FK_CONTEXT__REF_TIFRS17Context
+go
+
+if exists (select 1 
+            from  sysobjects c 
+            join  sysconstraints s on (s.constrid = c.id and s.tableid = object_id('TIfrs17Perm'))
+            where name = 'FK_TIFRS17P_CHAIN_OWN_TIFRS17C' and type = 'RI')
+   alter table TIfrs17Perm
+      drop constraint FK_TIFRS17P_CHAIN_OWN_TIFRS17C
+go
+
+if exists (select 1 
+            from  sysobjects c 
+            join  sysconstraints s on (s.constrid = c.id and s.tableid = object_id('TIfrs17Perm'))
+            where name = 'FK_TIFRS17P_REFERENCE_TIFRS17C' and type = 'RI')
+   alter table TIfrs17Perm
+      drop constraint FK_TIFRS17P_REFERENCE_TIFRS17C
+go
+
+if exists (select 1 
+            from  sysobjects c 
+            join  sysconstraints s on (s.constrid = c.id and s.tableid = object_id('TIfrs17Plan'))
+            where name = 'FK_TIFRS17P_REF_REQ' and type = 'RI')
+   alter table TIfrs17Plan
+      drop constraint FK_TIFRS17P_REF_REQ
+go
+
+if exists (select 1 
+            from  sysobjects c 
+            join  sysconstraints s on (s.constrid = c.id and s.tableid = object_id('TIfrs17Plan'))
+            where name = 'FK_chain_REF_plan' and type = 'RI')
+   alter table TIfrs17Plan
+      drop constraint FK_chain_REF_plan
+go
+
+if exists(select 1 from sysindexes i where i.name = 'PK_TIFRS17CHAIN' and 
+           (i.status2&2) = 2 and i.id = object_id('TIfrs17Chain'))
+   alter table TIfrs17Chain
+      drop constraint PK_TIFRS17CHAIN
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TIfrs17Chain')
+            and   type = 'U')
+   drop table TIfrs17Chain
+go
+
+if exists(select 1 from sysindexes i where i.name = 'PK_TIFRS17ContextRequest' and 
+           (i.status2&2) = 2 and i.id = object_id('TIfrs17ContextRequest'))
+   alter table TIfrs17ContextRequest
+      drop constraint PK_TIFRS17ContextRequest
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TIfrs17ContextRequest')
+            and   type = 'U')
+   drop table TIfrs17ContextRequest
+go
+
+if exists(select 1 from sysindexes i where i.name = 'PK_TIFRS17CONTEXT' and 
+           (i.status2&2) = 2 and i.id = object_id('TIfrs17Context'))
+   alter table TIfrs17Context
+      drop constraint PK_TIFRS17CONTEXT
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TIfrs17Context')
+            and   type = 'U')
+   drop table TIfrs17Context
+go
+
+if exists(select 1 from sysindexes i where i.name = 'PK_TIFRS17PERM' and 
+           (i.status2&2) = 2 and i.id = object_id('TIfrs17Perm'))
+   alter table TIfrs17Perm
+      drop constraint PK_TIFRS17PERM
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TIfrs17Perm')
+            and   type = 'U')
+   drop table TIfrs17Perm
+go
+
+if exists(select 1 from sysindexes i where i.name = 'PK_TIFRS17PLAN' and 
+           (i.status2&2) = 2 and i.id = object_id('TIfrs17Plan'))
+   alter table TIfrs17Plan
+      drop constraint PK_TIFRS17PLAN
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TIfrs17Plan')
+            and   type = 'U')
+   drop table TIfrs17Plan
+go
+
+if exists(select 1 from sysindexes i where i.name = 'PK_TIFRS17REQUEST' and 
+           (i.status2&2) = 2 and i.id = object_id('TIfrs17Request'))
+   alter table TIfrs17Request
+      drop constraint PK_TIFRS17REQUEST
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('TIfrs17Request')
+            and   type = 'U')
+   drop table TIfrs17Request
+go
+
+/*==============================================================*/
+/* Table: TIfrs17Chain                                          */
+/*==============================================================*/
+create table TIfrs17Chain (
+   chain                varchar(30)                    not null,
+   comment              varchar(64)                    null
+)
+go
+
+alter table TIfrs17Chain
+   add constraint PK_TIFRS17CHAIN primary key (chain)
+go
+
+/*==============================================================*/
+/* Table: TIfrs17ContextRequest                                 */
+/*==============================================================*/
+create table TIfrs17ContextRequest (
+   requestId            varchar(30)                    not null,
+   ContextId            varchar(20)                    not null,
+   comment              varchar(64)                    null
+)
+go
+
+alter table TIfrs17ContextRequest
+   add constraint PK_TIFRS17ContextRequest primary key (requestId, ContextId)
+go
+
+/*==============================================================*/
+/* Table: TIfrs17Context                                        */
+/*==============================================================*/
+create table TIfrs17Context (
+   ContextId            varchar(20)                    not null,
+   comment              varchar(64)                    null
+)
+go
+
+alter table TIfrs17Context
+   add constraint PK_TIFRS17CONTEXT primary key (ContextId)
+go
+
+/*==============================================================*/
+/* Table: TIfrs17Perm                                           */
+/*==============================================================*/
+create table TIfrs17Perm (
+   version              smallint                       not null,
+   fileVariable         varchar(50)                    not null,
+   ContextId            varchar(20)                    not null,
+   pattern              varchar(128)                   null,
+   folder               varchar(20)                    null,
+   fonction             varchar(30)                    null,
+   chain                varchar(30)                    not null,
+   fileName             varchar(30)                    null,
+   comment              varchar(64)                    null
+)
+go
+
+alter table TIfrs17Perm
+   add constraint PK_TIFRS17PERM primary key (version, fileVariable, ContextId, chain)
+go
+
+/*==============================================================*/
+/* Table: TIfrs17Plan                                           */
+/*==============================================================*/
+create table TIfrs17Plan (
+   requestId            varchar(30)                    not null,
+   chain                varchar(30)                    not null,
+   planId               varchar(30)                    not null,
+   comment              varchar(64)                    null
+)
+go
+
+alter table TIfrs17Plan
+   add constraint PK_TIFRS17PLAN primary key (planId, chain, requestId)
+go
+
+/*==============================================================*/
+/* Table: TIfrs17Request                                        */
+/*==============================================================*/
+create table TIfrs17Request (
+   requestId            varchar(30)                    not null,
+   comment              varchar(64)                    null
+)
+go
+
+alter table TIfrs17Request
+   add constraint PK_TIFRS17REQUEST primary key (requestId)
+go
+
+alter table TIfrs17ContextRequest
+   add constraint FK_CONTEXT__REF_REQ foreign key (requestId)
+      references TIfrs17Request (requestId)
+go
+
+alter table TIfrs17ContextRequest
+   add constraint FK_CONTEXT__REF_TIFRS17Context foreign key (ContextId)
+      references TIfrs17Context (ContextId)
+go
+
+alter table TIfrs17Perm
+   add constraint FK_TIFRS17P_CHAIN_OWN_TIFRS17C foreign key (chain)
+      references TIfrs17Chain (chain)
+go
+
+alter table TIfrs17Perm
+   add constraint FK_TIFRS17P_REFERENCE_TIFRS17C foreign key (ContextId)
+      references TIfrs17Context (ContextId)
+go
+
+alter table TIfrs17Plan
+   add constraint FK_TIFRS17P_REF_REQ foreign key (requestId)
+      references TIfrs17Request (requestId)
+go
+
+alter table TIfrs17Plan
+   add constraint FK_chain_REF_plan foreign key (chain)
+      references TIfrs17Chain (chain)
+go
+

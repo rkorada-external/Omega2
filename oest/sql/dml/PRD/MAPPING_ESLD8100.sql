@@ -1,0 +1,35 @@
+-------------------------------
+--mapping of  ESLD8100
+
+	----------   Clean tables   ---------------------
+
+	delete BEST..TI17PERMFIL where IDF_CT in  ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESLD8100')
+	delete BEST..TI17REQFNC where     IDF_CT  in ( select IDF_CT from BEST..TI17FNC where   CHAIN_CT='ESLD8100')
+	delete BEST..TI17FNC where CHAIN_CT='ESLD8100'
+	delete BEST..TI17CHN  where CHAIN_CT='ESLD8100'
+
+	insert into BEST..TI17CHN values ('ESLD8100',  '')
+
+	----------IDF_CT:   ESLD8100 ------------------
+
+		insert into BEST..TI17FNC values ('ESLD8100',' ','ESLD8100',0)
+					
+
+		----------  Perms---------------------
+
+			insert into BEST..TI17PERMFIL values ('ESLD8100',  'EST_FTECLEDA','$DFILP/${ENV_PREFIX}_ESLD8700_FTECLEDA_${NORME_CF}_${TYPEINV}_${PARM_ICLODAT_D}_${PARAM_LOCALSIT}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESLD8100',  'EST_FTECLEDR','$DFILP/${ENV_PREFIX}_ESLD8700_FTECLEDR_${NORME_CF}_${TYPEINV}_${PARM_ICLODAT_D}_${PARAM_LOCALSIT}.dat','I','')
+			insert into BEST..TI17PERMFIL values ('ESLD8100',  'EST_CLS','${ENV_PREFIX}_ESLD8100_CLSTYPE_${HOST_PRDSIT}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESLD8100',  'EST_FILE_LIST','${ENV_PREFIX}_ESLD8100_FILE_LIST_${HOST_PRDSIT}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESLD8100',  'EST_FTECLEDARA','${ENV_PREFIX}_ESID8110_RAAJUSTDB_${CLODATMAX_YEA}_${CLODATMAX_QTR}Q_${HOST_PRDSIT}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESLD8100',  'EST_FTECLEDRRA','${ENV_PREFIX}_ESID8110_RRAJUSTDB_${CLODATMAX_YEA}_${CLODATMAX_QTR}Q_${HOST_PRDSIT}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESLD8100',  'EST_FTECLEDARANZ','${ENV_PREFIX}_ESID8110_RAAJUST_${CLODATMAX_YEA_LOC}_${CLODATMAX_QTR_LOC}Q_${HOST_PRDSIT}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESLD8100',  'EST_FTECLEDRRANZ','${ENV_PREFIX}_ESID8110_RRAJUST_${CLODATMAX_YEA_LOC}_${CLODATMAX_QTR_LOC}Q_${HOST_PRDSIT}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESLD8100',  'EST_FTECLEDAYTD','${ENV_PREFIX}_ESLD8100_BSAR_FTECLEDASO_YTD_${CLODATMAX_YEA_LOC}_${CLODATMAX_QTR_LOC}Q_${HOST_PRDSIT}.dat','O','')
+			insert into BEST..TI17PERMFIL values ('ESLD8100',  'EST_FTECLEDRYTD','${ENV_PREFIX}_ESLD8100_BSAR_FTECLEDRSO_YTD_${CLODATMAX_YEA_LOC}_${CLODATMAX_QTR_LOC}Q_${HOST_PRDSIT}.dat','O','')
+	
+		----------   Reqs    ---------------------
+
+			insert into BEST..TI17REQFNC values ('Y',  'ESLD8100','')
+go
+

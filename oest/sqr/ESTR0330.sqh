@@ -1,0 +1,84 @@
+!	Working Constantes et variables multi-lingue
+!	M. Philippe HOUEE 		12/05/1997
+!
+! Edition (ESTR0330):
+!Liste des segments
+!--------------------------------------------------------
+
+#ifndef __sqh
+#define __sqh
+
+!----------------------------------------------------------------
+! Working multi-lingue
+!----------------------------------------------------------------
+#define WORKING   do C_working
+
+begin-procedure C_working($langue)
+   evaluate $langue
+
+	!---------------------------------------------------------
+	! Working Langue Francaise
+	!---------------------------------------------------------
+        when = 'F'
+		move 'Aucun Enregistrement '	to $_msk_NODATA
+                !masque d'affichage des montants:
+                move '999,999,999,999,999.999nu'  to $_msk_MONTANT
+                !masque d'affichage des ratio en %
+                move '999.99'                   to $_msk_RATIO
+               
+	break
+
+	!----------------------------------------------------------
+	! Working Langue Anglaise
+	!----------------------------------------------------------
+        when = 'E'
+		move 'No record            ' 	to $_msk_NODATA
+		!masque d'affichage des montants:
+                move '999,999,999,999,999.999nu'  to $_msk_MONTANT
+                !masque d'affichage des ratio en %
+                move '999.99'                   to $_msk_RATIO
+        break
+
+	!-----------------------------------------------------------
+	! Working Langue Inconnue ( en anglais)
+	!-----------------------------------------------------------
+        when-other
+		move 'No record            ' 	to $_msk_NODATA
+		!masque d'affichage des montants:
+                move '999,999,999,999,999.999nu'  to $_msk_MONTANT
+                !masque d'affichage des ratio en %
+                move '999.99'                   to $_msk_RATIO   
+   end-evaluate
+
+end-procedure
+
+!--------------------------------------------------------------------
+! Working mono-lingue
+!--------------------------------------------------------------------
+
+	! * SETUP *
+	#define NB_TRACE 20
+	#define MAXLINES 36 
+	#define ORIENT   landscape
+	#define FORMFEED noformfeed
+
+	! * Variables position *
+	#define ligne_entete      19
+	#define ligne_exercice    14
+	#define ligne_contrat     15
+
+	
+	! * Format *
+	#define msk_PAGE          '999999'
+	#define dateNULLE   	  'Jan  1 1900 12:00:00:000AM'
+
+	!>>> Mise en forme --> mef
+	#define mef_entete        $_bold
+	#define mef_fin_entete    $_end_bold
+	#define mef_tab           $_bold
+	#define mef_fin_tab       $_end_bold
+
+!------------------------------------------------------------------
+! Fin __sqh
+!------------------------------------------------------------------
+#endif

@@ -1,0 +1,42 @@
+/***************************************************
+Program:		SEGRESULTSINDEX
+File script :	BSEG_SEGRESULTSINDEX.tab
+Main database :	BSEG
+Version:		1
+Author:			NGA
+Creation date:	27/02/2014
+Description:
+	. Create index for segmentation results table
+	. Create index for segmentation error results table
+Parameters:
+	- #sgtrunNt: Segmentation run ID
+	
+Conditions:
+
+Comments:
+
+****************************************************/
+
+use BSEG
+go
+   
+create unique index ISEGRUNRES_#sgtrunNt_00 on TSEGRUNRES_#sgtrunNt (
+	SGMT_NF ASC,
+	CTR_NF ASC,
+	UWY_NF ASC,
+	UW_NT ASC,
+	SEC_NF ASC,
+	RTO_NF ASC,
+	SGTLVL_NT ASC
+)
+go
+
+create unique index ISEGRUNERR_#sgtrunNt_00 on TSEGRUNERR_#sgtrunNt (
+	CTR_NF ASC,
+	UWY_NF ASC,
+	UW_NT ASC,
+	SEC_NF ASC,
+	END_NT ASC,
+	RTO_NF ASC
+)
+go

@@ -1,0 +1,52 @@
+use BRET
+go
+
+/*
+[000] 24/05/2016 R. Cassis :spot:29162 Ajout table pour Impact projet RETRO sur EST P&C
+*/
+
+if exists (select 1
+            from  sysindexes
+           where  id    = object_id('BRET..TRTRANSTCODE')
+            and   name  = 'ITRTRANSTCODE_00'
+            and   indid > 0
+            and   indid < 255)
+   drop index TRTRANSTCODE.ITRTRANSTCODE_00
+go
+
+if exists (select 1
+            from  sysobjects
+            where id = object_id('BRET..TRTRANSTCODE')
+            and   type = 'U')
+   drop table BRET..TRTRANSTCODE
+go
+
+/*==============================================================*/
+/* Table: TRTRANSTCODE                                          */
+/*==============================================================*/
+create table BRET..TRTRANSTCODE (
+   TRANSTYP_CF          UBANVAL_CT                      not null,
+   FAMTRAN_CF           UBANVAL_CT                      not null,
+   CTRNAT_CT            UBANVAL_CT                      not null,
+   ACCADMTYP_CT         UACCADMTYP_CT                   not null,
+   ORIDETTRS_CF         UDETTRS_CF                      not null,
+   TRADETTRS_CF         UDETTRS_CF                      not null,
+   constraint PK_TRTRANSTCODE primary key nonclustered (TRANSTYP_CF, FAMTRAN_CF, ORIDETTRS_CF, CTRNAT_CT, ACCADMTYP_CT)
+)
+go
+
+/*==============================================================*/
+/* Index: ITRTRANSTCODE_00                                      */
+/*==============================================================*/
+create unique clustered index ITRTRANSTCODE_00 on BRET..TRTRANSTCODE (
+TRANSTYP_CF ASC,
+FAMTRAN_CF ASC,
+ORIDETTRS_CF ASC,
+TRADETTRS_CF ASC
+)
+Go
+
+GRANT ALL ON TRTRANSTCODE TO GOMEGA, GDBBATCH
+go
+GRANT SELECT ON TRTRANSTCODE TO GCONSULT
+GO

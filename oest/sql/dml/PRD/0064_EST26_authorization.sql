@@ -1,0 +1,30 @@
+USE BREF
+go
+
+DELETE FROM TPROFILFUNC WHERE FUNC_CF in (818138,818141,816925,816955) AND APP_CF IN('EST')
+
+
+go
+
+INSERT INTO TPROFILFUNC (FUNC_CF, APP_CF, PRF_CF) VALUES (818138, 'EST', 'PUBLIC')
+INSERT INTO TPROFILFUNC (FUNC_CF, APP_CF, PRF_CF) VALUES (818141, 'EST', 'LIFEALL')
+INSERT INTO TPROFILFUNC (FUNC_CF, APP_CF, PRF_CF) VALUES (816925, 'EST', 'LIFEALL')
+INSERT INTO TPROFILFUNC (FUNC_CF, APP_CF, PRF_CF) VALUES (816955, 'EST', 'LIFEALL')
+go
+
+DELETE FROM BREF..TFUNCTION WHERE FUNC_CF IN(818138,818141,816925,816955) AND APP_CF IN ('EST')
+go
+
+INSERT INTO TFUNCTION (FUNC_CF, APP_CF, FUNC_LS, FUNC_LD, BATDEP_B, UPDATE_B, FNTYP_CT) 
+	VALUES (818138, 'EST', 'V Gap thresh adm', 'This function controls access to Gap details threshold administration screen',0, 0, 0)
+
+INSERT INTO TFUNCTION (FUNC_CF, APP_CF, FUNC_LS, FUNC_LD, BATDEP_B, UPDATE_B, FNTYP_CT) 
+	VALUES (818141, 'EST', 'U Gap thresh adm', 'This function controls update in Gap details threshold administration screens ',1, 1, 0)
+	
+INSERT INTO TFUNCTION (FUNC_CF, APP_CF, FUNC_LS, FUNC_LD, BATDEP_B, UPDATE_B, FNTYP_CT) 
+	VALUES (816925, 'EST', 'U Gap acc pro', 'This function allows to use Gap accounting prognoses screens ',1, 1, 0)
+	
+INSERT INTO TFUNCTION (FUNC_CF, APP_CF, FUNC_LS, FUNC_LD, BATDEP_B, UPDATE_B, FNTYP_CT) 
+	VALUES (816955, 'EST', 'U Gap acc excpro', 'This function allows to use  Gap accounting exceeding prognoses screen ',1, 1, 0)
+
+go

@@ -1,0 +1,58 @@
+USE BEST
+go
+IF OBJECT_ID('TLIFESTD_H') IS NOT NULL
+BEGIN
+  DROP TABLE TLIFESTD_H
+  IF OBJECT_ID('TLIFESTD_H') IS NOT NULL
+    PRINT '<<< FAILED DROPPING TABLE TLIFESTD_H >>>'
+  ELSE
+    PRINT '<<< DROPPED TABLE TLIFESTD_H >>>'
+END
+go
+CREATE TABLE TLIFESTD_H
+(
+  CTR_NF UCTR_NF not null,
+	END_NT UEND_NT not null,
+	SEC_NF USEC_NF not null,
+	UWY_NF UUWY_NF not null,
+	UW_NT UUW_NT not null,
+	CRE_D UUPD_D not null,
+	BALSHEY_NF smallint not null,
+	BALSHTMTH_NF tinyint not null,
+	ACY_NF smallint not null,
+	GAAP_NT tinyint not null,
+	DETTRNCOD_CF char (5) default '''''' not null,
+	ACM_NF tinyint default 13 not null,
+	PRS_CF smallint not null,
+	ACMTRS_NT smallint not null,
+	SSD_CF USSD_CF not null,
+	CUR_CF UCUR_CF not null,
+	ESTMNT_M UAMT_M not null,
+	INDSUP_B bit default 0 not null,
+	ORICOD_LS UL16 null,
+	CREUSR_CF UUPDUSR_CF not null,
+	LSTUPD_D UUPD_D not null,
+	LSTUPDUSR_CF UUPDUSR_CF not null,
+	ORICTR_NF UCTR_NF null,
+	ORISEC_NF USEC_NF null,
+	ORIUWY_NF UUWY_NF null,
+	DIFF_M UAMT_M null,
+	PROPAGATION_B bit default 0 not null,
+	CALCULATED_B bit default 0 not null,
+	BATCH_B bit default 0 not null 
+) LOCK DATAROWS
+go
+
+IF OBJECT_ID('TLIFESTD_H') IS NOT NULL
+  PRINT '<<< CREATED TABLE TLIFESTD_H >>>'
+ELSE
+  PRINT '<<< FAILED CREATING TLIFESTD_H  >>>'
+go
+CREATE UNIQUE NONCLUSTERED INDEX ILIFESTD_H on TLIFESTD_H (CTR_NF, END_NT, SEC_NF, UWY_NF, UW_NT, CRE_D, BALSHEY_NF, BALSHTMTH_NF, ACY_NF, PRS_CF, ACMTRS_NT, GAAP_NT, DETTRNCOD_CF)
+go
+GRANT ALL ON TLIFESTD_H TO GOMEGA 
+go
+GRANT ALL ON TLIFESTD_H TO GDBBATCH
+go
+GRANT SELECT ON TLIFESTD_H TO GCONSULT
+go

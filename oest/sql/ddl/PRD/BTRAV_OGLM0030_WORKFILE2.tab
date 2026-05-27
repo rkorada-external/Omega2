@@ -1,0 +1,111 @@
+USE BTRAV
+go
+/****************************************************
+Table            : BTRAV..OGLM0030_WORKFILE2
+Base principale  : BTRAV
+Version          : 
+Author           : SA
+Date of creation : 08/15/2015
+Fiche            :spot:28690
+Description      : Central table where the validated data is housed before translation.
+*********************************************************/
+/* UBGL_ON */
+IF OBJECT_ID('OGLM0030_WORKFILE2') IS NOT NULL
+BEGIN
+    DROP TABLE OGLM0030_WORKFILE2
+    PRINT '<<< DROPPED TABLE OGLM0030_WORKFILE2 >>>'
+END
+go
+
+CREATE TABLE OGLM0030_WORKFILE2
+(
+    ACCTYP_NF                tinyint       NULL,
+    SSD_CF                   USSD_CF       NULL,
+    ESB_CF                   UESB_CF       NULL,
+    BALSHEY_NF               UUWY_NF       NOT NULL,
+    BALSHRMTH_NF             tinyint       NOT NULL,
+    BALSHRDAY_NF             tinyint       NOT NULL,
+    VALPERY_NF               UUWY_NF       NULL,
+    VALPERMTH_NF             tinyint       NULL,
+    TRNCOD_CF                UDETTRS_CF    NOT NULL,
+    DBLTRNCOD_CF             UDETTRS_CF    NULL,
+    RETAUTGEN_B              bit           NOT NULL,
+    CTR_NF                   UCTR_NF       NULL,
+    END_NT                   UEND_NT       NULL,
+    SEC_NF                   USEC_NF       NULL,
+    UWY_NF                   UUWY_NF       NULL,
+    UW_NT                    UUW_NT        NULL,
+    OCCYEA_NF                UUWY_NF       NULL,
+    ACY_NF                   UUWY_NF       NULL,
+    SCOSTRMTH_NF             tinyint       NULL,
+    SCOENDMTH_NF             tinyint       NULL,
+    CLM_NF                   UCLM_NF       NULL,
+    CUR_CF                   UCUR_CF       NULL,
+    AMT_M                    UAMT_M        NULL,
+    RETCTR_NF                URETCTR_NF    NULL,
+    RETEND_NT                UEND_NT       NULL,
+    RETSEC_NF                URETSEC_NF    NULL,
+    RTY_NF                   UUWY_NF       NULL,
+    RETUW_NT                 UUW_NT        NULL,
+    PLC_NT                   UPLC_NT       NULL,
+    RETOCCYEA_NF             UUWY_NF       NULL,
+    RETACY_NF                UUWY_NF       NULL,
+    RETSCOSTRMTH_NF          tinyint       NULL,
+    RETSCOENDMTH_NF          tinyint       NULL,
+    RCL_NF                   UCLM_NF       NULL,
+    RETCUR_CF                UCUR_CF       NULL,
+    RETAMT_M                 UAMT_M        NULL,
+    COMMAC_LL                UL64          NULL,
+    SPEENTTYP_CF             tinyint       NULL,
+    SPEENTNAT_CT             tinyint       NULL,
+    EVT_NF                   varchar(10)   NULL,
+    REVT_NF                  varchar(10)   NULL,    
+    NUMLINE_NT               int           DEFAULT 0 NOT NULL,
+    GEAC_CLOSE_PERD_ADJ      bit           NOT NULL,
+    GEAC_REVERSAL_CODE       char(1)       NULL,
+    TYPEMNT_CT               char(3)       NULL,
+    CRE_D                    UUPD_D        NULL,
+    CREUSR_CF                UUPDUSR_CF    NULL,
+    LSTUPD_D                 UUPD_D        NULL,
+    LSTUPDUSR_CF             UUPDUSR_CF    NULL,
+    FILENAME                 VARCHAR(100)  NULL,
+    NUMLIGNE_NT              NUMERIC(6)    NULL,
+    NUMFIC_NT                int           NULL
+)
+LOCK DATAROWS
+go
+IF OBJECT_ID('OGLM0030_WORKFILE2') IS NOT NULL
+    PRINT '<<< CREATED TABLE OGLM0030_WORKFILE2 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING TABLE OGLM0030_WORKFILE2 >>>'
+go
+GRANT REFERENCES ON OGLM0030_WORKFILE2 TO GOMEGA
+go
+GRANT REFERENCES ON OGLM0030_WORKFILE2 TO GDBBATCH
+go
+GRANT SELECT ON OGLM0030_WORKFILE2 TO GCONSULT
+go
+GRANT SELECT ON OGLM0030_WORKFILE2 TO GOMEGA
+go
+GRANT SELECT ON OGLM0030_WORKFILE2 TO GDBBATCH
+go
+GRANT INSERT ON OGLM0030_WORKFILE2 TO GOMEGA
+go
+GRANT INSERT ON OGLM0030_WORKFILE2 TO GDBBATCH
+go
+GRANT DELETE ON OGLM0030_WORKFILE2 TO GOMEGA
+go
+GRANT DELETE ON OGLM0030_WORKFILE2 TO GDBBATCH
+go
+GRANT UPDATE ON OGLM0030_WORKFILE2 TO GOMEGA
+go
+GRANT UPDATE ON OGLM0030_WORKFILE2 TO GDBBATCH
+go
+GRANT DELETE STATISTICS ON OGLM0030_WORKFILE2 TO GDBBATCH
+go
+GRANT TRUNCATE TABLE ON OGLM0030_WORKFILE2 TO GDBBATCH
+go
+GRANT UPDATE STATISTICS ON OGLM0030_WORKFILE2 TO GDBBATCH
+go
+GRANT TRANSFER TABLE ON OGLM0030_WORKFILE2 TO GDBBATCH
+go

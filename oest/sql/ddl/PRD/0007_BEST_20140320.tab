@@ -1,0 +1,27 @@
+use BEST
+go
+
+/*==============================================================*/
+/* Table: TLIFMOD2                                               */
+/*==============================================================*/
+ALTER TABLE dbo.TLIFMOD2 MODIFY GAAP_NT tinyint NOT NULL
+go
+
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TLIFMOD2') AND name='ILIFMOD2_00')
+BEGIN
+    DROP INDEX TLIFMOD2.ILIFMOD2_00
+    IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TLIFMOD2') AND name='ILIFMOD2_00')
+        PRINT '<<< FAILED DROPPING INDEX dbo.TLIFMOD2.ILIFMOD2_00 >>>'
+    ELSE
+        PRINT '<<< DROPPED INDEX dbo.TLIFMOD2.ILIFMOD2_00 >>>'
+END
+go
+CREATE UNIQUE NONCLUSTERED INDEX ILIFMOD2_00
+    ON dbo.TLIFMOD2(CTR_NF,SEC_NF,CRE_D,BALSHEY_NF,BALSHTMTH_NF,ACY_NF,GAAP_NT)
+go
+IF EXISTS (SELECT * FROM sysindexes WHERE id=OBJECT_ID('dbo.TLIFMOD2') AND name='ILIFMOD2_00')
+    PRINT '<<< CREATED INDEX dbo.TLIFMOD2.ILIFMOD2_00 >>>'
+ELSE
+    PRINT '<<< FAILED CREATING INDEX dbo.TLIFMOD2.ILIFMOD2_00 >>>'
+go
+

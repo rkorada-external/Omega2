@@ -1,0 +1,12 @@
+use BTRT
+go
+
+/*==============================================================*/
+/* Table: TCALEND                                  */
+/*==============================================================*/
+
+ALTER TABLE dbo.TFAMLIA ADD RPRAT_R USHORAT_R  NULL
+go
+
+ALTER TABLE dbo.TFAMLIA_V ADD RPRAT_R USHORAT_R  NULL
+go
