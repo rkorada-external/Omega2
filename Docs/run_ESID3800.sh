@@ -1,0 +1,107 @@
+#!/bin/ksh
+
+#set -x
+
+echo "------------ Start run_ESID3800.sh"
+
+if [ "$#" -ne 4 ]; then
+  echo "Usage: " >&2
+  echo '$1:env ( ITK, UAT, CNV, INT, PRD, MAI ) ' >&2
+  echo '$2: site ( as , am or eu) ' >&2
+  echo '$3: chain to launch without extension  ( ESPD1800) ' >&2
+  echo '$4: IDF_CT ' >&2
+  exit 1
+fi
+
+env=$1
+site=$2
+chain=$3
+IDF_CT=$4
+PCH=T
+
+
+
+if [ "$IDF_CT" = "" ]; then
+		IDF_CT = "$chain"
+fi
+
+if [ "$env" = "UAT" ]; then
+        PCH=T
+		server="aenuato2batch"
+fi
+
+if [ "$env" = "INT" ]; then
+        PCH=T
+		server="aeninto2batch" 
+fi
+
+if [ "$env" = "IN2" ]; then
+        PCH=T
+		server="aenin2o2batch" 
+fi
+
+if [ "$env" = "CNV" ]; then
+        PCH=C
+		server="aencnvo2batch"
+fi
+
+if [ "$env" = "PRD" ]; then
+        PCH=P
+		server="aenprdo2batch"
+fi
+
+if [ "$env" = "ITK" ]; then
+        PCH=T
+		server="aenitko2batch"
+fi
+
+if [ "$env" = "MAI" ]; then
+        PCH=T
+		server="aenmaio2batch"
+fi
+
+
+
+
+export ENV_PREFIX=${PCH}
+export XDFILP=/scordata_${server}/ub${site}/perm
+export XDFILI=/scordata_${server}/ub${site}/interm
+export YDFILP=/scordata_aenprdo2batch/ub${site}/perm
+export YENV_PREFIX=P
+cp ${XDFILP}/${PCH}_ES*J0000_*.dat         	$DFILP
+
+${BCPPDIR}/bcpmulti BIDON out "${PCH}_ESFJ0000_TI17PERMFIL.dat" -USVC_OM_Altersis_GRP_RO -S${env}_TPO2 -c to $DFILP -Jiso_1 -PLaRi7!H6M,Rh -t"~" -r"\n" -d0 -M0 -Q "
+select
+IDF_CT,
+PERMFIL_CT,
+case
+WHEN IO='I' and IDF_CT ='ESID3800' then str_replace (PATHPATTRN_LL,'DFIL','XDFIL')
+else PATHPATTRN_LL
+END  PATHPATTRN_LL,
+IO, PERM_LL
+from BEST..TI17PERMFIL
+WHERE IDF_CT ='ESID3800'
+"
+
+
+mv ${DFILP}/${PCH}_ESFJ0000_TI17PERMFIL.dat.1 ${DFILP}/${PCH}_ESFJ0000_TI17PERMFIL.dat
+#set +x 
+if [ "$DCMD_TNR" = "" ]; then
+	export DCMD=/scoromega_runnable_${server}/cmd
+else
+	export DCMD=$ 
+fi
+
+if [ "$DEXE_TNR" = "" ]; then
+	export DEXE=/scoromega_runnable_${server}/exe
+	export LD_LIBRARY_PATH=/scor/scoromega_runnable_${server}/lib:$LD_LIBRARY_PATH
+	export DLIB=/scor/scoromega_runnable_${server}/lib:$DLIB
+	export SHLIB_PATH=/scor/scoromega_runnable_${server}/lib:$SHLIB_PATH
+fi
+
+echo DCMD: $DCMD
+echo DEXE: $DEXE
+echo LD_LIBRARY_PATH: $LD_LIBRARY_PATH
+
+$DCMD/${chain}.cmd = M
+
