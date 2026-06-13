@@ -1,0 +1,65 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GETPRMO-optimized
+# 1 input parameter:
+# - Parameter file
+#
+# Subject: Get parameters from chain parameter file
+#
+# Format of a parameter file
+# "#" can be used as a comment line (the whole line)
+# A parameter consists of two field: a description field and its value
+#
+#
+# Sample of a parameter file
+# SSD_CF 1
+# ESB_CF 2
+# The function being used as follows: set `GETPRM $FRMP`
+# the values of the parameters will be in $1, $2, ...
+# In our example, $1=1 and $2=2
+#
+#
+#----------------------------------------------------------------------------
+
+GETPRMO() {
+	typeset -n tabref=$1
+	typeset file="$2"
+	typeset line nb=0 champ1 champ2
+
+	[[ -z "$1" || "$1" != "TAB_PARAM" ]] && {
+		print "error tab \"$1\" not found"
+		return 22
+	}
+
+	[[ ! -f "$file" ]] && {
+		print "error file \"$file\" not found "
+		return 33
+	}
+
+	while IFS= read -r line || [[ -n "$line" ]]; do
+		(( nb++ ))
+		
+		line="${line#"${line%%[![:space:]]*}"}"    #remove spaces begin of line
+		line="${line%"${line##*[![:space:]]}"}"    #remove spaces end of line
+
+		[[ -z "$line" || "$line" = \#* ]] && {
+			print "\nline[ $nb ] : skipped "
+			continue
+		}
+
+		champ1=$(print "$line" | awk '{print $1}')
+		champ2=$(print "$line" | sed -e "s/^$champ1[[:space:]]*//")
+
+		[[ -z "$champ1" ]] && {
+			print "\empty field [ $nb ] : skipped "
+			continue
+		}
+
+		tabref["$champ1"]="$champ2"
+		print "$nb : $champ1 \t --> [ $champ2 ] " 
+		
+	done < "$file"
+}
+
+
+
+

@@ -1,0 +1,102 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SPLIT_SSD
+#
+# parameters must be previously defined:
+# Parametre
+# en entree :
+#   SPLIT_PREFIX=${NSTEP}
+#   SPLIT_PREFIX_NEW=${NSTEP}
+# Fichiers
+# en entree :
+#   SPLIT_I: $NJOB_$NUMSTEP_$IB_<prog>.dat
+# en sortie
+#   $NJOB_<subs>_$NUMSTEP_$IB_<prog>.dat
+#
+# Subject: Eclate un fichier d'edition en n fichier (par filiale etablissement)
+# Le fichier doit etre construit ainsi :
+# La 1ere ligne de chaque page comporte : langue filiale 
+# Exemple :
+# F 03 
+#
+#------------------------------------------------------------------------------
+SPLIT_SSD () {
+
+# Begin Awk command
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+        STEP_PRG=SPLIT_SSD
+        STEPSTART
+
+   # Test Input file size
+   if [ ! -s ${SPLIT_I} ]
+   then
+      echo "# !!!!!! DATA FILE IS EMPTY"
+      STEPEND 0
+      return 0
+   fi
+
+   echo "# Split Data File by SSD"
+   AWK_I=${SPLIT_I}
+   AWK_PARAM="SPLIT_PREFIX=${SPLIT_PREFIX} SPLIT_PREFIX_NEW=${SPLIT_PREFIX_NEW}"
+   AWK_O=/dev/null
+   AWK_CMD=`CFTMP`
+   INPUT_TEXT ${AWK_CMD} <<EOF
+BEGIN {
+	FILOUT = "" # Nom du fichier en sortie
+	FILCUR = "" # Valeur courante du critere de rupture
+	RUPT   = "" # Critere de rupture
+}
+{
+# En rupture sur , on ferme le fichier et on change le nom de la sortie
+# Warning : premiere ligne > pas de  avant
+# Warning : derniere ligne > un  et rien apres
+	NEW = 0     # detection de changement de page
+	if (match(\$0, "\") != 0)
+		{	DERNIER1 = 1 # test dernier enregistrement pour cette maquette
+			for (I = 1; I <= length(\$0); I ++)
+			{	if (substr(\$0,I,1) == "\")
+				{	continue
+				}	
+				if (substr(\$0,I,1) == " " )
+				{	continue
+				}	
+				NEW = 1
+				DERNIER1 = 0
+				break 
+			}
+			if (DERNIER1 == 1) # pas d'édition du dernier enregistrement des maquettes
+			{	next
+			}
+		}
+	if (NEW == 1 || FNR ==1) # ==> 1ere ligne de chaque page
+		{
+		SSD = \$2
+		RUPT  = \$2 # calcul du critere de rupture
+		if (RUPT != FILCUR)
+			{
+			if (NR != 1)
+				{	print "\" > FILOUT
+					close (FILOUT)
+				}
+			gsub ("\","",\$0)
+			FILCUR  = RUPT  # sauvegarde de la rupture courante
+			FILE = FILENAME 
+			sub(SPLIT_PREFIX,SPLIT_PREFIX_NEW"_"SSD,FILE)
+			FILOUT  = FILE
+			}
+		}
+	print \$0 > FILOUT
+}
+END {
+print "\" > FILOUT
+close (FILOUT)
+}
+exit
+EOF
+
+   STEP_NOECHO="YES"
+   AWK
+fi
+}
+
+

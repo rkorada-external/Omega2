@@ -1,0 +1,43 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SQR
+# The following parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# SQR_PRG :  SQR Program
+# SQR_PARAM: Parameters to pass to SQR program
+# SQR_BASE:  Output Data File
+# SQR_LAG_CF: Language Code
+# Subject: Generic Function for SQR 
+#
+#----------------------------------------------------------------------------
+SQR ()
+{
+#set -x
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+        STEP_PRG=SQR
+        STEPSTART 
+
+        [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+	echo "# start of ${SQR_PRG}"
+
+        export SQR_LOG=${DFILT}/${NSTEP}_${IB}_${SQR_PRG}.log
+        export SQR_ANO=${DFILT}/${NSTEP}_${IB}_${SQR_PRG}.ano
+
+
+        export PRGLOG=${NSTEP}_${IB}_${SQR_PRG}.log
+        export PRGANO=${NSTEP}_${IB}_${SQR_PRG}.ano
+      
+        $SQRDIR/sqr -RT ${DSQR}/${SQR_PRG}.sqt $USR/$PSWD -DB${SQR_BASE} -V$SRV -F${SQR_O} -M${SQRDIR}/sqrmaxes.dat ${SQR_PARAM} >${SQR_LOG} 2>${SQR_ANO}
+
+        SQR_ERR=$?
+        if [ ${SQR_ERR} -eq 0 ] && [ ! -s ${SQR_O} ]
+        then
+           echo "# INFO: The Sqr output file is empty !"
+        fi
+
+        STEPEND ${SQR_ERR}
+fi
+return 0
+}
+

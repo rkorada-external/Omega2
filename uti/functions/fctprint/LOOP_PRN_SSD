@@ -1,0 +1,124 @@
+#----------------------------------------------------------------------------
+# FUNCTION: LOOP_PRN_SSD
+#
+# Subject: This function is used to print on directions or groups
+#
+# 4 parameters :
+#          NSTEP
+#          LOOP_PRN_SSD_PREFIX : name of the step which creates data files
+#          LOOP_PRN_SSD_TYPE   : type of targets site (group or direction)
+#          LOOP_PRN_SSD_FMT    : name of the sp file to call
+#          
+#----------------------------------------------------------------------------
+LOOP_PRN_SSD () {
+#set -x
+
+if [ "${RP}" = ""  -o `echo ${RP} | grep ${NSTEP} | wc -l` != 0 -o "${ADT}" != "" ]
+then
+  ADT="${NSTEP}"
+  # Disable DEBUG ISQL_MODE inside toolbox function
+  ISQL_MODE_PREV=${ISQL_MODE}
+  ISQL_MODE=""
+
+  echo "#"
+  echo '#*************************************************************************'
+  echo "# Enter LOOP_PRN_SSD"
+  echo "#"
+
+  echo "# Get list of printers for ${LOOP_PRN_SSD_TYPE} from  BREF..TPRINTB"
+  STEP_NOECHO=YES
+  ISQL_BASE="BREF"
+  ISQL_O=${DFILT}/${NSTEP}_${IB}_ISQL_LOOPPRN.dat
+  # For restart
+  /bin/rm -f ${ISQL_O} > /dev/null 2>&1
+  ISQL_QRY=`CFTMP`
+  INPUT_TEXT ${ISQL_QRY} << EOF
+begin tran
+
+select SSD_CF,PRDSIT_CF,CRTTYP_CT,GEOSIT_CF,PRT_CF
+from BREF..TPRINTB
+where CRTVAL_LS='${LOOP_PRN_SSD_TYPE}'
+
+commit tran
+exit
+EOF
+
+  # Extract information from the query
+  STEP_NOECHO=YES
+  ISQL_FRES=${DFILT}/${NSTEP}_${IB}_SSD${LOOP_PRN_SSD_TYPE}_O.tmp
+  ISQL_RES
+  
+
+  # Declare working files
+  FTMP=${DFILT}/${NSTEP}_${IB}_LOOPPRN.tmp
+
+  NSTEPS="${NSTEP}"
+  STEPSTART_FORCE YES
+  STEP_NOECHO=NO
+
+  for FDAT in `ls ${DFILT}/${LOOP_PRN_SSD_PREFIX}*.dat 2>/dev/null`
+  do
+    if [ -s ${FDAT} ]
+    then
+      # subsidiary
+      CR1=`basename ${FDAT} | awk '{print substr($0,length(ST)+1)}' ST=${NJOB} | awk -F_ '{print $3}'`
+      # direction or group
+      CR2=`basename ${FDAT} | awk '{print substr($0,length(ST)+1)}' ST=${NJOB} | awk -F_ '{print $4}'`
+      awk '$1==C1 && $3==C2 {print $0}' C1=${CR1} C2=${CR2} ${DFILT}/${NSTEP}_${IB}_SSD${LOOP_PRN_SSD_TYPE}_O.tmp > ${FTMP}
+      if [ ! -s ${FTMP} ]
+      then
+        # Get the default printer
+        awk '$1==C1 && $3==99 {print $0}' C1=${CR1}  ${DFILT}/${NSTEP}_${IB}_SSD${LOOP_PRN_SSD_TYPE}_O.tmp > ${FTMP}
+        if [ ! -s ${FTMP} ]
+        then
+          echo "# !!!!!!   NO DEFAULT PRINTER DEFINED for SSD:${CR1}"
+          continue
+        fi 
+      fi
+      
+      LIBEL="LOOP PRN for SSD_CF:${CR1} and ${LOOP_PRN_SSD_TYPE}:${CR2}"
+      # export these values for PRN function use
+      export SSD_CF=`awk '{print $1}' ${FTMP}`
+      export PRDSIT_CF=`awk '{print $2}' ${FTMP}`
+      export GEOSIT_CF=`awk '{print $4}' ${FTMP}`
+      export PRT_CF=`awk '{print $5}' ${FTMP}`
+      export PRTID=${PRDSIT_CF}';'${GEOSIT_CF}';'${PRT_CF}
+
+      PRN_NAME="${PRTID}"
+      PRN_I=${FDAT} 
+      PRN_FMT=${LOOP_PRN_SSD_FMT}   
+
+      NSTEP="${NSTEP}_${CR1}_${LOOP_PRN_SSD_TYPE}_${CR2}"
+      # Asynchronous processing in order to loop on the PRN even if one edition failed
+      PRN &    
+      wait $!
+      RC=$?
+      
+      NSTEP="${NSTEPS}"
+
+      # Delete of the data file
+      if [ ${RC} = 0 ]
+      then
+        /bin/rm -f ${FDAT} 2>/dev/null
+      fi
+    fi
+  done
+  if [ -s ${DABORT}/${NCHAIN}_${HOSTNAME}.rst ]
+  then
+    exit 12
+  fi  
+
+  # Disable DEBUG ISQL_MODE inside toolbox function
+  ISQL_MODE=${ISQL_MODE_PREV}
+
+STEPSTART_FORCE NO
+  /bin/rm -f ${FTMP} > /dev/null 2>&1
+  /bin/rm -f ${ISQL_O} > /dev/null 2>&1
+  /bin/rm -f ${ISQL_FRES} > /dev/null 2>&1
+  echo "#"
+  echo "# Exit LOOP_PRN_SSD"
+  echo '#*************************************************************************'
+fi
+return 0
+}
+

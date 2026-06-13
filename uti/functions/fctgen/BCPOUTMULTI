@@ -1,0 +1,82 @@
+#----------------------------------------------------------------------------
+# FUNCTION: BCPOUTMULTI
+# The following parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# BCP_O:    Path and name of Output File
+# BCP_QRY: Query doing the extract
+# BCP_SPECIAL_OPT: Special options which are not defined by default
+#
+# Subject: Generic Function of bcpmulti in
+# The separator field is ~
+#----------------------------------------------------------------------------
+BCPOUTMULTI()
+{
+#set -x
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+        STEP_PRG=BCPOUTMULTI
+        STEPSTART 
+
+        [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+	BASENAME_BCP_O=`basename ${BCP_O}`
+	DIRNAME_BCP_O=`dirname ${BCP_O}`
+        BCP_CMD=`CFTMP`
+        BCP_LOG=${DFILT}/${NSTEP}_${IB}_BCPOUT.log
+        BCP_ANO=${DFILT}/${NSTEP}_${IB}_BCPOUT.ano
+
+        export PRGLOG=${NSTEP}_${IB}_BCPOUT.log
+        export PRGANO=${NSTEP}_${IB}_BCPOUT.ano
+   
+        if [ -z "${BCP_FS}" ]
+        then
+          BCP_FS="\~"
+        fi
+        if [ -z "${BCP_RS}" ]
+        then
+          BCP_RS='\\n'
+        fi
+
+        # execute bcpmulti program
+        cat >${BCP_CMD} <<EOF
+${BCPPDIR}/bcpmulti BIDON out ${BASENAME_BCP_O} -U${USR} -S${SRV} -c to ${DIRNAME_BCP_O} -Jiso_1 -P${PSWD} -t"${BCP_FS}" -r"${BCP_RS}" -d0 -M0 -Q "${BCP_QRY}" ${BCP_SPECIAL_OPT}
+EOF
+	. ${BCP_CMD} >${BCP_LOG} 2>&1
+
+        # Return Code Management
+        BCP_ERR=$?
+        BCP_SPECIAL_OPT=""
+	BCP_FS=""
+	BCP_RS=""
+
+        /bin/rm -f ${BCP_CMD} 2>&1
+
+        # Supprimer l'extension .1 generee par bcp+ 
+        if [ -f "${BCP_O}.1" ]
+        then
+           mv ${BCP_O}.1 ${BCP_O}
+        fi
+
+        if [ "${BCP_ERR}" -eq 0 ]
+        then
+              # Analyse the sixth field of the log file to determine if error occured
+              # ---------------------------------------------------------------------
+              BCP_ERR=`awk '$6==1 {flag=1} END { if(flag == 1)print 1; else print 0 }' ${BCP_LOG} ` 
+              if [ "${BCP_ERR}" -eq 0 ]
+              then
+                    tail -2 ${BCP_LOG} | head -1
+              fi
+        fi
+
+        if [ "${BCP_ERR}" -ne 0 ]
+        then
+           mv ${BCP_LOG} ${BCP_ANO}
+        fi
+
+        STEPEND ${BCP_ERR}
+        # End of BCPOUTMULTI
+
+fi
+return 0
+}
+

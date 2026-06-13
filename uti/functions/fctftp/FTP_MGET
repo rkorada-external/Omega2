@@ -1,0 +1,95 @@
+#----------------------------------------------------------------------------
+# FUNCTION: FTP_MGET 
+#
+# The following parameters must be previously defined:
+# 9 parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# FTP_DELAY	: Waiting Delay before each retry
+# FTP_NBRETRY	: Number of times the function tries to connect
+# FTP_IP	: IP Address of the target host
+# FTP_USR	: User of the target host
+# FTP_PWD	: Passwd of the user address
+# FTP_MODE	: transfer mode (default value ascii)
+# FTP_RDIR	: Remote directory (Host)
+# FTP_LDIR	: Local directory
+# FTP_I		: Input files to transfer
+#
+# Subject: This function uses FTP program output command to get a file (or list of 
+#               files from a target host
+#----------------------------------------------------------------------------
+FTP_MGET () {
+#set -x
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+	echo "FTP_MGET sur ...........................:${FTP_I}"
+	echo "Remote directory (Host) ...........................:${FTP_RDIR}"
+	echo "Local directory ...........................:${FTP_LDIR}"
+   STEP_PRG=FTP_MGET
+   STEPSTART
+
+   LIBEL="Ftp Transfer"
+
+   DOUBLE_ANTISLASH ${FTP_RDIR}
+   CDFTP1=${DB_ANTISLASH}
+
+   # move to local data directory
+   cd ${FTP_LDIR}
+
+   # test transfer mode value
+   if [ "${FTP_MODE}" != "binary" ]
+   then
+	FTP_MODE="ascii"
+   fi
+   
+   # --- MAKE FILE TRANSFER ---
+   # --------------------------
+   # --------------------------
+   #
+   FTP_CUR_COUNTRETRY=0
+   while [ ${FTP_NBRETRY} -gt ${FTP_CUR_COUNTRETRY} ]
+   do
+echo "Start FTP transfer..........................."
+      # Start FTP transfer
+      # ----------------------------
+      FTP_LOG=`CFTMP`
+     #$# ftp -n -i ${FTP_IP} <<EOF 1>${FTP_LOG} 2>&1
+      /usr/bin/ftp -n -i ${FTP_IP} <<EOF 1>${FTP_LOG} 2>&1 
+verbose
+user ${FTP_USR} ${FTP_PSWD}
+cd ${CDFTP1}
+${FTP_MODE}
+mget ${FTP_I}
+quit
+EOF
+      FTP_ERROR=$?
+      FTMP=`CFTMP`
+
+      # HG MODIF 2002/03/18 pour compatibilite Sun OS 5.8
+      # 230-aftpd:220 JUNTA FTP server (SunOS 5.8) ready.
+      #RC1=`head -5 ${FTP_LOG} | cut -d" " -f1`
+      RC1=`cut -d" " -f1 ${FTP_LOG} | grep -v '230-' | head -5`
+
+
+      if [ `echo ${RC1} | grep -c 331.230.2.0.200` -eq 1 ] && [ ${FTP_ERROR} -eq 0 ]
+      then
+           echo "# Transfer succeeded  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+           awk '/data connection for/ { printf("# Get %s %s %s\n",$6,$8,$9) }' ${FTP_LOG}
+           break
+      else
+           # Error: Let's try again
+           echo "# Transfer of " `basename ${FTP_I}` "  failed  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+           cat ${FTP_LOG}
+           FTP_ERROR=1
+           let FTP_CUR_COUNTRETRY=FTP_CUR_COUNTRETRY+1
+      fi
+      sleep ${FTP_DELAY}
+
+   done
+   # --- END OF FTP CONNECTION ---
+   /bin/rm -f "${FTP_LOG}" >/dev/null 2>&1
+   STEPEND ${FTP_ERROR} 
+fi
+}
+
+
+

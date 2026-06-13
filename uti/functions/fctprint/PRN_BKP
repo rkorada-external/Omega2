@@ -1,0 +1,320 @@
+#----------------------------------------------------------------------------
+# FUNCTION: PRN
+#
+# 7 parameters must be previously defined:
+# NSTEP:        Number of STEP
+# PRN_NAME   :  Printer Identification
+# PRN_I      :  Data File to print
+# PRN_FMT    :  Format File
+#
+# PRN_TYPE: List of values - STARJET, STARPDF, WORD, DAESEND
+# PRN_OUT:  indicates if WEB AND/OR PRINT output
+#
+# Subject:  Generic Function for Printing
+# The report is printed either on the unix printer or to a netware printer
+# depending information defined 
+#
+# The report is directly printed to Unix printer if the geographic and 
+# production site are the same and the unix printer is defined
+# Otherwise, the report file and its associated control file are sent to 
+# the printing pool. They are two control files. The ftp file contains 
+# information to connect the remote printing server. The dae file is used as
+# a command file by the VB daemon that will execute starpage on the printing
+# server.
+#
+# HISTORICAL: HG 2001/02/22 - PRN_OUT variable added
+# 
+# 
+#----------------------------------------------------------------------------
+PRN ()
+{
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+   STEP_PRG=PRN
+   STEPSTART
+
+   [ -z "${PRN_OUT}" ] && PRN_OUT=${PRN_OUT_DEFAULT}
+
+   # Test if Input file exists
+   INTERN_ERROR=PRN_${NSTEP}_05
+   if test ! -s ${PRN_I}
+   then
+      echo '# Information: No input file produced after data formatting'
+      STEPEND 0
+      return 0
+   fi
+
+   # Get New Identification number for starjet file
+   INTERN_ERROR=PRN_${NSTEP}_15
+
+   ### FPRN_DAT & DOM Definition ###
+   #################################
+
+   # HG MODIF 2001/05/17
+   # default values
+   FPRN_DAT_SUFFIX="dat"
+   DOM=${PRN_FMT}
+
+   if [ "${PRN_TYPE}" = "WORD" ] || [ "${PRN_TYPE}" = "DAESEND" ] || [ "${PRN_TYPE}" = "ZIPFILE" ]
+   then
+      DOM="doc"
+      FPRN_DAT_SUFFIX=`basename ${PRN_I} | cut -d"." -f2`
+   fi
+
+   if [ "${PRN_TYPE}" = "STARJET" ] || [ "${PRN_TYPE}" = "STARPDF" ] 
+   then
+      DOM="sjt"
+   fi
+
+   # Forces to STARPDF if starjet mode  to be sent by  mail
+   # Forces to DAESEND if word mode to be sent by  mail
+   # ==> PRN_TYPE starts with mail: Keyword
+   # H. Guiheux - 00/09/18
+   FLAG_PDF=`echo ${PRN_NAME} | awk -F";" '{ print $NF }' | \
+        tr [A-Z] [a-z] |\
+	awk -F":" '{if ($1 == "mail") print 1; else print 0; }'`
+
+
+   [ ${FLAG_PDF} = "1" ] && [ ${PRN_TYPE} = "STARJET" ] && PRN_TYPE=STARPDF
+   [ ${FLAG_PDF} = "1" ] && [ ${PRN_TYPE} = "WORD" ] && PRN_TYPE=DAESEND
+
+   # Disable DEBUG ISQL_MODE inside toolbox function
+   ISQL_MODE_PREV=${ISQL_MODE}
+   ISQL_MODE=""
+
+   # It forces function execution
+   # considered as a step, even if the restart step is not reached
+   STEPSTART_FORCE YES
+
+   if [ "${PRN_TYPE}" = "STARJET" ] || [ "${PRN_TYPE}" = "WORD" ]
+   then
+      # Get Unix printer if defined in TPRINTER table
+      INTERN_ERROR=PRN_${NSTEP}_10
+      GET_PRTUNIX_NAME ${PRDSIT_CF} ${GEOSIT_CF} ${PRT_CF}
+   fi
+
+   STEPSTART_FORCE NO
+
+   # Send Report to the printing server
+   # ----------------------------------
+   
+   # It forces function execution
+   # considered as a step, even if the restart step is not reached
+   STEPSTART_FORCE YES
+
+   STEP_NOECHO=YES
+   ISQL_BASE=${BASE_TEC}
+   ISQL_O=${DFILT}/${NSTEP}_${IB}_PRN_O1.tmp
+   ISQL_QRY=`CFTMP`
+
+   # Sql Query to get a new number identification for the printing spool
+   # -------------------------------------------------------------------
+   INPUT_TEXT ${ISQL_QRY} <<EOF
+begin tran
+   update ${BASE_TEC}..TFILSUP set NUM_NF=1
+   where DOM_CF="$DOM" and NUM_NF=99999
+   update ${BASE_TEC}..TFILSUP set NUM_NF=NUM_NF+1
+   where DOM_CF="$DOM" 
+   select NUM_NF
+   from ${BASE_TEC}..TFILSUP
+   where DOM_CF="$DOM"
+commit tran
+exit
+EOF
+   ISQL
+
+   # Data formatting of the query result
+   # the result line is on the fifth line
+   # -----------------------------------
+   NUM=`sed -n -e '5p' ${ISQL_O}` 
+   SJTID=`printf "%05d" ${NUM}`
+
+   /bin/rm -f ${ISQL_O} 2>&1
+
+
+   # Defines filenames with starjet identification number
+   PRN_FMT_BASE=`echo ${PRN_FMT} | cut -d"." -f1 | tr a-z A-Z` 
+# HG correctif == 02/02/01
+   SSD_CF_02D=`printf "%02d" ${SSD_CF}`
+   FPRN_PREFIX=${NCHAIN}_${GEOSIT_CF}_${SSD_CF_02D}_${PRN_FMT_BASE}_${DATE_YYYYMMDD}
+   FPRN_BASE=`basename ${PRN_I} | cut -d"." -f1`
+   FPRN_I=`basename ${PRN_I}`
+
+   # filename that will be copied to the data transfer pool
+   FPRN_DAT=${FPRN_PREFIX}_${DOM}${SJTID}.dat
+   # shortname that will be transfered to the printing server
+   FPRN_DAT_SHORT=${DOM}${SJTID}.${FPRN_DAT_SUFFIX}
+   FPRN_DAT_SHORTBASE=${DOM}${SJTID}
+   FPRN_FTP=${FPRN_PREFIX}_${DOM}${SJTID}.ftp
+   FPRN_DAE=${FPRN_PREFIX}_${DOM}${SJTID}.dae
+
+   # if the edition has to be launched by subsidiary administrator 
+   FPRN_DAW=${FPRN_PREFIX}_${DOM}${SJTID}.daw 
+
+   # Get Information about Printing and Ftp Server
+   # to Build ftp and dae file
+   INTERN_ERROR=PRN_${NSTEP}_20
+   GET_PRTSERVER_INFO ${PRDSIT_CF} ${GEOSIT_CF}
+   
+   # HG 2005/10/14
+   # NEW PRN_TIPE: ZIP FILE to enable zip file transfer in binary mode
+   # HG 99/04/12
+   # Transfer Mode
+   # Binary mode for starjet files due to somme transfer ploblems with novell ftp server
+   if [ "${PRN_TYPE}" = "STARJET" ] || \
+	[ "${PRN_TYPE}" = "ZIPFILE" ] || \
+	[ "${PRN_TYPE}" = "STARPDF" ] 
+   then
+      PRN_TRANSFER_MODE=binary
+   fi
+
+   if [ "${PRN_TYPE}" = "WORD" ] || \
+	[ "${PRN_TYPE}" = "DAESEND" ] 
+   then
+      PRN_TRANSFER_MODE=ascii
+   fi
+
+
+   # Building ftp file
+   # Format of the ftp file
+   #    -1)  IP Address of the ftp server attached to the printing server
+   #    -2)  Login of the ftp server attached to the printing server
+   #    -3)  Password of the ftp server attached to the printing server
+   #    -4)  Directory where data have to be sent
+   #    -5)  Filename to be transfered
+   #    -6)  Transfer mode  (ASCII or BINARY)
+   #    -7)  Type of output WEB OR/AND PRINT 
+   #    -8)  Initial filename passed to the PRN function
+   printf "%s %s %s %s %s %s %s %s" ${PRTADDIP_CF} ${PRTUSR_CF} ${PRTPWD_CF} ${PRTCDFTP_CF} ${FPRN_DAT_SHORT} ${PRN_TRANSFER_MODE} ${PRN_OUT} ${FPRN_I} >${DFILT}/${FPRN_FTP}
+   PRN_OUT=${PRN_OUT_DEFAULT}
+
+
+   if [ "${PRN_TYPE}" = "STARJET" ] || [ "${PRN_TYPE}" = "WORD" ]
+   then
+      # Get Info from Novell printer
+      INTERN_ERROR=PRN_${NSTEP}_25
+      GET_PRTNOVELL_INFO ${PRDSIT_CF} ${GEOSIT_CF} ${PRT_CF}
+   fi
+
+   STEPSTART_FORCE NO
+
+   #  PREPARATION OF STARJET DAE FORMAT
+   # ----------------------------------
+   if [ "${PRN_TYPE}" = "STARJET" ] || [ "${PRN_TYPE}" = "STARPDF" ]
+   then
+      # Building dae or daw file for starjet
+      BSP='\'${PRN_FMT}.sp
+      ENDREP=$PRTENDADR_CF
+      BNEWNOMLIS='\'${FPRN_DAT_SHORT}
+      ERRREP="c:\\daemon\\temp\\error\\"
+  fi
+
+   #  PREPARATION OF STARPDF AND DAESEND DAE FORMAT
+   # ----------------------------------------------
+   if [ "${PRN_TYPE}" = "STARPDF" ] || [ "${PRN_TYPE}" = "DAESEND" ] ||  [ "${PRN_TYPE}" = "ZIPFILE" ]
+   then
+      # PRN_NAME contains email adress
+      # it may be prefixed by mail 
+      # Guiheux - 00/09/18
+      LOGIN_MAIL=${PRN_NAME}
+      FLAG_PDF=`echo ${PRN_NAME} | awk -F";" '{ print $NF }' | \
+                tr [A-Z] [a-z] |\
+      		awk -F":" '{if ($1 == "mail") print 1; else print 0; }'`
+      [ ${FLAG_PDF} = "1" ] && LOGIN_MAIL=`echo ${PRN_NAME} | awk -F: '{print $2;}'`
+   fi
+
+   ##########################################
+   # Command file generation (.dae, .daw)   #
+   ##########################################
+
+   if [ "${PRN_TYPE}" = "STARJET" ]
+   then
+      if [ "${EDIT}" != "NO" ]
+      then	
+# HGX: le 17/05/00 - Prise en compte des modification de MONTAGNAC a la demande de
+# G. BALABANIAN dans le cadre de la nouvelle architecture des editions
+	   printf "Starpage,/sFile=%s%s /cc:%sstarjet%s /d\"%s\" %s%s,,NW312=%s;%s;%s\n" ${ERRREP} "sjt${SJTID}.log" "\\" ${BSP} ${NOVQUEUE_CF} ${ENDREP} ${BNEWNOMLIS} ${EXESRV_CF} ${LOGEXE_CF} ${PWDEXE_CF}>${DFILT}/${FPRN_DAE}
+      else
+	   # build of the .daw file
+# HGX: le 17/05/00 - Prise en compte des modification de MONTAGNAC a la demande de
+# G. BALABANIAN dans le cadre de la nouvelle architecture des editions
+	   printf "Starpage,/sFile=%s%s /cc:%sstarjet%s /d\"%s\" %s%s,,NW312=%s;%s;%s\n" ${ERRREP} "sjt${SJTID}.log" "\\" ${BSP} ${NOVQUEUE_CF} ${ENDREP} ${BNEWNOMLIS} ${EXESRV_CF} ${LOGEXE_CF} ${PWDEXE_CF}>${DFILT}/${FPRN_DAW}
+	   printf "CHAIN:%s.cmd\n" "${NCHAIN}" >>${DFILT}/${FPRN_DAW}
+	   echo DATE_P:`date +"%d/%m/%Y %H:%M"` >>${DFILT}/${FPRN_DAW}
+      fi
+   fi
+
+
+   if [ "${PRN_TYPE}" = "STARPDF" ]
+   then
+      printf "Starpdf,/sFile=%s%s /cc:%sstarjet%s /d\"%s\" %s%s,,NW312=%s;%s;%s\n" "${ERRREP}" "sjt${SJTID}.log" "\\" "${BSP}" "${LOGIN_MAIL}" "${ENDREP}" "${BNEWNOMLIS}" "${EXESRV_CF}" "${LOGEXE_CF}" "${PWDEXE_CF}">${DFILT}/${FPRN_DAE}
+   fi
+
+   #
+   # MACRO WORD FORMAT
+   # ----------------
+   if [ "${PRN_TYPE}" = "WORD" ]
+   then
+      printf "%s,,,NW312=NotUsed;NotUsed;NotUsed\nNotUsed,%s,%s,,PRINT,1,port=%s" ${PRN_FMT} ${FPRN_DAT_SHORTBASE} ${PRTENDADR_CF} ${NOVQUEUE_CF}>${DFILT}/${FPRN_DAE}
+   fi
+
+   # HG 2005/10/14
+   # ZIPFILE PRN_TYPE taken into account
+   # After transfer the zipe file is sent by mail
+   if [ "${PRN_TYPE}" = "DAESEND" ] ||  [ "${PRN_TYPE}" = "ZIPFILE" ]
+   then
+   # PRN_NAME contient en fait le login a qui on envoie le mail
+      printf "DaeSend,%s %s" ${PRTENDADR_CF}'\'${FPRN_DAT_SHORT} ${LOGIN_MAIL} >${DFILT}/${FPRN_DAE} 
+   fi
+
+   if [ "${PRN_TYPE}" = "MOVEFILE" ]
+   then
+   # PRN_NAME contient en fait le login a qui on envoie le mail
+      printf "Movefile,%s %s %s" ${FPRN_DAT_SHORT} ${PRTENDADR_CF} ${OFFMVREP_CF} >${DFILT}/${FPRN_DAE}
+   fi
+
+
+   # Move files to the ftp pool
+   # --------------------------
+   echo "# Remote Printing managed by the Printer Server"
+   echo "# PrtID: ${PRTID}  - Printing Server IP Adress: ${PRTADDIP_CF}" 
+   echo "# moving " `basename ${PRN_I}` ${FPRN_DAT} 
+   echo "# Sending ${FPRN_DAT} to FTP POOL"
+   echo "#"
+   if [ "${EDIT}" != "NO" ]
+   then	
+       mv ${DFILT}/${FPRN_DAE} ${DFTPLST}/${FPRN_DAE}
+   else
+       mv ${DFILT}/${FPRN_DAW} ${DFTPLST}/${FPRN_DAW}
+   fi	
+
+   if [ "${PRN_TYPE}" != "MOVEFILE" ]
+   then
+      mv ${DFILT}/${FPRN_I} ${DFTPLST}/${FPRN_DAT}
+   else
+      #${PKZIPDIR}/pkzip ${DFTPLST}/${FPRN_DAT} -pmex ${DFILT}/${FPRN_I}
+      #mv ${DFTPLST}/${FPRN_DAT}.zip ${DFTPLST}/${FPRN_DAT}
+      mv ${DFILT}/${FPRN_I} ${DFTPLST}/${FPRN_DAT}
+
+   fi
+
+   mv ${DFILT}/${FPRN_FTP} ${DFTPLST}/${FPRN_FTP}
+
+   STEPEND 0
+
+
+   # Enable DEBUG ISQL_MODE inside toolbox function
+   ISQL_MODE=${ISQL_MODE_PREV}
+
+fi
+
+PRN_OUT=${PRN_OUT_DEFAULT}
+INTERN_ERROR=""
+
+set +x
+}
+
+

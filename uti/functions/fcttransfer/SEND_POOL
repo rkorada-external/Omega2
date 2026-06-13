@@ -1,0 +1,446 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SEND_POOL
+#
+# Subject: This function is used at the end of an extraction chain to send 
+#          data files in corresponding pools.
+#
+# 5 parameters :
+#          NSTEP
+#          SEND_POOL_PREFIX : prefix name of data files 
+#          SEND_POOL_FILES  : list of files to transfer (*.dat|*.dat|*.dat)
+#          SEND_POOL_TYPE   : SITE or SSD or SSDESB 
+#          SEND_POOL_SITE   : target site name if type = SITE
+#
+#	   Use global variable NCHAIN_SHORT (short name of the chain)
+#
+# 6 functions
+#	   GET_EXTNUM       : get extraction nimber from BTEC..TFILSUP
+#	   GET_TFTPB        : get BREF..TFTPB content
+#	   PUT_POOL	    : put file in pool directory
+#	   SEND_POOL_SSD    : for subsidiary treatment
+#	   SEND_POOL_SSDESB : for subsidiary/establishment treatment
+#	   SEND_POOL_SITE   : for site treatment
+#    
+#----------------------------------------------------------------------------#
+# Update history :
+#    02/12/2013		G.LECLERC 		Add PRDSIT_CF in BREF..TFILESUP
+#    10/12/2013     G.LECLERC 		Add PRDSIT_CF in BREF..TFTPB
+#*****************************************
+GET_EXTNUM () {
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+# Get from BTEC..TFILSUP an identification number NUM for the extraction chain
+echo "# Get extraction number from BTEC..TFILSUP ... ${GET_EXTNUM_CHAIN}"
+
+STEP_NOECHO=YES
+# For restart
+/bin/rm -f ${GET_EXTNUM_O} > /dev/null 2>&1
+
+ISQL_BASE="BTEC"
+ISQL_O=${GET_EXTNUM_O}
+ISQL_QRY=`CFTMP`
+INPUT_TEXT ${ISQL_QRY} << EOF
+begin tran
+
+update BTEC..TFILSUP set NUM_NF=0
+FROM   BTEC..TFILSUP A, BREF..TBATCHNIGHT B
+where A.DOM_CF='${GET_EXTNUM_CHAIN}' 
+and   A.NUM_NF=9999
+and   A.PRDSIT_CF = B.PRDSIT_CF 
+AND   B.BATCHUSER_CF = UPPER(suser_name())
+
+update BTEC..TFILSUP set NUM_NF=NUM_NF+1
+FROM   BTEC..TFILSUP A, BREF..TBATCHNIGHT B
+where DOM_CF='${GET_EXTNUM_CHAIN}'
+and   A.PRDSIT_CF = B.PRDSIT_CF 
+AND   B.BATCHUSER_CF = UPPER(suser_name())
+
+
+select "NUMBER",NUM_NF from BTEC..TFILSUP A, BREF..TBATCHNIGHT B
+where DOM_CF='${GET_EXTNUM_CHAIN}'
+and   A.PRDSIT_CF = B.PRDSIT_CF 
+AND   B.BATCHUSER_CF = UPPER(suser_name())
+
+commit tran
+exit
+EOF
+ISQL
+
+# Extract the identification number from ISQL_O, result file of the query
+NUM=`grep NUMBER ${ISQL_O} | awk '{print $2}'` 
+/bin/rm -f  ${ISQL_O} >/dev/null 2>&1
+if [ "${NUM}" = "" ] || [ $NUM -eq 0 ]
+then
+  echo "# BAD SEQUENCE NUMBER"
+  STEPEND 1
+else
+    NUM=`printf "%04d" ${NUM}`
+    echo "#          Extraction : ${NUM}"
+    echo ${NUM} > ${GET_EXTNUM_O}
+fi
+}
+
+
+#*****************************************
+GET_TFTPB () {
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+echo "# Get list of target directories"
+STEP_NOECHO="YES"
+ISQL_BASE="BREF"
+ISQL_O=${DFILT}/${NSTEP}_${IB}_TFTPB_O.dat
+# For restart
+/bin/rm -f ${ISQL_O} > /dev/null 2>&1
+# modifie le 06/10/99 select ssd_cf,esb_cf,repname_cf,chainname_cf from BREF..TFTPB
+ISQL_QRY=`CFTMP`
+INPUT_TEXT ${ISQL_QRY} << EOF
+begin tran
+select A.ssd_cf,A.esb_cf,A.repname_cf,IsNull(A.chainname_cf, '') from BREF..TFTPB A, BREF..TBATCHNIGHT B
+where A.PRDSIT_CF = B.PRDSIT_CF 
+AND   B.BATCHUSER_CF = UPPER(suser_name())
+
+commit tran
+exit
+EOF
+
+STEP_NOECHO="YES"
+ISQL_FRES=${GET_TFTPB_O}
+ISQL_RES
+
+/bin/rm -f ${ISQL_O} > /dev/null 2>&1
+}
+
+
+#*****************************************
+PUT_POOL() {
+# This function put in the directory TRGT data files.
+# There is 3 case :
+#	TRGT is ${OLDSYSTEM}
+#	TRGT is on the local site
+#	TRGT is not on the local site (zip)
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+if [ `echo ${TRGT} | egrep "${OLDSYSTEM}" | wc -l` = 1 ] && [ ! -z "${OLDSYSTEM_FILE}" ] # ${OLDSYSTEM} treatment
+then
+
+    for F in ${ZIP_I}
+    do
+      cat  ${F} >> ${DTRANSFER}/${TRGT}/to/${OLDSYSTEM_FILE}.new
+    done
+
+    echo "#          Put ${OLDSYSTEM_FILE}"
+    if [ "${OLDSYSTEM_APPEND}" != "YES" ]
+    then
+      /bin/mv  ${DTRANSFER}/${TRGT}/to/${OLDSYSTEM_FILE}.new ${DTRANSFER}/${TRGT}/to/${OLDSYSTEM_FILE} > /dev/null 2>&1
+    else
+      if [ -f ${DTRANSFER}/${TRGT}/to/${OLDSYSTEM_FILE} ]
+      then
+        /bin/cat ${DTRANSFER}/${TRGT}/to/${OLDSYSTEM_FILE}.new >> ${DTRANSFER}/${TRGT}/to/${OLDSYSTEM_FILE}
+        if [ $? -ne 0 ]
+        then
+          echo "# !!!!!!  Concatenation failure for ${DTRANSFER}/${TRGT}/to/${OLDSYSTEM_FILE}"
+          STEPEND 1
+        fi
+        /bin/rm -f ${DTRANSFER}/${TRGT}/to/${OLDSYSTEM_FILE}.new
+        chmod 666 ${DTRANSFER}/${TRGT}/to/${OLDSYSTEM_FILE}
+      else
+        /bin/mv ${DTRANSFER}/${TRGT}/to/${OLDSYSTEM_FILE}.new ${DTRANSFER}/${TRGT}/to/${OLDSYSTEM_FILE}
+      fi
+    fi
+    echo "#          Save ${OLDSYSTEM_FILE}"
+    /bin/cp ${DTRANSFER}/${TRGT}/to/${OLDSYSTEM_FILE} ${DTRANSFER}/${TRGT}/tosave/${SVG}_${OLDSYSTEM_FILE}
+    gzip ${DTRANSFER}/${TRGT}/tosave/${SVG}_${OLDSYSTEM_FILE}
+
+else 
+    if [ `awk -F";" '$1==SIT {print}' SIT=${TRGT} ${DREMLOGIN}/.remlogin | wc -l` -eq 0 ]   # the site is local (not defined in .remlogin)
+    then
+      for F in ${ZIP_I}
+      do
+        echo "#          Put" `basename ${F}`
+        /bin/cp  ${F} ${DTRANSFER}/${TRGT}/fromsave/${SVG}_`basename ${F}`
+	gzip ${DTRANSFER}/${TRGT}/fromsave/${SVG}_`basename ${F}`
+        /bin/mv  ${F} ${DTRANSFER}/${TRGT}/from
+      done
+    else
+      ZIP_I="${ZIP_I} ${DFILT}/${FFTX}"
+      ZIP_ODIR="${DTRANSFER}/${TRGT}/to"
+      ZIP_O="${NCHAIN}_${NUM}.zip"
+      echo "#          Send ${ZIP_O} to ${TRGT}"
+      STEP_NOECHO="YES"
+      PKZIP
+      chmod 666 ${ZIP_ODIR}/${ZIP_O}
+      /bin/cp ${ZIP_ODIR}/${ZIP_O} ${DTRANSFER}/${TRGT}/tosave/${SVG}_${ZIP_O}
+    fi
+fi
+/bin/rm -f ${DFILT}/${NCHAIN}_${NUM}* > /dev/null 2>&1
+}
+
+#*****************************************
+SEND_POOL_SSD () {
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+GET_TFTPB_O=${DFILT}/${NSTEP}_${IB}_TFTPB.dat
+GET_TFTPB
+
+FTMP1=`CFTMP`
+# Get directory list
+awk '{print $3}' ${GET_TFTPB_O} | sort -u > ${FTMP1}
+ 
+for TRGT in `cat ${FTMP1}`
+do
+  echo "# Look if files to send to ${TRGT} ..."
+  if [ ! -d ${DTRANSFER}/${TRGT}/to ]
+  then
+    echo "# !!! Directory ${DTRANSFER}/${TRGT}/to doesn't exist"
+    STEPEND 1
+  fi
+       
+  # Build name of the ftx file : its format ( data filename:size )
+  FFTX=${NCHAIN}_${NUM}.ftx                                                        
+
+  /bin/rm -f ${DFILT}/${FFTX} > /dev/null 2>&1
+  ZIP_I=""
+  DATA=""
+    
+  # Get files to send to the same place
+  for FDAT in ${LIST_FILE}
+  do
+    DIRNAME=""
+    NEWFILE=""
+
+    SUB=`basename ${FDAT} | awk '{print substr($0,length(ST)+1)}' ST=${NJOB} | awk -F_ '{print $3}'` 
+
+    # Look if there is a special directory for this chain for the SSD
+    DIRNAME=`awk '$1==SSD && $2==99 && $4==CHN {print $3}' SSD=${SUB} CHN=${NCHAIN_SHORT} ${GET_TFTPB_O}`
+
+    if [ "${DIRNAME}" = "" ]
+    then
+      # Get the default directory
+      DIRNAME=`awk '$1==SSD && $2==99 && $4=="" {print $3}' SSD=${SUB} ${GET_TFTPB_O}`
+      if [ "${DIRNAME}" = "" ]
+      then
+         echo "# !!! No pool directory is assigned to subsidiary ${SUB}"
+         STEPEND 4
+      fi
+    fi
+
+    if [ "${DIRNAME}" != "${TRGT}" ]
+    then
+      continue
+    fi
+    NEWFILE=`basename ${FDAT} | awk '{gsub(PREFIX,NEW_PREFIX"_"ID"_"SSD); print}' PREFIX=${SEND_POOL_PREFIX} NEW_PREFIX=${NCHAIN} ID=${NUM} SSD=${SUB}`     
+    # Insert line into the ftx file
+    DATA="YES"
+    FSIZE=`ls -l ${FDAT} | awk '{print $5}'`
+    printf "%s:%s\n" "${NEWFILE}" "${FSIZE}" >> ${DFILT}/${FFTX}   
+
+    # Use cp in case of restart to not remove files
+    cp ${FDAT} ${DFILT}/${NEWFILE}
+    if [ $? -ne 0 ]
+    then
+	echo "# !!! Error in rename file"
+	STEPEND 1
+    fi
+    ZIP_I="${ZIP_I} ${DFILT}/${NEWFILE}"
+ 
+
+  done
+
+  if [ "${DATA}" != "YES" ]
+  then
+    continue
+  fi
+  
+  PUT_POOL
+done
+}
+
+
+
+#*****************************************
+SEND_POOL_SSDESB () {
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+GET_TFTPB_O=${DFILT}/${NSTEP}_${IB}_TFTPB.dat
+GET_TFTPB
+
+FTMP1=`CFTMP`
+# Get directory list
+awk '{print $3}' ${GET_TFTPB_O} | sort -u > ${FTMP1}
+ 
+for TRGT in `cat ${FTMP1}`
+do
+  echo "# Look if files to send to ${TRGT} ..."
+  if [ ! -d ${DTRANSFER}/${TRGT}/to ]
+  then
+    echo "# !!! Directory ${DTRANSFER}/${TRGT}/to doesn't exist"
+    STEPEND 1
+  fi
+       
+  # Build name of the ftx file : its format ( data filename:size )
+  FFTX=${NCHAIN}_${NUM}.ftx                                                        
+
+  /bin/rm -f ${DFILT}/${FFTX} > /dev/null 2>&1
+  ZIP_I=""
+  DATA=""
+    
+  # Get files to send to the same place
+  for FDAT in ${LIST_FILE}
+  do
+    DIRNAME=""
+    NEWFILE=""
+    SUB=`basename ${FDAT} | awk '{print substr($0,length(ST)+1)}' ST=${NJOB} | awk -F_ '{print $3}'`
+    ESB=`basename ${FDAT} | awk '{print substr($0,length(ST)+1)}' ST=${NJOB} | awk -F_ '{print $4}'`
+
+    # Look if there is a special directory for this chain for the SSD/ESB
+    DIRNAME=`awk '$1==SSD && $2==EST && $4==CHN {print $3}' SSD=${SUB} EST=${ESB} CHN=${NCHAIN_SHORT} ${GET_TFTPB_O}`
+
+    if [ "${DIRNAME}" = "" ]
+    then
+      # Look if there's a default directory for this chain for the SSD/ESB
+      DIRNAME=`awk '$1==SSD && $2==EST && $4=="" {print $3}' SSD=${SUB} EST=${ESB} ${GET_TFTPB_O}`
+      if [ "${DIRNAME}" = "" ]
+      then
+        echo "# !!! No pool directory is assigned to subsidiary/establishment ${SUB}/${ESB}"
+        STEPEND 1
+      fi
+    fi
+
+    if [ "${DIRNAME}" != "${TRGT}" ]
+    then
+      continue
+    fi
+    NEWFILE=`basename ${FDAT} | awk '{gsub(PREFIX,NEW_PREFIX"_"ID"_"SSD"_"EST); print}' PREFIX=${SEND_POOL_PREFIX} NEW_PREFIX=${NCHAIN} ID=${NUM} SSD=${SUB} EST=${ESB}`
+
+    # Insert line into the ftx file
+    DATA="YES"
+    FSIZE=`ls -l ${FDAT} | awk '{print $5}'`
+    printf "%s:%s\n" "${NEWFILE}" "${FSIZE}" >> ${DFILT}/${FFTX}   
+
+    # Use cp in case of restart to not remove files
+    cp ${FDAT} ${DFILT}/${NEWFILE}
+    if [ $? -ne 0 ]
+    then
+	echo "# !!! Error in rename file"
+	STEPEND 1
+    fi
+    ZIP_I="${ZIP_I} ${DFILT}/${NEWFILE}"
+
+  done
+
+  if [ "${DATA}" != "YES" ]
+  then
+    continue
+  fi
+  
+  PUT_POOL
+done
+}
+
+
+
+#*****************************************
+SEND_POOL_SITE () {
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+if [ ! -d ${DTRANSFER}/${SEND_POOL_SITE}/to ]
+then
+  echo "# !!! Directory ${DTRANSFER}/${SEND_POOL_SITE}/to doesn't exist"
+  STEPEND 1
+fi
+       
+# Build name of the ftx file : its format ( data filename:size )
+FFTX=${NCHAIN}_${NUM}.ftx                                                        
+
+/bin/rm -f ${DFILT}/${FFTX} > /dev/null 2>&1
+ZIP_I=""
+DATA=""
+    
+# Get files to send to the same place
+for FDAT in ${LIST_FILE}
+do
+  NEWFILE=`basename ${FDAT} | awk '{gsub(PREFIX,NEW_PREFIX"_"ID); print}' PREFIX=${SEND_POOL_PREFIX} NEW_PREFIX=${NCHAIN} ID=${NUM}`
+
+  # Insert line into the ftx file
+  DATA="YES"
+  FSIZE=`ls -l ${FDAT} | awk '{print $5}'`
+  printf "%s:%s\n" "${NEWFILE}" "${FSIZE}" >> ${DFILT}/${FFTX}   
+  
+  # Use cp in case of restart to not remove files
+  cp ${FDAT} ${DFILT}/${NEWFILE}
+  if [ $? -ne 0 ]
+  then
+        echo "# !!! Error in rename file"
+        STEPEND 1
+  fi
+  ZIP_I="${ZIP_I} ${DFILT}/${NEWFILE}"
+done
+
+if [ "${DATA}" != "YES" ]
+then
+  continue
+fi
+
+TRGT=${SEND_POOL_SITE}
+PUT_POOL  
+}
+
+#****************************** SEND_POOL ************************
+SEND_POOL () {
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then
+  ADT="${NSTEP}"
+  STEP_PRG=SEND_POOL
+  STEPSTART
+
+  if [ "${SEND_POOL_FILES}" = "" ]
+  then
+    echo "# !!! No file to transfer"
+    STEPEND 0
+    return 0
+  fi
+
+  # Get list of files to send to pool
+  LIST_FILE=`echo ${SEND_POOL_FILES} | awk 'BEGIN{RS="|";ORS=" "} {print $0}'`
+
+  GET_EXTNUM_CHAIN=${NCHAIN_SHORT}
+  GET_EXTNUM_O=${DFILT}/${NSTEP}_${IB}_TFILSUP.dat
+  GET_EXTNUM
+
+  NUM=`cat ${GET_EXTNUM_O}`
+  /bin/rm -f ${GET_EXTNUM_O} >/dev/null 2>&1
+
+  case ${SEND_POOL_TYPE} in    
+
+	SITE)
+	        if [ "${SEND_POOL_SITE}" = "" ]
+	        then
+		  echo "#	!!! No site defined"
+		  STEPEND 2
+		fi
+		SEND_POOL_SITE;;
+
+	SSD)
+		SEND_POOL_SSD;;
+
+	SSDESB)
+		SEND_POOL_SSDESB;;
+
+	*)
+		echo "# No good type defined in variable SEND_POOL_TYPE"
+		STEPEND 3;;
+
+  esac
+  STEPEND 0
+fi
+}
+
+
+

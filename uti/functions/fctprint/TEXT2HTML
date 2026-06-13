@@ -1,0 +1,26 @@
+#----------------------------------------------------------------------------
+# FUNCTION: TEXT2HTML
+# No parameter
+# Subject: Converts plain text to html text with same filename.html
+# call sample: TEXT2HTML FILENAME
+#---------------------------------------------------------------------------- 
+TEXT2HTML(){
+if [ $# -eq 0 ] ; then
+   echo "USAGE: $(basename $0) file1 file2 file3 ..."
+   exit 1
+fi
+ 
+for file in $* ; do
+   html=$(echo $file | sed 's/\.[a-z][a-z][a-z]$/\.html/i')
+ 
+   echo "<html>" > $html
+   echo "   <body>" >> $html
+ 
+   while read line ; do
+      echo "$line<br>" >> $html
+   done < $file
+ 
+   echo "   </body>" >> $html
+   echo "</html>" >> $html
+done
+}

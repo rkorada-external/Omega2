@@ -1,0 +1,20 @@
+#----------------------------------------------------------------------------
+# FUNCTION: WS_STOP_REPORT
+#
+# Input parameters:
+# $1	Identifier of the report to stop.
+#
+# Subject: Technical function that stops a running report.
+#----------------------------------------------------------------------------
+WS_STOP_REPORT() {
+	# Check mandatory parameters
+	if [ -z "${1}" ]; then
+		echo "# Missing required parameter REPORT_ID at \$1"
+		return 99
+	fi
+	REPORT_ID=$1
+	echo "# Stop report ${REPORT_ID}"
+	_DO_WS_CALL ${REPORT_SRV_HOSTNAME:-localhost} ${REPORT_SRV_PORT:-8080} ${REPORT_SRV_APPLI:-omega2-report-web} report stop ${REPORT_ID} 0
+	rc=$?
+	return $rc
+}

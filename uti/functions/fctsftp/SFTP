@@ -1,0 +1,90 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SFTP
+#
+# :spot:30348
+#
+#   External Variables
+#       SFTP_SITE
+#       SFTP_WAY (PUT / GET)
+#	SFTP_FILE          : file to transfer
+#       
+#   Internal variables
+#	SFTP_IP         : IP Address of the target host
+#	SFTP_USR        : User of the target host
+#	SFTP_RDIR       : Remote directory (Host)
+#	SFTP_LDIR       : Local directory
+#	SFTP_O          : Output file after transfer
+#
+# Subject: This function encapsulates SFTP command
+# Creation date: March 01 2016
+# Author: Alain Spinosa 
+#----------------------------------------------------------------------------
+SFTP ()
+{
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+   if [ "${SFTP_WAY}" != "PUT" -a "${SFTP_WAY}" != "GET" ]
+   then
+     echo "# \${SFTP_WAY} not setted"
+     STEPEND 1
+   fi
+ 
+   STEP_PRG=SFTP_${SFTP_WAY}
+   STEPSTART
+
+   # File ${DREMLOGIN}/.remlogin format
+   #
+   # site;IP;USR;site directory
+   # $1  ;$2;$3 ;$4
+   #
+   #
+   # Private/Public Key pair authentication , No password
+   # Private key is located in /etc/ssh/Private_key_bloom_2016
+   # Settings for stfp connection are defined in /etc/ssh/ssh_config
+   #
+   # Temporary file initialization
+   FTMP=`CFTMP`
+
+   # DREMLOGIN File
+   # DREMLOGIN_FILE=${DREMLOGIN}/.remlogin_test
+   DREMLOGIN_FILE=${DREMLOGIN}/.remlogin 
+
+   # Get paramaters in .remlogin file for connexion
+    if [ ! -f $DREMLOGIN_FILE ]
+    then
+      echo "# $DREMLOGIN_FILE doesn't exist"
+      STEPEND 1
+    fi
+
+    awk -F\; 'SITE==$1 {print}' SITE=${SFTP_SITE} $DREMLOGIN_FILE > ${FTMP}
+
+    if [ -s ${FTMP} ]  # If site information is found
+    then
+      # Get parameters for SFTP
+      #
+      SFTP_LDIR=`dirname "${SFTP_FILE}"`
+      SFTP_I=`basename "${SFTP_FILE}"`
+#      SFTP_I=$SFTP_FILE
+      SFTP_IP=`cut -d";" -f2 ${FTMP}`
+      SFTP_USR=`cut -d";" -f3 ${FTMP}`
+      SFTP_RDIR=`cut -d";" -f4 ${FTMP}`
+
+      # Run sftp command      
+      SFTP_${SFTP_WAY}
+
+      if [ $? != 0 ]
+      then
+         echo "#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+         echo "# SFTP Server $SFTP_IP is not responding  on ${SFTP_SITE}..."
+         STEPEND 1
+      fi
+    else
+	echo "# $SFTP_SITE is not a known site"
+	echo "# Please check the file $DREMLOGIN_FILE"
+    fi
+fi
+STEPEND 0
+}

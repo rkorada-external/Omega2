@@ -1,0 +1,128 @@
+#!/bin/ksh
+#---------------------------------------------------------------
+# Fichier :   GNUPGP
+# Log     :   
+# Auteur  :   T Dauby
+# Date    :   27/05/2010
+# Modif   :   
+# Desc    :   encrypt or decrypt file using GNUPGP
+# Usage   :  
+#GNUPGP_IN   : Input file. The file will be searched in $DPROTECT
+#GNUPGP_OUT  : Output file. The file will be searched in $DPROTECT
+#GNUPGP_MODE : Two modes. ENCRYPT to encrypt and DECRYPT to decrypt
+#GNUPGP_KEY  : The logical name of the key
+
+# RUN_GNUPGP, sub function used to execute gnu PGP
+# The parameters are the same as GNUPGP, but PRGANO and PRGLOG must also be defined
+RUN_GNUPGP() {
+
+    [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+    GNUPGP_BIN="/produits/gnupg/bin/gpg"
+
+
+    # Check parameters
+
+    if [ -z "${GNUPGP_IN}" ]
+    then
+        LOGWRITE '# ERROR: GNUPGP_IN variable must be set'
+        return  99
+    fi 
+
+    if [ -z "${GNUPGP_OUT}" ]
+    then
+        LOGWRITE '# ERROR: GNUPGP_OUT variable must be set'
+        return  99
+    fi 
+
+    if [ -z "${GNUPGP_KEY}" ]
+    then
+        LOGWRITE '# ERROR: GNUPGP_KEY variable must be set'
+        return  99
+    fi 
+
+    if ! [ "${GNUPGP_MODE}" == "ENCRYPT" -o "${GNUPGP_MODE}" == "DECRYPT" ]
+    then
+        LOGWRITE '# ERROR: GNUPGP_MODE must be set to ENCRYPT or DECRYPT'
+        return  99
+    fi 
+
+    if [ -z "${PRGLOG}" -o -z  "${PRGANO}" ]
+    then
+        LOGWRITE '# ERROR: PRGLOG or PRGANO variables  must be set before running RUN_GNUPGP'
+        return  99
+    fi 
+
+    # safety checks, no dir in GNUPGP_IN and GNUPGP_OUT
+    if [ "${GNUPGP_IN}" != "`basename "${GNUPGP_IN}"`" ]
+    then
+        LOGWRITE '# ERROR: GNUPGP_IN must not contain directory'
+        return 5
+    fi
+
+    # safety checks, no dir in GNUPGP_IN and GNUPGP_OUT
+    if [ "${GNUPGP_OUT}" != "`basename "${GNUPGP_OUT}"`" ]
+    then
+        LOGWRITE '# ERROR: GNUPGP_OUT must not contain directory'
+        return 5
+    fi
+
+    # Check if the input file exists
+    if [ ! -f "${DPROTECT}/${GNUPGP_IN}" ]
+    then
+        LOGWRITE '# ERROR: Input file does not exists'
+        return 4
+    fi
+
+    # remove debug
+    set +x
+
+    # Get the key
+    local key=`grep "^${GNUPGP_KEY};" "${DPROTECT}/.keys" | cut -d ';' -f2`
+
+    # decrypt
+    if [ "${GNUPGP_MODE}" == "ENCRYPT" ]
+    then
+        ${GNUPGP_BIN} --batch --force-mdc --yes --passphrase-fd 0 --output "${DPROTECT}/${GNUPGP_OUT}" -c "${DPROTECT}/${GNUPGP_IN}" <<-EOF > "${DFILT}/${PRGLOG}" 2>&1
+${key}
+EOF
+    else
+        ${GNUPGP_BIN} --batch --yes --passphrase-fd 0 --output "${DPROTECT}/${GNUPGP_OUT}" -d "${DPROTECT}/${GNUPGP_IN}" <<-EOF > "${DFILT}/${PRGLOG}" 2>&1
+${key}
+EOF
+    fi
+    RC=$?
+
+    # put debug back on
+    [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+    # Check return status
+    if [ "${RC}" -ne 0 ]
+    then
+        LOGWRITE "# ERROR: return code != 0 (${RC})"
+        mv "${DFILT}/${PRGLOG}" "${DFILT}/${PRGANO}"
+    fi
+
+    unset GNUPGP_BIN GNUPGP_IN GNUPGP_OUT GNUPGP_KEY GNUPGP_MODE key
+    return "${RC}"
+}
+
+# GNUPGP function
+GNUPGP()
+{
+    [ "${FCT_DEBUG}" = "YES" ] && set -x
+    if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+    then
+        ADT="${NSTEP}"
+        STEP_PRG=GNUPGP
+        STEPSTART
+
+        export PRGANO=${NSTEP}_${IB}_GNUPGP.ano
+        export PRGLOG=${NSTEP}_${IB}_GNUPGP.log
+
+        [ "${FCT_DEBUG}" = "YES" ] && set -x
+        RUN_GNUPGP
+        STEPEND $?
+   fi
+}
+

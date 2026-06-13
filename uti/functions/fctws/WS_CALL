@@ -1,0 +1,396 @@
+#----------------------------------------------------------------------------
+# Internal function for calling a Java batch or report
+#
+# $1	Batch server host name
+# $2	Batch server port
+# $3	Web application name
+# $4	Servlet name
+# $5	Operation to execute
+# $6	Name of bean to execute (batch or report name)
+# $7	Verbose boolean flag?
+# Return 0 if OK, >0 otherwise
+#----------------------------------------------------------------------------
+_DO_WS_CALL() {
+	# Debug mode?
+	[ "${WS_DEBUG}" = "true" ] && set -x
+
+	# Fetch parameters
+	batch_host=$1
+	batch_port=$2
+	batch_web_app=$3
+	batch_servlet=$4
+	batch_op=$5
+	batch_name=$6
+	verbose=$7
+
+	# curl will store the HTTP response headers here
+	http_response_file=${DFILT}/${NSTEP}_${IB}_curl_headers_$$.tmp
+	
+	# curl will write the HTTP response body here
+	http_body_file=${DFILT}/${NSTEP}_${IB}_curl_body_$$.tmp
+
+	# Define ANO and LOG filenames
+	export PRGANO=${NSTEP}_${IB}_${batch_name}.ano
+	export PRGLOG=${NSTEP}_${IB}_${batch_name}.log
+	WS_ANO=${DFILT}/${PRGANO}
+	WS_LOG=${DFILT}/${PRGLOG}
+
+	# Check input parameters
+	if [ -z "${batch_host}" ]; then
+		echo '# ERROR: batch_host variable must be set'
+		_END_WS_CALL ${http_response_file} ${http_body_file}
+		return 99
+	fi
+	if [ -z "${batch_port}" ]; then
+		echo '# ERROR: batch_port variable must be set'
+		_END_WS_CALL ${http_response_file} ${http_body_file}
+		return 99
+	fi
+	if [ -z "${batch_web_app}" ]; then
+		echo '# ERROR: batch_web_app variable must be set'
+		_END_WS_CALL ${http_response_file} ${http_body_file}
+		return 99
+	fi
+	if [ -z "${batch_servlet}" ]; then
+		echo '# ERROR: batch_servlet variable must be set'
+		_END_WS_CALL ${http_response_file} ${http_body_file}
+		return 99
+	fi
+	if [ -z "${batch_op}" ]; then
+		echo '# ERROR: batch_op variable must be set'
+		_END_WS_CALL ${http_response_file} ${http_body_file}
+		return 99
+	fi
+
+	# Build URL of service to invoke
+	url=http://${batch_host}:${batch_port}/${batch_web_app}/${batch_servlet}/${batch_op}/${batch_name}
+
+	# Print URL to the standard output
+	[ ${verbose} -eq 1 ] && echo "# Call ${url}"
+
+	# This variable will hold the list of parameters to be passed to the
+	# curl command. First, write the result of the HTTP request to an temporary
+	# output file.
+	curl_params="--output ${http_body_file}"
+
+	# How to pass form data to the Java program? curl basically supports two
+	# syntaxes:
+	# -d (the default) submits the form data as is
+	# --form submits a multipart/form-data which allows to send a file
+	curl_frm="-d"
+
+	# Is this shell script running on the same host as the Java app server?
+	is_local=0
+	[ "${batch_host}" = "localhost" -o "${batch_host}" = "${HOSTNAME}" -o "${batch_host}" = $(hostname) -o "${batch_host}" = "127.0.0.1" ] && is_local=1
+
+	# If we have an input file, need to upload it to the Java server (unless
+	# the Java server is localhost)
+	if [ -n "${WS_INPUT_FILE}" ]; then
+		# Check that the file exists (curl will complain anyway)
+		if [ ! -f ${WS_INPUT_FILE} ]; then
+			echo "# Warning: WS_INPUT_FILE ${WS_INPUT_FILE} does not exist"
+		fi
+		if [ ${is_local} -eq 1 -a "${WS_SYNCHRONOUS}" = "true" ]; then
+			# If the Java server is deployed on the local host, it is not
+			# useful to POST file data to it: the Java service will merely
+			# read from the local file (speed optimization).
+			if [ "${OSTYPE}" = "cygwin" ]; then
+				# Convert path to Windows format, assuming Java on local Windows
+				curl_params="${curl_params} ${curl_frm} WS_INPUT_FILE=$(cygpath -w ${WS_INPUT_FILE})"
+			else
+				curl_params="${curl_params} ${curl_frm} WS_INPUT_FILE=${WS_INPUT_FILE}"
+			fi
+			# Ensure that the Java server will be able to read from the file,
+			# even if it's running under a different user name.
+			chmod 0644 ${WS_INPUT_FILE}
+		else
+			# Different hosts or asynchronous mode:
+			# POST the file (note the '@' syntax)
+			# Switch to multipart/form-data
+			curl_frm="--form"
+			curl_params="${curl_params} ${curl_frm} WS_INPUT_FILE=@${WS_INPUT_FILE}"
+		fi
+	fi
+
+	# If we have specified an output file, we can tell the Java server to
+	# write to it directly, using the specified path if we are running on the
+	# same host (localhost).
+	if [ -n "${WS_OUTPUT_FILE}" ]; then
+		if [ "${WS_SYNCHRONOUS}" = "false" -o ${is_local} -eq 1 ]; then
+			# In asynchronous mode, we ask the Java server to write its results
+			# to the specified output file. If the Java server is on the local
+			# host, the file will be written on the local file system;
+			# otherwise, it will be written on the remote host file system.
+			#
+			# In synchronous or asynchronous mode, we can ask the Java server
+			# to directly write to a local file in oder to improve performance
+			# if it is running on the local host.
+			#
+			# Pass the path of our output file to the Java server
+			if [ ${is_local} -eq 1 ]; then
+				if [ "${OSTYPE}" = "cygwin" ]; then
+					# Convert path to Windows format, assuming Java on local Windows
+					curl_params="${curl_params} ${curl_frm} WS_OUTPUT_FILE=$(cygpath -w ${WS_OUTPUT_FILE})"
+				else
+					curl_params="${curl_params} ${curl_frm} WS_OUTPUT_FILE=${WS_OUTPUT_FILE}"
+				fi
+				# Ensure that the file exists, is empty and can be overwritten
+				# by the Java server even if it's running under a different user
+				# name.
+				cat /dev/null > ${WS_OUTPUT_FILE}
+				chmod 0666 ${WS_OUTPUT_FILE}
+			fi
+			# Clear the WS_OUTPUT_FILE variable in order to prevent further
+			# copy from response body to that file
+			WS_OUTPUT_FILE=""
+		fi
+		# Otherwise the output of the Java servlet will be redirected to
+		# $WS_OUTPUT_FILE
+	fi
+
+	# Automatically pass some parameters to the Web Service, similar to the
+	# environment variables that are automatically passed to the C programs.
+	# Chain name
+	[ -n "${NCHAIN}" ] && curl_params="${curl_params} ${curl_frm} NCHAIN=${NCHAIN}"
+	# Job name
+	[ -n "${NJOB}" ] && curl_params="${curl_params} ${curl_frm} NJOB=${NJOB}"
+	# Step name
+	[ -n "${NSTEP}" ] && curl_params="${curl_params} ${curl_frm} NSTEP=${NSTEP}"
+	# Job step identifier
+	[ -n "${IB}" ] && curl_params="${curl_params} ${curl_frm} IB=${IB}"
+	# Job name
+	[ -n "${JN}" ] && curl_params="${curl_params} ${curl_frm} JN=${JN}"
+	# Request date
+	[ -n "${RD}" ] && curl_params="${curl_params} ${curl_frm} RD=${RD}"
+	# Requestor name
+	[ -n "${RN}" ] && curl_params="${curl_params} ${curl_frm} RN=${RN}"
+	# Location of requestor
+	[ -n "${RL}" ] && curl_params="${curl_params} ${curl_frm} RL=${RL}"
+	# Recipient name
+	[ -n "${AN}" ] && curl_params="${curl_params} ${curl_frm} AN=${AN}"
+	# Location of recipient
+	[ -n "${AL}" ] && curl_params="${curl_params} ${curl_frm} AL=${AL}"
+	# Number of copies
+	[ -n "${CN}" ] && curl_params="${curl_params} ${curl_frm} CN=${CN}"
+	# Technical parameters
+	[ -n "${TP}" ] && curl_params="${curl_params} ${curl_frm} TP=${TP}"
+	# Company name
+	[ -n "${CY}" ] && curl_params="${curl_params} ${curl_frm} CY=${CY}"
+	# Date of batch session
+	[ -n "${SD}" ] && curl_params="${curl_params} ${curl_frm} SD=${SD}"
+	# Sequence number
+	[ -n "${SN}" ] && curl_params="${curl_params} ${curl_frm} SN=${SN}"
+	# Batch code
+	[ -n "${CB}" ] && curl_params="${curl_params} ${curl_frm} CB=${CB}"
+	# Path for temporary files
+	[ -n "${PH}" ] && curl_params="${curl_params} ${curl_frm} PH=${PH}"
+	# Root of files
+	[ -n "${RF}" ] && curl_params="${curl_params} ${curl_frm} RF=${RF}"
+	# Print Type
+	[ -n "${PRN_TYPE}" ] && curl_params="${curl_params} ${curl_frm} PRN_TYPE=${PRN_TYPE}"
+	# Print Id
+	[ -n "${PRTID}" ] && curl_params="${curl_params} ${curl_frm} \"PRTID=${PRTID}\"" #Florent 28/05/2013 necessaire avec eval curl
+	# Production site. If not defined, use HOST_PRDSIT (if not launched by daemon)
+	if [ -n "${PRDSIT_CF}" ]; then
+		curl_params="${curl_params} ${curl_frm} PRDSIT_CF=${PRDSIT_CF}"
+	elif [ "${LAUNCHER}" != "DAEMON" ]; then
+		[ -n "${HOST_PRDSIT}" ] && curl_params="${curl_params} ${curl_frm} PRDSIT_CF=${HOST_PRDSIT}"
+	fi
+	# Launcher
+	[ -n "${LAUNCHER}" ] && curl_params="${curl_params} ${curl_frm} LAUNCHER=${LAUNCHER}"
+	# Geographical Site
+	[ -n "${GEOSIT_CF}" ] && curl_params="${curl_params} ${curl_frm} GEOSIT_CF=${GEOSIT_CF}"
+	# Printer code
+	[ -n "${PRT_CF}" ] && curl_params="${curl_params} ${curl_frm} PRT_CF=${PRT_CF}"
+	# Printing Date
+	[ -n "${DATE_YYYYMMDD}" ] && curl_params="${curl_params} ${curl_frm} DATE_YYYYMMDD=${DATE_YYYYMMDD}"
+	# Synchronous / asynchronous call - by default this depends on WAR
+	# configuration, but can be overridden here
+	[ -n "${WS_SYNCHRONOUS}" ] && curl_params="${curl_params} ${curl_frm} WS_SYNCHRONOUS=${WS_SYNCHRONOUS}"
+
+	# Manage email if it's a report, ajout du z in the case of PRT_CF not set
+	if [ `echo "z${PRT_CF}" | cut -d: -f1` = "zmail" -a "${batch_servlet}" = "report" ]
+	then
+		LOGIN=`echo ${PRT_CF} | cut -d: -f2`
+		GET_MAILID_FROMLOGIN ${LOGIN}
+		if [ "${MAILID}" = "" ]
+		then
+			echo "# Email unknown for login ${LOGIN}"
+			_END_WS_CALL ${http_response_file} ${http_body_file}
+			return 99
+		fi
+		echo "# Email ${MAILID} for login ${LOGIN}"
+		curl_params="${curl_params} ${curl_frm} \"EMAIL_RECIPIENT=${MAILID}\""
+	fi
+
+	# Parse file WS_PARAMS and pass the parameters to curl
+	if [ -n "${WS_PARAMS}" -a -s "${WS_PARAMS}" ]; then
+		while read param_name param_value; do
+			curl_params="${curl_params} ${curl_frm} \"${param_name}=${param_value}\"" #Florent 28/05/2013 pour les paramètres avec des espaces
+		done < ${WS_PARAMS}
+	fi
+
+	# Build the curl options
+	curl_options="--connect-timeout 10 --dump-header ${http_response_file} ${WS_OPT}"
+	if [ "${WS_SYNCHRONOUS}" = "false" ]; then
+		# In asynchronous mode, wait max 1 minute for HTTP response
+		curl_options="${curl_options} --max-time 60"
+	fi
+	[ "${WS_DEBUG}" = "true" ] && curl_options="${curl_options} -v"
+
+	# Log command line (create log file)
+	echo "# curl command line" > ${WS_LOG}
+	echo curl ${curl_options} ${curl_params} ${url} >> ${WS_LOG}
+
+	# Trace input / output files
+	[ -n "${WS_INPUT_FILE}" ] && echo "# WS_INPUT_FILE=${WS_INPUT_FILE}" >> ${WS_LOG}
+	[ -n "${WS_OUTPUT_FILE}" ] && echo "# WS_OUTPUT_FILE=${WS_OUTPUT_FILE}" >> ${WS_LOG}
+
+	# Call the remote Web service
+	echo "# curl standard output" >> ${WS_LOG}
+	eval curl ${curl_options} ${curl_params} ${url} >> ${WS_LOG} 2>&1 #Florent 28/05/2013 ajout de eval pour les paramètres avec des espaces
+	ret=$?
+
+	# dos2unix options
+	DOS2UNIX_OPT=
+	if [ "${SYSTEM}" = "Linux" ]; then
+		DOS2UNIX_OPT="-q"
+	fi
+
+	# Process error code
+	# curl: (7) couldn't connect to host
+	# curl: (28) Connection timed out after x milliseconds
+	if [ ${ret} -ne 0 ]; then
+		# Curl exited with a non-zero error code
+		# Copy the headers (if any) to the log file
+		echo "# curl headers" >> ${WS_LOG}
+		if [ -s ${http_response_file} ]; then
+			dos2unix ${DOS2UNIX_OPT} ${http_response_file}
+			cat ${http_response_file} >> ${WS_LOG}
+		fi
+		# Cleanup
+		_END_WS_CALL ${http_response_file} ${http_body_file}
+		echo "# Return code: ${ret}" >> ${WS_LOG}
+		return ${ret}
+	fi
+
+	# Trace headers
+	echo "# curl headers" >> ${WS_LOG}
+	if [ -s ${http_response_file} ]; then
+		dos2unix ${DOS2UNIX_OPT} ${http_response_file}
+		cat ${http_response_file} >> ${WS_LOG}
+	fi
+
+	# Process the HTTP response code. In some situations we may have 2 HTTP
+	# response codes returned by the servlet, and only the last one is
+	# interesting. For example, if a file is uploaded to the server we may
+	# have
+	# HTTP/1.1 100 Continue
+	# but if one of the parameters of the request cannot be decoded, it will
+	# be followed by
+	# HTTP/1.1 500 Internal Servlet Error
+	http_response_line=$(grep '^HTTP/' ${http_response_file} | tail -1)
+	http_response_code=$(echo ${http_response_line} | cut -d' ' -f2)
+	case ${http_response_code} in
+		100|200)
+			# 100 Continue -- this is the response sent when the batch executes
+			# asynchronously
+			# 200 Ok -- Normal case
+			#
+			# Look for the number of lines that have been extracted
+			app_num_lines=$(egrep '^X-Number-Lines' ${http_response_file})
+			if [ -n "${app_num_lines}" ]; then
+				app_lines=$(echo ${app_num_lines} | cut -d' ' -f2)
+				echo "# Number of extracted lines: ${app_lines}"
+				if [ ${app_lines} -eq 0 ]; then
+					# Leave a message like Omega 1 batches
+					echo "# INFO: The output file is empty !"
+				fi
+			fi
+			;;
+		*)
+			# An error has occurred, we should have an explanation in the headers
+			app_error_line=$(egrep '^X-Error-Code' ${http_response_file})
+			if [ -n "${app_error_line}" ]; then
+				if [ -s ${http_body_file} ]; then
+					echo "# HTTP body" >> ${WS_LOG}
+					cat ${http_body_file} >> ${WS_LOG}
+				fi
+				# Log application error
+				echo "# Java error code found: ${app_error_line}" >> ${WS_LOG}
+				# Get application error code
+				app_error_code=$(echo ${app_error_line} | cut -d' ' -f2)
+				# Output application error message
+				echo ${app_error_line} | cut -d' ' -f3-
+				# Cleanup
+				_END_WS_CALL ${http_response_file} ${http_body_file}
+				echo "# Return code: ${app_error_code}" >> ${WS_LOG}
+				return ${app_error_code}
+			fi
+
+			# No application error code
+			# Log error, headers and body (may contain a stack trace)
+			echo "# HTTP error code found: ${http_response_code}" >> ${WS_LOG}
+			if [ -s ${http_body_file} ]; then
+				echo "# HTTP body" >> ${WS_LOG}
+				cat ${http_body_file} >> ${WS_LOG}
+			fi
+			# Print HTTP response header
+			echo ${http_response_line}
+			# Cleanup
+			_END_WS_CALL ${http_response_file} ${http_body_file}
+			echo "# Return code: 1" >> ${WS_LOG}
+			return 1
+			;;
+	esac
+
+	# Copy the results to the output file, if needed
+	if [ -n "${WS_OUTPUT_FILE}" -a -e "${http_body_file}" ]; then
+		if [ -e "${http_body_file}" ]; then
+			cp ${http_body_file} ${WS_OUTPUT_FILE}
+		fi
+	fi
+
+	# Copy the results to the standard output, if needed
+	if [ "${WS_OUTPUT_STDOUT}" = "true" ]; then
+		cat ${http_body_file}
+	fi
+
+	# Exit normally
+	_END_WS_CALL ${http_response_file} ${http_body_file}
+	return 0
+}
+
+
+#----------------------------------------------------------------------------
+# Internal function to be called after a Web Service call is finished, in
+# order to cleanup global variables and to remove temporary files.
+#
+# $1 Path of the HTTP response file
+# $2 Path of the HTTP body file
+#----------------------------------------------------------------------------
+_END_WS_CALL() {
+	http_response_file=$1
+	http_body_file=$2
+
+	# Remove temporary files and WS_PARAMS params file
+	rm -f ${http_response_file} ${http_body_file}
+	if [ -n "${WS_PARAMS}" ]; then
+		rm -f ${WS_PARAMS} >/dev/null 2>&1
+	fi
+
+	# Clear global variables
+	_WS_FINALLY
+}
+
+#----------------------------------------------------------------------------
+# Internal function to be called after a Service call is finished or aborted,
+# in order to cleanup global variables.
+#----------------------------------------------------------------------------
+_WS_FINALLY() {
+	# End debug mode?
+	[ "${WS_DEBUG}" = "true" ] && set +x
+
+	# Clear global WS_* variables
+	unset WS_INPUT_FILE WS_OUTPUT_FILE WS_OUTPUT_STDOUT WS_PARAMS WS_SYNCHRONOUS WS_OPT WS_DEBUG
+}

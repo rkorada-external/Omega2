@@ -1,0 +1,97 @@
+#----------------------------------------------------------------------------
+# FUNCTION: FTP
+#
+#   External Variables
+#       FTP_SITE
+#       FTP_WAY (PUT coming GET / MPUT / MGET)
+#	FTP_FILE          : file to transfer
+#       
+#   Optional variables
+#	FTP_MODE       : transfer mode (default value ascii)
+#
+#   Internal variables
+#	FTP_DELAY      : Waiting Delay before each retry
+#	FTP_NBRETRY    : Number of times the function tries to connect
+#	FTP_IP         : IP Address of the target host
+#	FTP_USR        : User of the target host
+#	FTP_PWD        : Passwd of the user address
+#	FTP_RDIR       : Remote directory (Host)
+#	FTP_LDIR       : Local directory
+#	FTP_O          : Output file after transfer
+#
+# Subject: This function encapsulates FTP program output command to delete a file
+# 
+#----------------------------------------------------------------------------
+FTP ()
+{
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+   if [ "${FTP_WAY}" != "PUT" -a "${FTP_WAY}" != "MGET" -a "${FTP_WAY}" != "MDEL" -a "${FTP_WAY}" != "MDEL2" -a "${FTP_WAY}" != "TEST" ]
+   then
+     echo "# \${FTP_WAY} not setted"
+     STEPEND 1
+   fi
+ 
+   STEP_PRG=FTP_${FTP_WAY}
+   STEPSTART
+
+   # File ${DREMLOGIN}/.remlogin format
+   #
+   # $1 ;$2;  $3; $4; $5
+   #site;IP; USR;PWD;site directory
+
+   # Temporary file initialization
+   FTMP=`CFTMP`
+
+   # Get paramaters in .remlogin file for connexion
+    if [ ! -f ${DREMLOGIN}/.remlogin ]
+    then
+      echo "# ${DREMLOGIN}/.remlogin doesn't exist"
+      STEPEND 1
+    fi
+
+
+    awk -F\; 'SITE==$1 {print}' SITE=${FTP_SITE} ${DREMLOGIN}/.remlogin > ${FTMP}
+
+    if [ -s ${FTMP} ]  # If site information is found
+    then
+      # Get parameters for FTP
+      FTP_DELAY=2
+      FTP_NBRETRY=1
+      if [ "${FTP_MODE}" != "binary" -a "${FTP_MODE}" != "ascii" ]
+      then
+        FTP_MODE="binary"
+      fi
+      FTP_LDIR=`dirname "${FTP_FILE}"`
+      FTP_I=`basename "${FTP_FILE}"`
+      FTP_IP=`cut -d";" -f2 ${FTMP}`
+      FTP_USR=`cut -d";" -f3 ${FTMP}`
+      FTP_PSWD=`cut -d";" -f4 ${FTMP}`
+      FTP_RDIR=`cut -d";" -f5 ${FTMP}`
+      DOUBLE_ANTISLASH ${FTP_USR}
+      FTP_USR=${DB_ANTISLASH}
+      DOUBLE_ANTISLASH ${FTP_PSWD}
+      FTP_PSWD=${DB_ANTISLASH}
+#      STEPSTART_FORCE YES
+      STEP_NOECHO="YES"
+
+      if [ "${FTP_WAY}"  = "PUT" ] 
+      then
+          FTP_O=`basename "${FTP_FILE}"`
+      fi
+
+      FTP_${FTP_WAY}
+      if [ $? != 0 ]
+      then
+         echo "#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+         echo "# FTP Server is not responding  on ${FTP_SITE}..."
+         STEPEND 1
+      fi
+    fi
+fi
+STEPEND 0
+
+}

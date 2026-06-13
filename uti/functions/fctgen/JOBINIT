@@ -1,0 +1,106 @@
+#----------------------------------------------------------------------------
+# FUNCTION: JOBINIT
+# no input parameter:
+# Subject: This function reports start of job execution
+# The function handles the restart management
+# It behaves differently when launched by the daemon
+#----------------------------------------------------------------------------
+#[001] 11/02/2021 JYP : Spira 84654: microAOC: make possible // runs by chain
+JOBINIT () {
+
+#set -x
+
+# For Chain report RMF
+export JDATE_YYYYMMDDHHMMSS=`date +"%Y%m%d%H%M%S"`
+export JDATE_DDMMYYHHMM=`date +"%d/%m/%Y %H:%M"`
+
+DOMAIN=`echo ${NJOB} | awk '{ print substr($0, 1, 2)}'`
+if [ "${DOMAIN}" = "MO" ]
+then
+   export NJOB=${NJOB}
+else
+   export NJOB=${NCHAIN}_${NJOB}
+fi
+
+export STEP_ERR=0
+export STEP_STOP=""
+
+# Test if the chain is on restart mode
+if [ -s ${DABORT}/${NCHAIN}_${IB}.rst ]
+then
+  if [ "${JOBRST}" = "${NJOB}" ] # Is the current job the job to restart ? 
+  then
+    # Remove the rst file to launch the following job normaly
+    /bin/rm -f ${DABORT}/${NCHAIN}_${IB}.rst > /dev/null 2>&1 
+  else
+    # It is not the job to restart, get to the following one
+    exit 0
+  fi
+else
+  # No restart Mode
+  export RP=""
+fi
+
+JOBFAILED=NO
+
+# if the job is launched by the daemon, there was no chain initialisation before
+# So, we must get automaticaly the right environment file and launches the
+# initialisation  chain
+if [ "${LAUNCHER}" = "DAEMON" ]
+then
+   
+   # Determines the environment file
+   . ${DUTI}/fctdaemon.cmd FINDENV 
+
+   CHAININIT $0 ${FENV}
+
+   # HG MODIF 2001/10/05
+   #
+   # because $0 is associated to the function name and not the shell name
+   # specific work must be done on HP-UX to determine NJOB
+    if [ ${SYSTEM} = "HPUX" ]
+    then
+      NJOB=`ps -ef | awk '$2==PID {print $0}' PID=$$`
+      NJOB=$(basename $(echo $NJOB | awk '{ pos=match($0, "\.cmd"); val=substr($0, 1, pos-1);print val; }' | awk '{ print $NF}'))
+    else
+      NJOB=`basename $0 | cut -d"." -f1`
+    fi
+
+   export NJOB=${NCHAIN}_${NJOB}
+else
+
+
+   # Stop if previous job failed and and chain stops on job abort
+   if test -f ${DABORT}/${FRSTN} && [ "${CHAINSTOP_ON_JOBABORT}" = "YES" ]
+   then
+        export ERROR=`tail -1 ${DABORT}/${FRSTN}  | cut -d";" -f4`
+	if [ "${ERROR}" != "0" ] && [ "${ERROR}" != "" ]
+	then
+		exit ${ERROR}
+	fi
+   fi
+   if [ "${RMF}" = "YES" ]
+   then
+    # Put in FRMF one line for the job which has just been launched
+    printf "%-30s;%-10s;%-20s;%-14s;%-14s;%-5s;%-7s\n" ${IB} ${NCHAIN} ${NJOB} "${JDATE_DDMMYYHHMM}" "/" "/" "INRUN" >> ${FRMF}
+   fi
+fi
+
+# Display Start of job
+if [ "${JOB_NOECHO}" != "YES" ]
+then
+   ECHO_LOG '#-------------------------------------------------------------------------' 
+   ECHO_LOG "# Begin of job    :  ${NJOB}  Date :  "`date +"%Y/%m/%d %H:%M:%S"` 
+   ECHO_LOG "# Current PID     :  $$ "
+
+   if [ "${JOB_LIBEL}" != "" ]
+   then
+      ECHO_LOG "#   Action:  ${JOB_LIBEL} "
+   fi
+
+   ECHO_LOG '#-------------------------------------------------------------------------' 
+fi
+}
+
+
+

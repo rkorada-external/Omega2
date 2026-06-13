@@ -1,0 +1,59 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_PRTID_FROMUSER 
+#
+# input parameter:
+# $1: User
+# Output parameter:
+# PRDSIT_CF : Production site
+# GEOSIT_CF : Geographic site
+# PRTID     : Printer identifier
+#
+# Subject: Generic function that identifies Printer Id from User
+# Get PRDSIT_CF and GEOSIT_CF from the tables TUSR and TSUBSID
+#----------------------------------------------------------------------------
+GET_PRTID_FROMUSER () {
+#set -x
+
+# It forces function execution
+# considered as a step, even if the restart step is not reached
+STEPSTART_FORCE YES
+ISQL_MODE_PREV=${ISQL_MODE}
+ISQL_MODE=""
+
+# Get printer list by ssd/esb
+LIBEL="GET PRINTER IDENTIFICATION FROM USER"
+ISQL_BASE="BREF"
+ISQL_O=${DFILT}/${NSTEP}_${IB}_GET_PRTID_FROMUSER_01.tmp
+ISQL_QRY=`CFTMP`
+
+# Extract information from the query
+INPUT_TEXT $ISQL_QRY <<EOF
+select PRDSIT_CF, GEOSIT_CF 
+from BREF..TUSR T1, BREF..TSUBSID T2
+where USR_CF='$1'
+and T1.SSD_CF=T2.SSD_CF
+exit
+EOF
+
+STEP_NOECHO="YES"
+ISQL_FRES=${DFILT}/${NSTEP}_${IB}_GET_PRTID_FROMUSER_02.tmp
+LIB_ERR="ERROR ON GET_PRTID_FROMUSER: $1"
+ISQL_INFO
+
+export PRDSIT_CF=`cat $ISQL_FRES | awk '{print $1}'`
+export GEOSIT_CF=`cat $ISQL_FRES | awk '{print $2}'`
+export PRTID=${PRDSIT_CF}';'${GEOSIT_CF}';'${PRT_CF}
+
+# Cancel Function Execution Forcing
+# Step execution Rules are respected
+STEPSTART_FORCE NO
+ISQL_MODE=${ISQL_MODE_PREV}
+
+/bin/rm -f  ${ISQL_O} 2>&1
+/bin/rm -f  ${ISQL_FRES} 2>&1
+
+LIB_ERR=""
+
+}
+
+

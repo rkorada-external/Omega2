@@ -1,0 +1,74 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SFTP_PUT 
+#
+# :spot:30348
+#
+# The following parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# SFTP_IP	: IP Address of the target host
+# SFTP_USR	: User of the target host
+# SFTP_RDIR	: Remote directory (Host)
+# SFTP_LDIR	: Local directory
+# SFTP_I		: Input file to transfer
+#
+# Subject: This function uses SFTP program output command to download a file
+# to a target host
+# Creation date: March 01 2016
+#----------------------------------------------------------------------------
+
+SFTP_PUT () {
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+   STEP_PRG=SFTP_PUT
+   STEPSTART
+
+   # Transfert par SFTP des fichiers .lis et .dae
+
+   LIBEL="Sftp Transfer"
+
+   # move to local data directory
+   cd ${SFTP_LDIR}
+
+   # --- MAKE FILE TRANSFER ---
+   # --------------------------
+   # --------------------------
+   #
+
+# Start SFTP transfer
+# ----------------------------
+SFTP_LOG=`CFTMP`
+
+# Temporary Batchfile used to send sftp command
+BATCHFILE=/tmp/tempo.$$
+
+# Filename created on Remote server is SFTP_I , the same one as local filename
+
+#cat > $BATCHFILE << EOF > ${SFTP_LOG} 2>&1
+cat > $BATCHFILE << EOF
+cd $SFTP_RDIR
+put ${SFTP_LDIR}/${SFTP_I} ${SFTP_RDIR}/${SFTP_I}
+quit
+EOF
+
+/usr/bin/sftp -b $BATCHFILE ${SFTP_USR}@$SFTP_IP > ${SFTP_LOG} 2>&1
+SFTP_ERROR=$?
+
+ # --- END OF SFTP CONNECTION ---
+
+if [ $SFTP_ERROR = 0 ]
+ then
+      echo "# Transfer of " `basename ${SFTP_I}` "  succeeded  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+ else
+      echo "# Transfer of " `basename ${SFTP_I}` "  failed  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+      echo "# SFTP LOG" 
+      cat $SFTP_LOG
+fi
+
+ /bin/rm -f $SFTP_LOG >/dev/null 2>&1
+ /bin/rm -f $BATCHFILE >/dev/null 2>&1
+ STEPEND ${SFTP_ERROR} 
+ return ${SFTP_ERROR} 
+fi
+return 0
+}

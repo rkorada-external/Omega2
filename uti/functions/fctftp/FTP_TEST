@@ -1,0 +1,130 @@
+#----------------------------------------------------------------------------
+# FUNCTION: FTP_TEST
+#
+# The following parameters must be previously defined
+# NSTEP  : STEP Identifier
+#
+# FTP_TIMEOUT   : Waiting time before testing end of ftp process
+# FTP_DELAY	: Waiting Delay before each retry
+# FTP_NBRETRY	: Number of times the function tries to connect
+# FTP_IP	: IP Address of the target host
+# FTP_USR	: User of the target host
+# FTP_PWD	: Passwd of the user address
+# FTP_RDIR	: Remote directory (Host)
+# FTP_I		: Input file to transfer
+#
+# Subject: Generic function FTP_TEST
+# This function tests if a connexion can be made to a target host
+# The connection is tried until it succeeds. Th number of tries is defined 
+# by FTP_NBRETRY
+#
+# update: FTP_TIMEOUT=5
+#----------------------------------------------------------------------------
+FTP_TEST () {
+#set -x
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+   STEP_PRG=FTP_TEST
+   STEPSTART
+
+   # Cnx FTP
+   LIBEL="Test Ftp Conection"
+
+   if [ "${FTP_TIMEOUT}" = "" ]
+   then
+      FTP_TIMEOUT=5
+   fi
+
+   DOUBLE_ANTISLASH ${FTP_RDIR}
+   CDFTP1=${DB_ANTISLASH}
+
+   # move to local data directory
+   cd ${FTP_LDIR}
+
+   # --- TRY FTP CONNECTION ---
+   # --------------------------
+   # --------------------------
+   #
+   FTP_CUR_COUNTRETRY=0
+   while [ ${FTP_NBRETRY} -gt ${FTP_CUR_COUNTRETRY} ]
+   do
+
+      echo "#"
+
+      # Start FTP in background mode
+      # ----------------------------
+      FTP_LOG=`CFTMP`
+      #$#ftp -n ${FTP_IP} <<EOF 1>${FTP_LOG} 2>&1 &
+	/usr/bin/ftp -n ${FTP_IP} <<EOF 1>${FTP_LOG} 2>&1 &
+verbose
+user ${FTP_USR} ${FTP_PSWD}
+cd ${CDFTP1}
+quit
+EOF
+ 
+     # Get ftp process id which has been launched
+     PidChild=$!
+     # Wait ...
+     sleep ${FTP_TIMEOUT}
+
+     # Is the ftp process terminated or still alive ?
+     NBLINE=`ps -edf | awk '{ if ($3==PidChild) print $0}' PidChild=$PidChild | wc -l `
+
+      # The process is still alive, because no answer from the ftp server.
+      # So, it must be killed !!
+      if [ "${NBLINE}" -ne 0 ]
+      then
+         kill -9 $PidChild
+         echo "# ftp process was killed  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+         /bin/rm -f ${FTP_LOG} >/dev/null 2>&1
+         let FTP_CUR_COUNTRETRY=FTP_CUR_COUNTRETRY+1
+         sleep ${FTP_DELAY}
+         continue
+      fi
+
+      # The process is terminated, 
+      # so, FTP Error Code is rested
+      # 331 User  OK
+      # 230 Login OK
+      # 2.0 CWD   OK
+      # 221 Good bye
+      FTP_ERROR=0
+#set -x
+      # HG MODIF 2002/03/18 pour compatibilite Sun OS 5.8
+      # 230-aftpd:220 JUNTA FTP server (SunOS 5.8) ready.
+      #RC=`cut -d" " -f1 ${FTP_LOG}`
+      RC=`cut -d" " -f1 ${FTP_LOG} | grep -v '230-' `
+
+      if test 0 -ne `echo $RC | grep -c 331.230.2.0.221`
+      then
+         # OK
+         echo "# Connection to ${FTP_IP} succeeded  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+         /bin/rm -f ${FTP_LOG} >/dev/null 2>&1
+         break
+      else
+         # Error: Let's try again
+         echo "# Connection to ${FTP_IP} failed  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+         cat ${FTP_LOG}
+         /bin/rm -f ${FTP_LOG} >/dev/null 2>&1
+         FTP_ERROR=1
+         let FTP_CUR_COUNTRETRY=FTP_CUR_COUNTRETRY+1
+      fi
+#set +x
+     sleep ${FTP_DELAY}
+
+   done
+   # --- END OF FTP CONNECTION ---
+
+   if [ "${CHAINSTOP_ON_CNXABORT}" = "NO" ] && [ ${FTP_ERROR} -ne 0 ]
+   then
+     STEPWARNING ${FTP_ERROR} 
+     return ${FTP_ERROR} 
+   fi
+
+   STEPEND ${FTP_ERROR} 
+   return ${FTP_ERROR} 
+fi
+
+}
+
+

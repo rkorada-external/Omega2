@@ -1,0 +1,35 @@
+#----------------------------------------------------------------------------
+# FUNCTION: STEPSTART
+# no input parameter:
+# Subject: This function reports start of step execution
+# call : STEPSTART 
+#   
+#----------------------------------------------------------------------------
+STEPSTART () {
+#set -x
+
+# This test allows to execute subfunctions using standard functions 
+# without displaying in the log file, messages about start and end of job
+PRGANO=""
+PRGLOG=""
+if [ "${STEP_NOECHO}" != "YES" ]
+then
+   if [ "${EXCEPTION_PROCESS}" != "ON" ]
+   then
+      echo '#'
+      echo '#'
+      echo '#=========================================================================' 
+      echo '# Begin of step: ' ${NSTEP} " Date: " `date +"%Y/%m/%d %H:%M:%S"`
+      if [ "${STEP_PRG}" != "" ]
+      then
+         echo '# Function:' ${STEP_PRG}
+      fi
+      echo '# Subject:' ${LIBEL}
+      echo '#'
+   else
+      echo '#    Action:' ${LIBEL}
+   fi
+   LIBEL=''
+fi
+}
+

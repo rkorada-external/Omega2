@@ -1,0 +1,44 @@
+#----------------------------------------------------------------------------
+# FUNCTION:                     UPDATE_INDEX_STAT
+#
+# The following parameters must be previously defined:
+#
+# NSTEP:                        STEP Identifier
+# BCP_PARTITION:        PARTITION TABLE (YES/NO)
+#
+# Subject:                      Generic Function of update index statistics
+# Creation:                     September 4, 2013 : JBG (CAPG)
+#
+# Modifications
+# [01] Florent 01/08/2014 :spot:27252 we do not use the unix user for the partition name but the Sybase user !
+#----------------------------------------------------------------------------
+
+UPDATE_INDEX_STAT()
+{
+	LIBEL="Update index stat"
+	if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+	then
+		ADT="${NSTEP}"
+		STEP_PRG=UPDATE_INDEX_STAT
+		STEPSTART
+
+		[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+		STEPSTART_FORCE YES
+		STEP_NOECHO=YES
+		ISQL_O=${DFILT}/${NSTEP}_${IB}_SQL_O1.log
+		ISQL_BASE=`echo ${BCP_TABLE} | cut -f1 -d"."`
+		ISQL_TABL=`echo ${BCP_TABLE} | cut -f3 -d"."`
+		echo $ISQL_TABL | grep -iqv ^T
+		[[ $? -ne 0 ]] && ISQL_PART=`echo ${ISQL_TABL} | sed 's/.\{1\}/P/'` || ISQL_PART=`echo ${ISQL_TABL} | sed 's/^/P/'`
+		ISQL_PART="${ISQL_PART}_$(echo ${USR} | tr 'a-z' 'A-Z')"
+		echo "# UPDATE INDEX STATISTICS ${BCP_TABLE} PARTITION ${ISQL_PART}"
+		ISQL_QRY="UPDATE INDEX STATISTICS ${BCP_TABLE} PARTITION ${ISQL_PART}"
+		ISQL
+		STEPSTART_FORCE NO
+		STEPEND 0
+  fi
+	BCP_PARTITION=""
+	ISQL_PART=""
+	ISQL_QRY=""
+}

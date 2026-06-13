@@ -1,0 +1,21 @@
+#----------------------------------------------------------------------------
+# FUNCTION: FIND_ORA_LOGIN_PSWD
+# 6 parameters must be previously defined:
+# $1:  Instance
+# Subject: Get oracle instance password
+#----------------------------------------------------------------------------
+
+FIND_ORA_LOGIN_PSWD () {
+[ "$FCT_DEBUG" == "YES" ] && set -x
+if [ "${DEFAULT_ORA_LOGIN}" = "" ]
+then
+   DEFAULT_ORA_LOGIN=USR_BATCH
+fi
+
+ORA_LOGIN_PWD=`awk -F":" '$1==INSTANCE && $2==ORALOGIN {print $2 ":" $3}' INSTANCE="$1" ORALOGIN="${DEFAULT_ORA_LOGIN}" ${DPWDORA}/.orapasswd`
+if [ "${ORA_LOGIN_PWD}" = "" ]
+then
+   return 99
+fi
+}
+

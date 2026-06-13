@@ -1,0 +1,42 @@
+#----------------------------------------------------------------------------
+# FUNCTION: AWK 
+# The following parameters must be previously defined:
+# 3 parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# AWK_I  : Input File
+# AWK_PARAM: AWK Parameters
+# AWK_O  : Output File
+# AWK_CMD: Command File
+# Subject: Generic Function To execute a Awk Command
+#----------------------------------------------------------------------------
+AWK () {
+#set -x
+# Begin Awk command 
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+        STEP_PRG=AWK
+	STEPSTART
+
+        [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+	awk -f ${AWK_CMD} ${AWK_PARAM} ${AWK_I} > ${AWK_O}
+        AWK_ERR=$?
+
+	# Delete Temporary File
+	DIRNAME_AWK_CMD=`dirname ${AWK_CMD}`
+	if [ ${DIRNAME_AWK_CMD} = ${DTMP} ]
+	then
+                STEP_NOECHO_OLD=${STEP_NOECHO}
+                STEP_NOECHO="YES"
+		RMFIL "${AWK_CMD}"
+                STEP_NOECHO=${STEP_NOECHO_OLD}
+	fi
+
+	# End awk command 
+	STEPEND ${AWK_ERR}
+
+fi
+return 0
+}
+
+

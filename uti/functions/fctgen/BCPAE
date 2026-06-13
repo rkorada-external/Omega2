@@ -1,0 +1,62 @@
+#----------------------------------------------------------------------------
+# FUNCTION: BCPAE
+# The following parameters must be previously defined:
+#
+# NSTEP  : STEP Identifier
+#
+# BCP_WAY: IN/OUT
+# BCP_VER: Version of bcp (standard "" or multi "+")
+# then, Depending of the switch
+#    BCP_I
+#    BCP_TABLE
+#    BCP_QRY
+#    BCP_I
+#    BCP_O
+#    BCP_SPECIAL_OPT
+#
+# Subject: Generic Function of bcp. It switches to standard bcp or bcpmulti
+#----------------------------------------------------------------------------
+BCPAE()
+{
+if [ -z ${BCP_QRY} ]; then
+
+echo "TABLE EMPTY IN SYBASE !"
+
+else
+
+	
+touch  $DFILT/${NJOB}_${BASE}_${table_name}_CREATE_VIEW.sql
+touch  $DFILT/${NJOB}_${BASE}_${table_name}_DROP_VIEW.sql
+
+
+echo "IF OBJECT_ID('${USER}.${table_name}_${NJOB}_VIEW') IS NOT NULL
+BEGIN
+DROP VIEW ${USER}.${table_name}_${NJOB}_VIEW
+END
+go " > $DFILT/${NJOB}_${BASE}_${table_name}_CREATE_VIEW.sql
+echo "create view ${USER}.${table_name}_${NJOB}_VIEW as ${BCP_QRY}" >> $DFILT/${NJOB}_${BASE}_${table_name}_CREATE_VIEW.sql
+	ISQL_BASE="${BASE}"
+	ISQL_QRY=$DFILT/${NJOB}_${BASE}_${table_name}_CREATE_VIEW.sql
+	ISQL
+	
+	BCP_TABLE="${BASE}.${USER}.${table_name}_${NJOB}_VIEW"
+	BCP
+
+echo "IF OBJECT_ID('${USER}.${table_name}_${NJOB}_VIEW') IS NOT NULL
+BEGIN
+DROP VIEW ${USER}.${table_name}_${NJOB}_VIEW
+END
+go " > $DFILT/${NJOB}_${BASE}_${table_name}_DROP_VIEW.sql
+        ISQL_BASE="${BASE}"
+        ISQL_QRY=$DFILT/${NJOB}_${BASE}_${table_name}_DROP_VIEW.sql
+        ISQL
+
+rm $DFILT/${NJOB}_${BASE}_${table_name}_CREATE_VIEW.sql
+rm $DFILT/${NJOB}_${BASE}_${table_name}_DROP_VIEW.sql
+		
+fi 
+
+return $?
+}
+
+

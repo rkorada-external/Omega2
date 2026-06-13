@@ -1,0 +1,44 @@
+#----------------------------------------------------------------------------
+# FUNCTION: FIND_SVC_LOGIN
+# 6 parameters must be previously defined:
+# $1:  ServerName
+# $2:  service
+# Subject: Get Sybase Login/Password
+#----------------------------------------------------------------------------
+FIND_SVC_LOGIN () {
+  SVC_SERVER=$1
+  SVC_LOGIN=$2
+  SVC_LOGIN_PWD=`awk -F":" '$2==SERVER && $3==SQLLOGIN {print $3 ":" $4}' SERVER="${SVC_SERVER}" SQLLOGIN="${SVC_LOGIN}" ${DPWDSQL}/.sqlpasswd`
+}
+
+
+#----------------------------------------------------------------------------
+# FUNCTION: GET_SVC_LOGIN
+# $1:  ServerName
+# $2:  service
+# Subject: Get Sybase Login/Password
+#----------------------------------------------------------------------------
+
+GET_SVC_LOGIN () {
+
+FIND_SVC_LOGIN $1 $2
+
+if [ "${SVC_LOGIN_PWD}" = "" ]
+then
+   USR=NULL
+   PSWD=NULL
+   echo '#'
+   echo '#'
+   echo '#========================================================================='
+   echo "# Sybase Login for Sql Server $1 Svc $2 not found"
+   echo '#========================================================================='
+
+   return 99
+else
+   export SVC_USR=`echo ${SVC_LOGIN_PWD} | cut -d":" -f1`
+   export SVC_PSWD=$(DECRYPT_PASSWD $(echo ${SVC_LOGIN_PWD} | cut -d":" -f2))
+   return 0
+fi
+
+}
+ 

@@ -1,0 +1,18 @@
+#----------------------------------------------------------------------------
+# FUNCTION: CHAININIT_SYB
+# 1 input parameters:
+# - $* : all command line parameters
+#
+# Subject: This function calls the standard CHAININIT function
+#
+#----------------------------------------------------------------------------
+CHAININIT_SYB() {
+#set -x
+
+# Define the launcher 
+export LAUNCHER=SYBADMIN
+export DLOG=$DSYBLOG
+
+CHAININIT $1 $2 $*
+}
+

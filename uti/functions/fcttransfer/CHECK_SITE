@@ -1,0 +1,57 @@
+#----------------------------------------------------------------------------
+# FUNCTION: CHECK_SITE
+#
+# The following parameters must be previously defined:
+# 3 parameters 
+#	NSTEP       : STEP Identifier
+# 	SITE        : Name of the host site to check
+# 	CHECK_OUT   : parameters files to connect to the target machine
+#
+# Subject: This function is used to check a host environnement machine 
+#     	   parameters in the local machine before making ftp transfert
+#	   for intersite files transfer.
+# 	   The machine must be declared in $DREMLOGIN/.remlogin
+#
+#----------------------------------------------------------------------------
+CHECK_SITE () {
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then 
+  ADT="${NSTEP}"
+  STEP_PRG=CHECK_SITE
+  STEPSTART    
+
+  if [ ! -f $DREMLOGIN/.remlogin ]
+  then
+    echo "# !!!! FILE ${DREMLOGIN}/.remlogin not found"
+    STEPEND 1
+  fi 
+
+  FTMP=`CFTMP`
+  # Get remote site parameters for transfer
+  awk -F";" '$1==SIT {print}' SIT=${SITE} ${DREMLOGIN}/.remlogin > ${FTMP}
+
+  if [ ! -f ${FTMP} ]
+  then
+    echo "# !!! SITE : ${SITE} not found in $DREMLOGIN/.remlogin"
+    STEPEND 1            
+  fi
+
+  MACH=`cut -d";" -f2 ${FTMP}`
+  USER=`cut -d";" -f3 ${FTMP}`
+  PASSWD=`cut -d";" -f4 ${FTMP}`
+  RDIR=`cut -d";" -f5 ${FTMP}`
+
+  # Build parameters file to connect with host machine
+  echo ${MACH}";"${USER}";"${PASSWD}";"${RDIR} > ${CHECK_OUT}
+ 
+  STEPEND 0
+fi
+}
+
+
+
+
+

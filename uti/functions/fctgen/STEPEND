@@ -1,0 +1,190 @@
+#----------------------------------------------------------------------------
+# FUNCTION: STEPEND
+# 1 input parameter:
+#   - Return Code of the step
+# Subject: This function handles end of step
+# if the input parameter value is 0, it means the step ended correctly
+# otherwise it means the step abnormaly ended and the job must be stopped.
+#    
+# call : STEPEND <$?>
+#   
+#----------------------------------------------------------------------------
+#[001] 11/02/2021 JYP : Spira 84654: microAOC: make possible // runs by chain
+
+STEPEND () {
+# set -x
+
+# After Step Abort and during exception process, a standard function call
+# can fail. The end of step is handled differently
+if [ "${EXCEPTION_PROCESS}" = "ON" ]
+then
+   if [ $1 -ne 0 ]
+   then
+      echo "#   ERROR: Exception step has failed with return Code:$1"  
+   fi
+return 0
+fi
+
+# This test allows to execute subfunctions using standard functions 
+# without displaying in the log file, messages about start and end of job
+if [ $1 -eq 0 ]
+then 
+   if [ "${STEP_NOECHO}" != "YES" ]
+   then
+      if [ "${PRGLOG}" != "" ]
+      then
+       if [ -s ${DFILT}/${PRGLOG} ]
+       then
+        /bin/mv ${DFILT}/${PRGLOG} ${DFILT}/${PRGLOG}.tmp > /dev/null 2>&1
+        echo '#-------------------------------------------------------------------------' > ${DFILT}/${PRGLOG}
+        echo "# FILE:${PRGLOG}" >> ${DFILT}/${PRGLOG}
+        echo "# Chain name : ${NCHAIN}		Date : "`date +"%Y/%m/%d %H:%M:%S"` >> ${DFILT}/${PRGLOG}
+        echo "# Job name   : ${NJOB}" >> ${DFILT}/${PRGLOG}
+        echo "# Step name  : ${NSTEP}" >> ${DFILT}/${PRGLOG}
+        echo '#-------------------------------------------------------------------------' >> ${DFILT}/${PRGLOG}
+        /bin/cat ${DFILT}/${PRGLOG}.tmp >> ${DFILT}/${PRGLOG} 2>/dev/null
+	/bin/rm -f ${DFILT}/${PRGLOG}.tmp > /dev/null 2>&1
+        echo "# PRGLOG:${PRGLOG}"
+       else
+        /bin/rm -f ${DFILT}/${PRGLOG} >/dev/null 2>&1
+       fi                            
+      fi
+
+      echo '# End of step  : ' ${NSTEP}" Date: " `date +"%Y/%m/%d %H:%M:%S"`
+      echo '#=========================================================================' 
+   fi
+   PRGLOG=""  
+   LIB_ERR=""
+   STEP_NOECHO=""
+   export RP=""
+
+else  # Error Management
+   echo "#"
+   echo "#  ======================================================="  
+   echo "#              ABNORMAL END OF STEP "  
+   echo "#  JOB name ${NJOB} - identifier ${IB}"
+   if [ "${PRGLOG}" != "" ]
+   then
+    if [ -s ${DFILT}/${PRGLOG} ]
+    then
+        /bin/mv ${DFILT}/${PRGLOG} ${DFILT}/${PRGLOG}.tmp > /dev/null 2>&1
+
+        echo '#-------------------------------------------------------------------------' > ${DFILT}/${PRGLOG}
+        echo "# FILE:${PRGLOG}" >> ${DFILT}/${PRGLOG}
+        echo "# Chain name : ${NCHAIN}		Date : "`date +"%Y/%m/%d %H:%M:%S"` >> ${DFILT}/${PRGLOG}
+        echo "# Job name   : ${NJOB}" >> ${DFILT}/${PRGLOG}
+        echo "# Step name  : ${NSTEP}" >> ${DFILT}/${PRGLOG}
+        echo '#-------------------------------------------------------------------------' >> ${DFILT}/${PRGLOG}
+
+        /bin/cat ${DFILT}/${PRGLOG}.tmp >> ${DFILT}/${PRGLOG} 2>/dev/null
+	/bin/rm -f ${DFILT}/${PRGLOG}.tmp > /dev/null 2>&1
+        echo "# PRGLOG:${PRGLOG}"
+    else
+        /bin/rm -f ${DFILT}/${PRGLOG} >/dev/null 2>&1
+    fi
+   fi
+   if [ "${PRGANO}" != "" ]
+   then
+    if [ -s ${DFILT}/${PRGANO} ]
+    then
+        /bin/mv ${DFILT}/${PRGANO} ${DFILT}/${PRGANO}.tmp > /dev/null 2>&1
+
+        echo '#-------------------------------------------------------------------------' > ${DFILT}/${PRGANO}
+        echo "# FILE:${PRGANO}" >> ${DFILT}/${PRGANO}
+        echo "# Chain name : ${NCHAIN}		Date : "`date +"%Y/%m/%d %H:%M:%S"` >> ${DFILT}/${PRGANO}
+        echo "# Job name   : ${NJOB}" >> ${DFILT}/${PRGANO}
+        echo "# Step name  : ${NSTEP}" >> ${DFILT}/${PRGANO}
+        echo '#-------------------------------------------------------------------------' >> ${DFILT}/${PRGANO}
+
+        /bin/cat ${DFILT}/${PRGANO}.tmp >> ${DFILT}/${PRGANO} 2>/dev/null
+	/bin/rm -f ${DFILT}/${PRGANO}.tmp > /dev/null 2>&1
+
+        echo "# PRGANO:${PRGANO}"
+        [ "${STEPEND_DISPLAY_ANO}" = "YES" ] && APPEND_LOG ${DFILT}/${PRGANO}
+    else
+       /bin/rm -f ${DFILT}/${PRGANO} >/dev/null 2>&1
+    fi 
+   fi
+   echo "#   ERROR: Step ${NSTEP} has failed with return Code:$1"  
+   PRGANO=""
+   PRGLOG="" 
+  
+   if [ "${INTERN_ERROR}" != "" ]
+   then
+      echo "#    internal error code : ${INTERN_ERROR}"
+   fi
+
+   if [ "${LIB_ERR}" != "" ]
+   then
+      echo "#    error detail : ${LIB_ERR}"
+   fi
+
+   echo "#  ========================================================"  
+
+
+
+   if [ "${LAUNCHER}" != "DAEMON" ]
+   then
+      # Store Step Error into restart file to allow restart management
+      echo "${IB};${NJOB};${NSTEP};$1" >> ${DABORT}/${FRSTN} 
+      LIB_ERR=""
+
+      if [ "${RMF}" = "YES" ]
+      then
+        END_DATE1=`date +"%d/%m/%Y %H:%M"`
+        END_DATE2=`date +"%Y%m%d%H%M%S"`
+        LAPS_RMF ${JDATE_YYYYMMDDHHMMSS} ${END_DATE2}
+
+	STATUS=FAILED
+	if [ "${WARNING}" = "YES" ]
+	then
+	  STATUS="${STATUS}-WARNING"
+	fi
+
+	# Update FRMF for the job which failed
+        awk -F\; 'BEGIN {OFS=";"} { if ($3~NJOB && $7~"INRUN") { $5=DATE; gsub("INRUN",STATUS,$7);$6=LAPS};print}' DATE="${END_DATE1}" NJOB="${NJOB}" LAPS="${LAPS_RMF_O}" STATUS="${STATUS}" ${FRMF} > ${FRMF}.tmp
+        /bin/mv ${FRMF}.tmp ${FRMF}
+      fi
+
+   else
+      # Temporary, rst file is not used for restart with daemon
+      /bin/rm ${DABORT}/${NCHAIN}_${HOSTNAME}.rst >/dev/null 2>&1
+	  
+	  if [ -f ${DABORT}/${FRSTN} ] # rst file multi instance
+	  then
+	  /bin/rm ${DABORT}/${FRSTN}  >/dev/null 2>&1
+	  fi
+   fi
+
+   # if step failed the job is stop or not depending of STEPEND_CONTINUE value
+   if [ "${STEPEND_CONTINUE}" != "YES" ]
+   then
+      STEPEND_CONTINUE="NO"
+      # Signal Trap management
+      trap EXCEPTION 0
+      JOBFAILED="YES"
+
+      # Delete volatile files
+      /bin/rm ${DTMP}/${NSTEP}_${IB}_TBB_*.tmp >/dev/null 2>&1
+
+
+      # These variables are defined to be used by the developer
+      #  inside EXCEPTION function
+      export STEP_ERR=$1
+      export STEP_STOP=${NSTEP}
+      exit ${STEP_ERR}
+      if [ "${LAUNCHER}" != "SYBADMIN" ]
+      then
+         exit ${STEP_ERR}
+      else
+         return ${STEP_ERR}
+      fi
+
+   fi
+fi      
+
+LIB_ERR=""
+STEP_NOECHO=""
+}
+
+

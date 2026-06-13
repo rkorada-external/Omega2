@@ -1,0 +1,21 @@
+#----------------------------------------------------------------------------
+# FUNCTION: FIND_SQL_LOGIN_PSWD
+# 6 parameters must be previously defined:
+# $1:  ServerName
+# Subject: Get Sybase Login/Password
+#----------------------------------------------------------------------------
+FIND_SQL_LOGIN_PSWD () {
+if [ "${DEFAULT_SQL_LOGIN}" = "" ]
+then
+   DEFAULT_SQL_LOGIN=batch
+fi
+
+SQL_LOGIN_PWD=""
+
+SQL_LOGIN_PWD=`awk -F":" '$2==SERVER && $3==SQLLOGIN {print $3 ":" $4}' SERVER="$1" SQLLOGIN="${DEFAULT_SQL_LOGIN}" ${DPWDSQL}/.sqlpasswd`
+if [ "${SQL_LOGIN_PWD}" = "" ]
+then
+   SQL_LOGIN_PWD=`awk -F":" '$2==SERVER && $3=="sa" {print $3 ":" $4}' SERVER="$1" ${DPWDSQL}/.sqlpasswd`
+fi
+}
+

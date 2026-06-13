@@ -1,0 +1,66 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SFTP_GET 
+#
+# :spot:30348
+#
+# The following parameters must be previously defined:
+# 9 parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# SFTP_IP	: IP Address of the target host
+# SFTP_USR	: User of the target host
+# SFTP_RDIR	: Remote directory (Host)
+# SFTP_LDIR	: Local directory
+# SFTP_I	: Output file to download 
+#
+# Subject: This function uses SFTP program output command to get a file (or list of 
+#               files from a target host
+# Date: March 02 2016 
+# Author: Alain Spinosa
+#----------------------------------------------------------------------------
+SFTP_GET () {
+#set -x
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+   STEP_PRG=SFTP_MGET
+   STEPSTART
+
+   LIBEL="Sftp Transfer"
+
+   # move to local data directory
+   # cd ${SFTP_LDIR}
+
+   # --- MAKE FILE TRANSFER ---
+   # --------------------------
+   # --------------------------
+
+SFTP_LOG=`CFTMP`
+
+# Temporary Batchfile used to send sftp command
+BATCHFILE=/tmp/tempo.$$
+
+cat > $BATCHFILE << EOF
+get ${SFTP_RDIR}/${SFTP_I} ${SFTP_LDIR}/${SFTP_I}
+quit
+EOF
+
+/usr/bin/sftp -b $BATCHFILE ${SFTP_USR}@$SFTP_IP > ${SFTP_LOG} 2>&1
+SFTP_ERROR=$?
+
+ # --- END OF SFTP CONNECTION ---
+
+  if [ $SFTP_ERROR = 0 ]
+   then
+        echo "# Download Transfer of $SFTP_I succeeded  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+   else
+        echo "# Download Transfer of $SFTP_I failed  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+        echo "# SFTP LOG"
+        cat $SFTP_LOG
+  fi
+
+ /bin/rm -f $SFTP_LOG >/dev/null 2>&1
+ /bin/rm -f $BATCHFILE >/dev/null 2>&1
+ STEPEND ${SFTP_ERROR}
+ return ${SFTP_ERROR}
+fi
+return 0
+}

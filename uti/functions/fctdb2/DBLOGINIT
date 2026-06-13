@@ -1,0 +1,238 @@
+#!/bin/ksh
+#------------------------------------------------------------------------------------------------------------------------------------------------------------
+# FUNCTION: DBLOGINIT
+# Authors   : Laurent Planche
+# Creation  : 12/01/2016
+#------------------------------------------------------------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Subject            : Generic Function to init log into Netezza tables
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Options            :  -d : schema name to log to (DELIVERY_${ENVIRONNEMENT} by default)
+#                       -t : table name prefix to be used (followed by the level given) (by default DELIVERY_JOB_LOG)
+#                   	-l : Log level (mandatory) (LEV1, LEV2, LEV3 to write logs into *_LEV1, *_LEV2 or *_LEV3 tables)
+#                       -j : job name (by default $NJOB will be used)
+#                       -s : step name (by default $NSTEP will be used)
+#                       -p : proc step name (by default $NPROC will be used)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Change Log:
+# 12/01/2016: Creation :spot:30171
+#[003] 16/11/2016 R. Cassis :spot:31493 Au STEPEND, le code retour est 1 et plus -1
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+#set -x
+# JOB_REF=$JDATE_YYYYMMDDHHMMSS
+
+#DBLOGINIT -d LOG_DATABASE -t LOG_TABLE_PREFIX -l LOG_LEVEL -j JOB_NAME -s STEP_NAME -p PROC_NAME 
+usage() { 
+cat << EOF
+Usage:
+DBLOGINIT -d LOG_SCHEMA -t LOG_TABLE_PREFIX -l LOG_LEVEL -j JOB_NAME -s STEP_NAME -p PROC_NAME 
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+#                       -d : shema name to log to (DELIVERY_${ENVIRONNEMENT} by default)
+#                       -t : table name prefix to be used (followed by the level given) (by default DELIVERY_JOB_LOG)
+#                   	-l : Log level (mandatory) (LEV1, LEV2, LEV3 to write logs into *_LEV1, *_LEV2 or *_LEV3 tables)
+#                       -j : job name (by default $NJOB will be used)
+#                       -s : step name (by default $NSTEP will be used)
+#                       -p : proc step name (by default $NPROC will be used)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+EOF
+STEPEND 1
+exit 1
+}
+
+# Perform dbsql generated command (See DBLOG_TREAT_PARAMS)
+DBLOGINIT()
+{
+OPTIND=1
+DBLOG_DBNAME='BLUDB'
+
+
+if [ -z "${NSTEP}" ] 
+then
+	NSTEP="DBLOG_AUTONOMOUS_CALL"
+	IB=`hostname``date +%Y%m%d%H%M%S%N`
+fi
+
+typeset DBLOG_OUTLOG=$DDBFILT/${NSTEP}_${IB}_DBLOGINIT.log
+typeset DBLOG_COMMAND="dbsql "
+touch ${DBLOG_OUTLOG}
+
+
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then 
+	ADT="${NSTEP}"
+	STEP_PRG=DBLOGINIT
+	export PRGLOG=`basename ${DBLOG_OUTLOG}`
+	#STEPSTART
+
+
+	while getopts "d:t:l:j:s:p:" o; do
+		case "${o}" in
+			d)
+			DBLOG_SCHEMA=${OPTARG}
+			;;
+			t)
+			DBLOG_TABLE=${OPTARG}
+			;;
+			l)
+			DBLOG_LOG_LEVEL=${OPTARG}
+			;;
+			j)
+			DBLOG_JOB_NAME=${OPTARG}
+			;;
+			s)	
+			DBLOG_STEP_NAME=${OPTARG}
+			;;	
+			p)
+			DBLOG_PROC_NAME=${OPTARG}
+			;;
+			* | -h)
+			usage
+			;;
+		esac
+	done
+	shift $((OPTIND-1))
+
+	DBLOG_TREAT_PARAMS
+	echo "[GENERATED COMMAND]       : $DBLOG_COMMAND" >> $DBLOG_OUTLOG
+
+
+	eval ${DBLOG_COMMAND}  >> $DBLOG_OUTLOG 
+	DBLOG_RETURN_CODE=$?
+
+	if [ $DBLOG_RETURN_CODE -ne 0 ]
+	then
+		STEPEND ${DBLOG_RETURN_CODE}
+	#else
+	#	echo "# Log file:  ${DBLOG_OUTLOG}"
+	fi
+
+fi
+
+DBLOG_SCHEMA=''
+DBLOG_TABLE=''
+DBLOG_JOB_NAME=''
+DBLOG_JOB_REF=''
+DBLOG_STEP_NAME=''
+DBLOG_PROC_NAME=''
+
+#STEPEND 0
+return 0
+}
+
+
+
+#Generated final dblog command from input options
+DBLOG_TREAT_PARAMS()
+{
+
+# Check mandatory arguments : log level
+if [ -z "${DBLOG_LOG_LEVEL}" ] 
+then
+    echo "Missing mandatory parameters -l"
+    usage
+    STEPEND 1
+fi
+
+# Check lov level values (LEV1, LEV2 or LEV3 only)
+case ${DBLOG_LOG_LEVEL} in
+    LEV1) echo "Log level 1 selected" >> ${DBLOG_OUTLOG}
+    ;;
+    LEV2) echo "Log level 2 selected" >> ${DBLOG_OUTLOG}
+    ;;
+    LEV3) echo "Log level 3 selected" >> ${DBLOG_OUTLOG}
+    ;;
+    *) echo "Invalid value for level parameter -l"
+    usage
+    STEPEND 1
+    ;;
+esac
+
+# Set default database name if needed
+if [ -z ${DBLOG_SCHEMA} ] 
+then
+    DBLOG_SCHEMA="DELIVERY_"${ENVIRONNEMENT}     
+    echo "Default schema  used: $DBLOG_SCHEMA" >> ${DBLOG_OUTLOG}
+else 
+    echo "schema used: $DBLOG_SCHEMA" >> ${DBLOG_OUTLOG}
+fi
+
+# Set default table name if needed
+if [ -z ${DBLOG_TABLE} ] 
+then
+    DBLOG_TABLE="DELIVERY_JOB_LOG_"${DBLOG_LOG_LEVEL}
+    echo "Default table used: $DBLOG_TABLE" >> ${DBLOG_OUTLOG}
+else
+    DBLOG_TABLE=${DBLOG_TABLE}"_"${DBLOG_LOG_LEVEL}
+    echo "Table used: $DBLOG_TABLE" >> ${DBLOG_OUTLOG}
+fi
+
+# Update command to include database and table names
+# DTY Adding the schema option 
+DBLOG_COMMAND=${DBLOG_COMMAND}"-d ${DBLOG_DBNAME} -A -t -r -nps -schema ${DBLOG_SCHEMA} -c \" insert into ${DBLOG_TABLE} "
+
+# Check job name  and set the default one if needed
+if [ -z ${DBLOG_JOB_NAME} ] 
+then
+    DBLOG_JOB_NAME=${NJOB}
+	
+	if [ -z ${DBLOG_JOB_NAME} ]
+	then
+		echo "Missing mandatory parameters -j"
+	    usage
+	    STEPEND 1
+	else	
+	    echo "Default job name used: $DBLOG_JOB_NAME" >> ${DBLOG_OUTLOG}
+	fi
+else
+	echo "Job name used: $DBLOG_JOB_NAME" >> ${DBLOG_OUTLOG}
+fi
+
+# Retrieve JOB REF based on the batch timestamp
+DBLOG_JOB_REF=${JDATE_YYYYMMDDHHMMSS}
+
+# Check step name if needed (for log level 2 only)
+if [ -z ${NSTEP} -a -z "${DBLOG_STEP_NAME}" -a "${DBLOG_LOG_LEVEL}" != "LEV1" ]
+then
+    echo "Missing mandatory parameters -s"
+	usage
+	STEPEND 1
+fi
+
+# Set default step name if needed
+if [ -z ${DBLOG_STEP_NAME} ]
+then
+    DBLOG_STEP_NAME=${NSTEP}
+	echo "Default step name used: $DBLOG_STEP_NAME" >> ${DBLOG_OUTLOG}
+else
+	echo "Step name used: $DBLOG_STEP_NAME" >> ${DBLOG_OUTLOG}
+fi
+
+# Check Proc name if needed (for log level 3 only)
+if [ -z "${NPROC}" -a -z "${DBLOG_PROC_NAME}" -a "${DBLOG_LOG_LEVEL}" = "LEV3" ]
+then
+    echo "Missing mandatory parameters -p"
+	usage
+	STEPEND 1
+fi
+
+# Set default proc name if needed
+if [ -z ${DBLOG_PROC_NAME}  ] 
+then
+    DBLOG_PROC_NAME=${NPROC}
+	echo "Default step name used: $DBLOG_PROC_NAME" >> ${DBLOG_OUTLOG}
+else
+	echo "Step name used: $DBLOG_PROC_NAME" >> ${DBLOG_OUTLOG}
+fi
+
+# Construct final insert command bases on the log level selected
+case ${DBLOG_LOG_LEVEL} in
+    LEV1) DBLOG_COMMAND=${DBLOG_COMMAND}" (JOB_NAME,JOB_REF,JOB_START) values ('${DBLOG_JOB_NAME}',TO_TIMESTAMP('${DBLOG_JOB_REF}','YYYYMMDDHH24MISS'),current_timestamp);\""
+	;;
+	LEV2) DBLOG_COMMAND=${DBLOG_COMMAND}" (JOB_NAME,JOB_REF,STEP_NAME,STEP_START) values ('${DBLOG_JOB_NAME}',TO_TIMESTAMP('${DBLOG_JOB_REF}','YYYYMMDDHH24MISS'),'${DBLOG_STEP_NAME}',current_timestamp) ;\""
+	;;
+	LEV3) DBLOG_COMMAND=${DBLOG_COMMAND}" (JOB_NAME,JOB_REF,STEP_NAME,PROC_STEP_NAME,PROC_STEP_START) values ('${DBLOG_JOB_NAME}',TO_TIMESTAMP('${DBLOG_JOB_REF}','YYYYMMDDHH24MISS'),'${DBLOG_STEP_NAME}','${DBLOG_PROC_NAME}',current_timestamp) ;\""
+	;;
+esac
+
+}

@@ -1,0 +1,80 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_MAILID_FROMUSER 
+#
+# input parameter:
+# $1: User
+# Output parameter:
+# PRDSIT_CF : Production site
+# GEOSIT_CF : Geographic site
+# MAILID    : User email address
+#
+# Subject: Generic function that identifies a user email address
+# Get PRDSIT_CF and GEOSIT_CF from the tables TUSR and TSUBSID
+#----------------------------------------------------------------------------
+GET_MAILID_FROMUSER () {
+#set -x
+
+[ "${COL_USR_CF}" = "" ] && COL_USR_CF=USR_CF
+
+# It forces function execution
+# considered as a step, even if the restart step is not reached
+STEPSTART_FORCE YES
+ISQL_MODE_PREV=${ISQL_MODE}
+ISQL_MODE=""
+
+# Get email address for user
+LIBEL="GET MAIL IDENTIFICATION FROM USER"
+ISQL_BASE="BREF"
+ISQL_O=${DFILT}/${NSTEP}_${IB}_GET_MAILID_FROMUSER_01.tmp
+ISQL_QRY=`CFTMP`
+
+# Extract information from the query
+INPUT_TEXT $ISQL_QRY <<EOF
+select PRDSIT_CF, GEOSIT_CF , USREML_LD
+from BREF..TUSR T1, BREF..TSUBSID T2
+where $COL_USR_CF='$1'
+and T1.SSD_CF=T2.SSD_CF
+exit
+EOF
+
+STEP_NOECHO="YES"
+ISQL_FRES=${DFILT}/${NSTEP}_${IB}_GET_MAILID_FROMUSER_02.tmp
+LIB_ERR="ERROR ON GET_MAILID_FROMUSER: $1"
+ISQL_INFO
+
+export PRDSIT_CF=`cat $ISQL_FRES | awk '{print $1}'`
+export GEOSIT_CF=`cat $ISQL_FRES | awk '{print $2}'`
+export MAILID=`cat $ISQL_FRES | awk '{print $3}'`
+
+# Cancel Function Execution Forcing
+# Step execution Rules are respected
+STEPSTART_FORCE NO
+ISQL_MODE=${ISQL_MODE_PREV}
+
+/bin/rm -f  ${ISQL_O} 2>&1
+/bin/rm -f  ${ISQL_FRES} 2>&1
+
+LIB_ERR=""
+unset COL_USR_CF
+}
+
+#----------------------------------------------------------------------------
+# FUNCTION: GET_MAILID_FROMLOGIN
+#
+# input parameter:
+# $1: User
+# Output parameter:
+# PRDSIT_CF : Production site
+# GEOSIT_CF : Geographic site
+# MAILID    : User email address
+#
+# Subject: Generic function that identifies a user email address with the login
+# Get PRDSIT_CF and GEOSIT_CF from the tables TUSR and TSUBSID
+#----------------------------------------------------------------------------
+GET_MAILID_FROMLOGIN () {
+
+COL_USR_CF=USRLOGIN_CF
+
+GET_MAILID_FROMUSER $1
+
+}

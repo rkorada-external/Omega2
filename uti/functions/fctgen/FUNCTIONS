@@ -1,0 +1,259 @@
+# Trie des parametres
+#-------------------------------------------------------------------------------
+# Declaration des fonctions de trie des parametres
+#-------------------------------------------------
+function exit_faild
+{
+   for f in ${TMPFIL}
+   do
+     rm -f ${DFILT}/${f}
+   done
+
+   echo "#========================================================================="
+   echo "#                            Comparison failed                            "
+   echo "#                       Abnormal DATACAMP terminate                       "
+   echo "# For more information see ano file in ${DFILT}                           "
+   echo "# ${DATACMP_ano}                                                          "
+   echo "#========================================================================="
+   exit $1
+}
+function exit_success
+{
+   for f in ${TMPFIL}
+   do
+     rm -f ${DFILT}/${f}
+   done
+
+   rm ${DATACMP_ano} 2>&1 1>/dev/null
+   echo "#========================================================================="
+   echo "#                            Comparison success                           "
+   echo "#                         normal DATACAMP terminate                       "
+   echo "#========================================================================="
+   exit $1
+}
+
+
+# fonction pour recuperer la liste des fichier a comparer
+# (les fichiers du cote gauche de Syncsort)
+#--------------------------------------------------------
+function get_left_side_files
+{
+while [ $I -lt ${#PARAM[@]} ]
+do
+   if [[ ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      read_param
+   fi
+   LINF[${#LINF[@]}]=${PARAM[$I]}
+   let "I++"
+   read_param
+done
+}
+
+
+# fonction pour recuperer la liste des table a comparer
+#------------------------------------------------------
+function get_left_side_tables
+{
+while [ $I -lt ${#PARAM[@]} ]
+do
+   if [[ ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      read_param
+   fi
+   LTABLES[${#LTABLES[@]}]=${PARAM[$I]}
+   let "I++"
+   read_param
+done
+}
+
+
+# fonction pour recuperer la liste des table avec lesquelles
+# la comparaison sera faite
+#-----------------------------------------------------------
+function get_right_side_tables
+{
+while [ $I -lt ${#PARAM[@]} ]
+do
+   if [[ ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      read_param
+   fi
+   RTABLES[${#RTABLES[@]}]=${PARAM[$I]}
+   let "I++"
+   read_param
+done
+}
+
+
+# fonction pour recuperer la liste des fichier avec lesquels
+# la comparaison sera faite (les fichiers du cote droit de Syncsort)
+#-------------------------------------------------------------------
+function get_rigth_side_files
+{
+while [ $I -lt ${#PARAM[@]} ]
+do
+   if [[ ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      read_param
+   fi
+   RINF[${#RINF[@]}]=${PARAM[$I]}
+   let "I++"
+   read_param
+done
+}
+
+
+# fonction pour recuperer la list de cles de comparaison
+#-------------------------------------------------------
+function get_keys
+{
+while [ $I -lt ${#PARAM[@]} ]
+do
+   if [[ ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      read_param
+   fi
+
+   case "$1" in
+     'l'|'L'|'') LEFT_KEYS="${LEFT_KEYS} ${PARAM[$I]}";;
+     'r'|'R') RIGHT_KEYS="${RIGHT_KEYS} ${PARAM[$I]}" ;; 
+   esac
+
+   FIELD=`print ${PARAM[$I]} | sed 's/^[ \t,]*\|[ \t,]*$//g'`
+   if [ "${FIELD}" != "" ] && [[ "$1" == ""  ||  "$1" =~ [lL] ]]; then
+      HEADER="${HEADER} `echo ${FIELD} | sed 's/ *, */;/g'`;"
+   fi
+   let "I++"
+   read_param
+done
+}
+
+
+# fonction pour recuperer les champs a comparer
+#----------------------------------------------
+function get_fildes
+{
+while [ $I -lt ${#PARAM[@]} ]
+do
+   if [[ ${PARAM[$I]} =~ ^-(.)+ ]]; then
+      read_param
+   fi
+
+   FIELD=`print ${PARAM[$I]} | sed 's/^[ \t,]*\|[ \t,]*$//g'`
+   if [ "${FIELD}" != "" ]; then
+      case $1 in
+        'l'|'L'|'')
+            LEFT_FIELDS="${LEFT_FIELDS} ${FIELD},"
+            HD_L="${HD_L} LEFTSIDE:` echo ${FIELD} | sed 's/ *, */; LEFTSIDE:/g'`;"
+            ;;
+        'r'|'R'   )
+            RIGHT_FIELDS="${RIGHT_FIELDS} ${FIELD}," 
+            HD_R="${HD_R} RIGHTSIDE:`echo ${FIELD} | sed 's/ *, */; RIGHTSIDE:/g'`;"
+            ;;
+      esac
+   fi
+   let "I++"
+   read_param
+done
+}
+
+
+# fonction pour recuperer la structure des enregistrement
+#--------------------------------------------------------
+function get_struct
+{
+if [ "${PARAM[$I]}" == "" ] || [[ ${PARAM[$I]} =~ ^-(.)+ ]]; then
+   MSG_ERR="# ${MSG_ERR}\n# -lstr | -rstr option: need parameter"
+   read_param
+else
+   if [ -f ${PARAM[$I]} ]; then
+      case $1 in
+      'l'|'L'|'') LEFT_STRUCT=`cat ${PARAM[$I]}`  ;;
+      'r'|'R'   ) RIGHT_STRUCT=`cat ${PARAM[$I]}` ;;
+      esac
+   else
+      case $1 in
+      'l'|'L'|'') LEFT_STRUCT=${PARAM[$I]}  ;;
+      'r'|'R'   ) RIGHT_STRUCT=${PARAM[$I]} ;;
+      esac
+   fi
+fi
+let "I++"
+read_param
+
+}
+
+
+function get_infiles_sync_code
+{
+   sync_code=""
+   tmpfiles=""
+   typeset -n infiles_array=$1
+   r_mx=$2
+   r_mn=""
+
+   if [ ! $r_mx == "" ]
+   then
+      r_mn=$3
+   fi
+
+   if [ ! $4 == "" ]
+   then
+      sep="'$4'"
+   fi
+
+   let  "len=${#infiles_array[@]} - 1"
+   for i in `seq 0 $len`
+   do
+      if [ -d ${infiles_array[$i]} ];
+      then
+         for file in `ls ${infiles_array[$i]} 2>/dev/null`
+         do
+          sed    's/\(\t\| \)*;\(\t\| \)*/;/g' ${infiles_array[$i]}/${file} > ${DFILT}/${file}
+          sed -i 's/\(\t\| \)*$//g'            ${DFILT}/${file}
+          sync_code=`echo -e "${sync_code} \n/INFILE ${DFILT}/${file} ${r_mx} ${r_mn} ${sep}"`
+          tmpfiles="${tmpfiles} ${file}"
+         done
+      else
+         if [ -f ${infiles_array[$i]} ]; then
+            baseName=`basename ${infiles_array[$i]}`
+            sed    's/\(\t\| \)*;\(\t\| \)*/;/g' ${infiles_array[$i]} > ${DFILT}/${baseName}
+            sed -i 's/\(\t\| \)*$//g' ${DFILT}/${baseName}
+            sync_code=`echo -e "${sync_code} \n/INFILE ${DFILT}/${baseName} ${r_mx} ${r_mn} ${sep}"`
+            tmpfiles="${tmpfiles} ${baseName}"
+         else
+            echo "# ${infiles_array[$i]} : unknown"
+            return 1
+         fi
+      fi
+   done
+   echo "$sync_code | ${tmpfiles}"
+   return 0
+}
+
+#
+#-------------------------------------------------------------------------------
+function get_max_fields_number
+{
+typeset -n LIST_FILE=$1
+NF=1
+let "len=${#LIST_FILE[@]}-1"
+for i in `seq 0 $len`
+do
+   if [ -d ${LIST_FILE[$i]} ]
+   then
+      for file in `ls ${LIST_FILE[$i]} 2>/dev/null`
+      do
+         FN=$(sed -n '1p' ${LIST_FILE[$i]}/$file | awk -F ";" '{print NF}')
+         if [ $FN -gt $NF ]; then; NF=$FN; fi
+      done
+   else
+     if [ -f ${LIST_FILE[$i]} ]; then
+       FN=$(sed -n '1p' ${LIST_FILE[$i]} 2>/dev/null | awk -F ";" '{print NF}' 2>/dev/null)
+       if [ $FN -gt $NF ]; then; NF=$FN; fi
+     else
+       echo "# ${LIST_FILE[$i]} unknown"
+       return 1
+     fi
+   fi
+done
+echo $NF
+return 0
+}
+

@@ -1,0 +1,82 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SPLIT_FILE_2
+#
+# parameters must be previously defined:
+# Parametre
+# en entree :
+#   SPLIT_PREFIX=${NJOB}
+#   SPLIT_PREFIX_NEW=${NJOB}
+# Fichiers
+# en entree :
+#   SPLIT_I: $NJOB_$NUMSTEP_$IB_<prog>.dat
+# en sortie
+#   $NJOB_<subs>_<critere1>_<critere2>_$NUMSTEP_$IB_<prog>.dat
+#
+# Subject: Eclate un fichier en n fichiers sur 2 criteres de rupture
+# Le fichier doit etre construit ainsi :
+# chaque ligne doit commancee par les criteres de rupture
+# Exemple :
+# 03~01~.............................
+#------------------------------------------------------------------------------
+
+SPLIT_FILE_2 () {
+#set -x
+# Begin Awk command
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+        STEP_PRG=SPLIT_FILE2
+        STEPSTART
+
+   # Test Input file size
+   if [ ! -s ${SPLIT_I} ]
+   then
+     echo "# !!!!!! DATA FILE IS EMPTY"
+     STEPEND 0
+     return 0
+   fi
+
+   echo "# Split Data File"
+   AWK_I=${SPLIT_I}
+   AWK_PARAM="SPLIT_PREFIX=${SPLIT_PREFIX} SPLIT_PREFIX_NEW=${SPLIT_PREFIX_NEW}"
+   AWK_O=/dev/null
+   AWK_CMD=`CFTMP`
+   INPUT_TEXT ${AWK_CMD} <<EOF
+BEGIN {
+	FS="~"
+	FILOUT = "" # Nom du fichier en sortie
+	RUPT   = "" # Critere de rupture
+}
+{
+	CRITERE1 = sprintf ("%02d", \$1)
+	CRITERE2 = sprintf ("%02d", \$2)
+	NEW_RUPT = \$1"_"\$2
+	if (NEW_RUPT != RUPT)
+	{
+	    if (NR != 1)
+	    {
+	       close (FILOUT)
+	    }
+
+            # sauvegarde de la rupture courante
+	    RUPT = NEW_RUPT  
+	    FILE = FILENAME 
+	    sub(SPLIT_PREFIX,SPLIT_PREFIX_NEW"_"CRITERE1"_"CRITERE2,FILE)
+	    FILOUT = FILE
+	    print \$0 > FILOUT
+	}
+        else
+	    print \$0 >> FILOUT
+}
+END {
+close (FILOUT)
+}
+exit
+EOF
+
+   STEP_NOECHO="YES"
+   AWK
+   STEPEND $?
+fi
+}
+
+

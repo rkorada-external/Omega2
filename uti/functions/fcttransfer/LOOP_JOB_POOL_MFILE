@@ -1,0 +1,166 @@
+#----------------------------------------------------------------------------
+# FUNCTION: LOOP_JOB_POOL_MFILE
+#
+# Subject: This function is used to launch a job ${LOOP_COMMAND} 
+#      given in parameter for each data file took from reception pool
+#
+# At least 3 parameters :
+#          NSTEP
+#          $1    : name of the chain to launch 
+#	   $2    : type of loop SSD or SSDESB or SITE
+#	   $3    : list of distant sites to process all or s1|s2|..
+#        + $...  : job parameters
+#
+# 2 function : GET_SITES, TOUCH
+#----------------------------------------------------------------------------
+
+LOOP_JOB_POOL_MFILE () {
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+
+if test -s ${DABORT}/${NCHAIN}_${HOSTNAME}.rst && [ "${CHAINSTOP_ON_JOBABORT}" = "YES" ]
+then
+   exit 0
+fi
+
+if [ -s ${DABORT}/${NCHAIN}_${IB}.rst ]
+then
+  if [ `grep ${NJOB} ${DABORT}/${NCHAIN}_${IB}.rst | wc -l` -eq 0 ]
+  then
+    exit 0
+  else
+    LOOPRST="YES"
+  fi
+fi
+
+# Get command line  $1 $2 .... $N
+COMMAND=$@
+
+
+# Get parameters
+LOOP_TYPE=$2
+LOOP_SITE=$3
+
+echo "#"
+echo '#*************************************************************************'
+echo "# Begin of LOOP_JOB_POOL for job ${NJOB}"
+echo "#"
+
+
+NSTEP="${NCHAIN}_${NJOB}_LOOP"
+if [ "${RP}" = "${NSTEP}" ]
+then
+  /bin/rm -f ${DABORT}/${NCHAIN}_${IB}.rst > /dev/null 2>&1
+fi
+
+if [ "${LOOP_TYPE}" != "SSD" ] && [ "${LOOP_TYPE}" != "SSDESB" ] &&  [ "${LOOP_TYPE}" != "SITE" ] || [ -z "${EXTCHAIN}" ]
+then
+   echo "# !!! The EXTCHAIN variable is not initialized"
+   echo "# Or No type for LOOP_JOB_POOL defined, parameter 2 : SSD or SSDESB or SITE"
+   echo "${IB};${NJOB};${NSTEP};10" >> ${DABORT}/${NCHAIN}_${HOSTNAME}.rst
+   exit 1
+fi
+
+
+echo "# Get list of pool directories"
+# Get directory list in the file GET_SITES_O (cf function definition)
+GET_SITES "${LOOP_SITE}"
+
+
+for DIR in `cat ${GET_SITES_O}`
+do
+  echo "# Processing data files from ${DIR} ..." 
+  PREV_NUM=""
+
+# HG MODIF: 2000/09/28
+# To handle order by number but not by date
+# for FDAT in `ls -rt ${DTRANSFER}/${DIR}/from/${EXTCHAIN}*.dat 2>/dev/null`
+  for FDAT in `ls ${DTRANSFER}/${DIR}/from/${EXTCHAIN}*.dat 2>/dev/null`
+  do
+    export CURPOOL="${DIR}"
+    echo "#   FILE : " `basename ${FDAT}`
+    echo "#"
+    if [ ! -s ${FDAT} ]
+    then
+      echo "#----- Empty file"
+      /bin/rm -f ${FDAT} 2>&1
+      continue
+    fi
+    
+    CUR_NUM=`basename ${FDAT} | sed "s/${EXTCHAIN}_//" | cut -f1 -d_`
+
+    #
+    # Launch COMMAND 
+    # launch job only if NUM changed
+    if [ "${PREV_NUM}" != "" ] && [ "${PREV_NUM}" != "${CUR_NUM}" ] 
+    then
+       ${COMMAND}
+
+       if [ $? != 0 ]
+       then
+         [ "${LOOP_TOUCH}" = "YES" ] && TOUCH
+         exit 1
+       fi
+
+       /bin/rm -f ${DTRANSFER}/${DIR}/from/${EXTCHAIN}_${SAV_NUM}_*.dat 2>&1
+    fi
+
+
+    case ${LOOP_TYPE} in
+
+	SITE)
+           MNEMO=`basename ${FDAT} | awk -F"_" 'BEGIN {OFS="_"} {$0=substr($0,length(ST)+2);sub($1"_","");print substr($0,0,length($0)-4)}' ST=${EXTCHAIN}`;;
+
+        SSD)
+           MNEMO=`basename ${FDAT} | awk -F"_" 'BEGIN {OFS="_"} {$0=substr($0,length(ST)+2);sub($1"_"$2"_","");print substr($0,0,length($0)-4)}' ST=${EXTCHAIN}`
+           export SSD_CF=`basename ${FDAT} | awk '{print substr($0,length(ST)+1)}' ST=${EXTCHAIN} | awk -F_ '{print $3}'`;;
+                     
+	SSDESB)
+           MNEMO=`basename ${FDAT} | awk -F"_" 'BEGIN {OFS="_"} {$0=substr($0,length(ST)+2);sub($1"_"$2"_"$3"_","");print substr($0,0,length($0)-4)}' ST=${EXTCHAIN}`
+           export SSD_CF=`basename ${FDAT} | awk '{print substr($0,length(ST)+1)}' ST=${EXTCHAIN} | awk -F_ '{print $3}'`
+           export ESB_CF=`basename ${FDAT} | awk '{print substr($0,length(ST)+1)}' ST=${EXTCHAIN} | awk -F_ '{print $4}'`;;
+
+       esac
+
+    # copy file in $DFILT
+    export FLOAD=${DFILT}/${NCHAIN}_${NJOB}_LOOP_${IB}_${MNEMO}.dat
+    /bin/cp ${FDAT} ${FLOAD} 2>&1
+    if [ $? != 0 ]
+    then
+     echo "# !!! Error in copy ${FDAT} in ${DFILT}"
+     echo "${IB};${NJOB};${NSTEP};20" >> ${DABORT}/${NCHAIN}_${HOSTNAME}.rst
+     exit 1
+    fi
+
+
+    SAV_NUM=${CUR_NUM}
+    CUR_NUM=${PREV_NUM}
+    PREV_NUM=${SAV_NUM}
+  
+
+  done
+
+  # launch COMMAND 
+  ${COMMAND}
+
+  if [ $? != 0 ]
+  then
+     [ "${LOOP_TOUCH}" = "YES" ] && TOUCH
+     exit 1
+  fi
+
+  /bin/rm -f ${DTRANSFER}/${DIR}/from/${EXTCHAIN}_${SAV_NUM}_*.dat 2>&1
+  /bin/rm -f ${DFILT}/${NCHAIN}_${NJOB}_LOOP_${IB}_*.dat 2>&1
+
+done
+
+/bin/rm -f ${GET_SITES_O}
+
+echo "# End of LOOP_JOB_POOL for job ${NJOB}"
+echo '#*************************************************************************'
+echo "#"
+return 0
+}
+
+

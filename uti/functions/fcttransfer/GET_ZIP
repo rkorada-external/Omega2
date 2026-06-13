@@ -1,0 +1,127 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_ZIP
+#
+# The following parameters must be previously defined:
+# 3 parameters 
+#       NSTEP          = step identifier
+#       GET_ZIP_I      = pool directories list (all or s1|s2|..)
+#       GET_ZIP_CHAIN  = extraction chain name
+#
+# 1 function : GET_SITES
+#
+# Subject: This function is used to get extraction files :
+#	(ftp) zip files produced from host sites and unzip them. 
+#          Used in TEFJ0011.cmd , step 10
+#
+# Ouput : 
+#       GET_ZIP_O	= Directories list where zip files have been found
+#
+#----------------------------------------------------------------------------
+GET_ZIP() {
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then 
+  ADT="${NSTEP}"
+  STEP_PRG=GET_ZIP
+  STEPSTART
+
+  if [ -z "${GET_ZIP_CHAIN}" ]
+  then
+    echo "# !!! The GET_ZIP_CHAIN variable must be initialized"
+    STEPEND 1
+  fi
+
+  # Get directory list in the file GET_SITES_O (cf function definition)
+  GET_SITES "${GET_ZIP_I}"
+ 
+  # Temporary file initialization	
+  FTMP=`CFTMP`
+
+  # Get extraction files from each directory
+  for DIR in `cat ${GET_SITES_O}`	
+  do
+    if [ `echo ${DIR} | egrep "${OLDSYSTEM}" | wc -l` = 1 ] # there's no file to get on ${OLDSYSTEM}
+    then
+      continue
+    fi
+
+    # Get paramaters in .remlogin file for connexion
+    if [ ! -d ${DTRANSFER}/${DIR}/from ] || [ ! -f ${DREMLOGIN}/.remlogin ]
+    then
+      echo "# Directory ${DTRANSFER}/${DIR}/from doesn't exist"
+      echo "# Or ${DREMLOGIN}/.remlogin doesn't exist"
+      STEPEND 1
+    fi
+
+    awk -F\; 'P1==$1 {print}' P1=${DIR} ${DREMLOGIN}/.remlogin > ${FTMP}
+
+
+    if [ -s ${FTMP} ]  # If the directory is not on the local machine 
+    then
+      echo "#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+      echo "# Get extraction from ${DIR} produced by ${GET_ZIP_CHAIN}"
+      ZIP="NO"
+      # Get parameters for FTP 	
+      FTP_DELAY=3
+      FTP_NBRETRY=1
+      FTP_MODE="binary"
+      FTP_LDIR="${DTRANSFER}/${DIR}/from"
+      FTP_IP=`cut -d";" -f2 ${FTMP}`
+      FTP_USR=`cut -d";" -f3 ${FTMP}`
+      FTP_PSWD=`cut -d";" -f4 ${FTMP}`
+      FTP_RDIR=`cut -d";" -f5 ${FTMP}`
+      STEPSTART_FORCE YES
+      STEP_NOECHO="YES"
+      echo "# Test FTP connexion"
+
+      FTP_TEST
+      if [ $? != 0 ]
+      then
+		echo "not zero..........................."
+         echo "#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+         echo "#"
+	 continue
+      fi
+echo "FTP_I...........................:${GET_ZIP_CHAIN}_*.zip"
+      echo "# FTP get extraction"
+      STEP_NOECHO="YES"
+      FTP_I="${GET_ZIP_CHAIN}_*.zip"
+      FTP_MGET
+      STEPSTART_FORCE NO
+    else
+      continue
+    fi
+echo "DIR...........................:${DIR}"
+echo "GET_ZIP_CHAIN...........................:${GET_ZIP_CHAIN}"
+echo "${DTRANSFER}/${DIR}/from/${GET_ZIP_CHAIN}_*.zip...........................:"
+    for FZIP in `ls ${DTRANSFER}/${DIR}/from/${GET_ZIP_CHAIN}_*.zip 2>/dev/null` 
+    do
+		echo "FZIP...........................:${FZIP}"
+      ZIP="YES"
+      STEP_NOECHO="YES"
+      ZIP_IDIR="${DTRANSFER}/${DIR}/from"
+      ZIP_ODIR=${ZIP_IDIR}
+      ZIP_I=`basename ${FZIP}`
+      echo "# Unzip ${FZIP}"
+      PKUNZIP
+    done
+
+    if [ "${ZIP}" != "YES" ]
+    then
+      echo "# No Zip file found"
+    else
+	echo "concat DIR...........................:${DIR}      :${GET_ZIP_O}"
+      echo ${DIR} >> ${GET_ZIP_O}
+    fi
+
+    echo "#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+    echo "#"
+  done  
+  /bin/rm -f ${FTMP}
+  STEPEND 0
+fi
+}
+
+

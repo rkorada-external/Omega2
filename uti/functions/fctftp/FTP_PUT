@@ -1,0 +1,112 @@
+#----------------------------------------------------------------------------
+# FUNCTION: FTP_PUT 
+#
+# The following parameters must be previously defined:
+# 7 parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# FTP_DELAY	: Waiting Delay before each retry
+# FTP_NBRETRY	: Number of times the function tries to connect
+# FTP_IP	: IP Address of the target host
+# FTP_USR	: User of the target host
+# FTP_PWD	: Passwd of the user address
+# FTP_MODE	: transfer mode (default value ascii)
+# FTP_RDIR	: Remote directory (Host)
+# FTP_LDIR	: Local directory
+# FTP_I		: Input file to transfer
+# FTP_O		: Output file after transfer
+#
+# Subject: This function uses FTP program output command to transfer a file
+# to a target host
+# Last Modified: 22 May 2000 H. Guiheux
+# 	To make it compatible on Windows NT
+#----------------------------------------------------------------------------
+FTP_PUT () {
+#set -x
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+   STEP_PRG=FTP_PUT
+   STEPSTART
+
+   # Transfert par FTP des fichiers .lis et .dae
+
+   LIBEL="Ftp Transfer"
+
+   DOUBLE_ANTISLASH ${FTP_RDIR}
+   CDFTP1=${DB_ANTISLASH}
+
+   # move to local data directory
+   cd ${FTP_LDIR}
+
+   # test transfer mode value
+   if [ "${FTP_MODE}" != "binary" ]
+   then
+	FTP_MODE="ascii"
+   fi
+
+   # --- MAKE FILE TRANSFER ---
+   # --------------------------
+   # --------------------------
+   #
+   FTP_CUR_COUNTRETRY=0
+   while [ ${FTP_NBRETRY} -gt ${FTP_CUR_COUNTRETRY} ]
+   do
+
+      # Start FTP transfer
+      # ----------------------------
+      FTP_LOG=`CFTMP`
+     #$# ftp -n ${FTP_IP} <<EOF 1>${FTP_LOG} 2>&1 
+/usr/bin/ftp -n ${FTP_IP} <<EOF 1>${FTP_LOG} 2>&1
+verbose
+user ${FTP_USR} ${FTP_PSWD}
+cd ${CDFTP1}
+${FTP_MODE}
+put ${FTP_I} ${FTP_O}
+quit
+EOF
+      # The process is terminated, 
+      # so, FTP Error Code is rested
+      # 331 User  OK
+      # 230 Login OK
+      # 2.0 CWD   OK
+      # 200 Ascii or bin OK
+      # 200 Port Command OK
+      # 150 Ready to reaceive   OK  (125 with War ftp on Windows NT)
+      # 226 transfer finished   OK
+      FTP_ERROR=0
+
+      # HG MODIF 2002/03/18 pour compatibilite Sun OS 5.8
+      # 230-aftpd:220 JUNTA FTP server (SunOS 5.8) ready.
+      #RC=`cut -d" " -f1 ${FTP_LOG}`
+      RC=`cut -d" " -f1 ${FTP_LOG} | grep -v '230-'`
+
+
+      # Modification May 2000 - H. Guiheux
+      # To make it compatible to  ftp Server on NT
+      #$# if test 0 -ne `echo ${RC} | grep -c 331.230.2.0.200.200.1[2,5][5,0].226`
+      if test 0 -ne `echo ${RC} | grep -c 331.230.2.0.200.local:.227.1[2,5][5,0].226`
+      then
+         # OK
+         echo "# Transfer of " `basename ${FTP_I}` " succeeded  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+         echo "# " `grep bytes.sent ${FTP_LOG}`
+         break
+      else
+         # Error: Let's try again
+         echo "# Transfer of " `basename ${FTP_I}` "  failed  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+         cat ${FTP_LOG}
+         FTP_ERROR=1
+         let FTP_CUR_COUNTRETRY=FTP_CUR_COUNTRETRY+1
+      fi
+      sleep ${FTP_DELAY}
+
+   done
+   # --- END OF FTP CONNECTION ---
+
+
+   /bin/rm -f "${FTP_LOG}" >/dev/null 2>&1
+   STEPEND ${FTP_ERROR} 
+   return ${FTP_ERROR} 
+
+fi
+return 0
+}
+

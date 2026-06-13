@@ -1,0 +1,83 @@
+#----------------------------------------------------------------------------
+# FUNCTION: STEPWARNING
+# 1 input parameter:
+# $1 : string
+# Subject: This function warns a error occured but 
+# allows the step keeping go on
+# call : STEPWARNING $1 
+#   
+#----------------------------------------------------------------------------
+STEPWARNING () {
+
+# Create a warning file to inform the chain that a warning has occure
+touch ${DABORT}/${NCHAIN}_${IB}.wng
+# Set Warning variable to yes to inform the job that a warning has occured durind a step execution
+WARNING=YES
+
+echo "#"
+echo "#  ======================================================="  
+echo "#              ABNORMAL END OF STEP "  
+echo "#  JOB name ${NJOB} - identifier ${IB}"
+if [ "${PRGLOG}" != "" ]
+then
+  if [ -s ${DFILT}/${PRGLOG} ]
+  then
+        /bin/mv ${DFILT}/${PRGLOG} ${DFILT}/${PRGLOG}.tmp > /dev/null 2>&1
+
+        echo '#-------------------------------------------------------------------------' > ${DFILT}/${PRGLOG}
+        echo "# FILE:${PRGLOG}" >> ${DFILT}/${PRGLOG}
+        echo "# Chain name : ${NCHAIN}		Date : "`date +"%Y/%m/%d %H:%M:%S` >> ${DFILT}/${PRGLOG}
+        echo "# Job name   : ${NJOB}" >> ${DFILT}/${PRGLOG}
+        echo "# Step name  : ${NSTEP}" >> ${DFILT}/${PRGLOG}
+        echo '#-------------------------------------------------------------------------' >> ${DFILT}/${PRGLOG}
+
+        /bin/cat ${DFILT}/${PRGLOG}.tmp >> ${DFILT}/${PRGLOG} 2>/dev/null
+	/bin/rm -f ${DFILT}/${PRGLOG}.tmp > /dev/null 2>&1
+        echo "# PRGLOG:${PRGLOG}"
+    else
+        /bin/rm -f ${DFILT}/${PRGLOG} >/dev/null 2>&1
+    fi
+fi
+
+if [ "${PRGANO}" != "" ]
+then
+    if [ -s ${DFILT}/${PRGANO} ]
+    then
+        /bin/mv ${DFILT}/${PRGANO} ${DFILT}/${PRGANO}.tmp > /dev/null 2>&1
+
+        echo '#-------------------------------------------------------------------------' > ${DFILT}/${PRGANO}
+        echo "# FILE:${PRGANO}" >> ${DFILT}/${PRGANO}
+        echo "# Chain name : ${NCHAIN}		Date : "`date +"%Y/%m/%d %H:%M:%S` >> ${DFILT}/${PRGANO}
+        echo "# Job name   : ${NJOB}" >> ${DFILT}/${PRGANO}
+        echo "# Step name  : ${NSTEP}" >> ${DFILT}/${PRGANO}
+        echo '#-------------------------------------------------------------------------' >> ${DFILT}/${PRGANO}
+
+        /bin/cat ${DFILT}/${PRGANO}.tmp >> ${DFILT}/${PRGANO} 2>/dev/null
+	/bin/rm -f ${DFILT}/${PRGANO}.tmp > /dev/null 2>&1
+
+        echo "# PRGANO:${PRGANO}"
+    else
+       /bin/rm -f ${DFILT}/${PRGANO} >/dev/null 2>&1
+    fi 
+fi
+
+echo "#   WARNING: Step ${NSTEP} has failed with return Code:$1"  
+PRGANO=""
+PRGLOG="" 
+ 
+if [ "${INTERN_ERROR}" != "" ]
+then
+  echo "#    internal error code : ${INTERN_ERROR}"
+fi
+
+if [ "${LIB_ERR}" != "" ]
+then
+    echo "#    error detail : ${LIB_ERR}"
+fi
+
+LIB_ERR=""
+STEP_NOECHO=""
+
+}
+
+

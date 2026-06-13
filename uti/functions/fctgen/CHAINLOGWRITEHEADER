@@ -1,0 +1,27 @@
+#----------------------------------------------------------------------------
+# FUNCTION: CHAINLOGWRITEHEADER 
+# No input parameters:
+# Subject: Report Chain start
+#----------------------------------------------------------------------------
+CHAINLOGWRITEHEADER () {
+echo '#-------------------------------------------------------------------------' 
+   echo '# Chain name    : ' ${NCHAIN} " Date : " `date +"%Y/%m/%d %H:%M:%S"` 
+   echo '# Machine       : ' ${HOSTNAME}
+   echo '# System        : ' ${SYSTEM}
+   echo '# SQL SERVER    : ' ${SRV}
+   echo "# Current PID   : " $$ 
+   echo "# Launcher Name : " ${LOGNAME}
+   echo "# ENV		: "${CHAINE_ENV}
+   echo "# Main Working Directories:"
+   echo "# DLOG : " ${DLOG}
+   echo "# DUTI : " ${DUTI}
+   echo "# DFILT: " ${DFILT}
+
+   if [ "${CHAIN_LIBEL}" != "" ]
+   then
+      echo "#   Subject: " ${CHAIN_LIBEL} 
+   fi
+
+   echo '#-------------------------------------------------------------------------' 
+}
+

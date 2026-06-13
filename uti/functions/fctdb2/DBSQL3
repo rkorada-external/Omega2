@@ -1,0 +1,222 @@
+#!/bin/ksh
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# AUTHORS:               Nour Miloua, Vincent Gautier, Roger Cassis
+# CREATE DATE:           21/11/2015
+# LAST MODIF DATE:       21/11/2015
+# DESCRIPTION:           Netezza dbsql utility for SCOR batch SQL Querying
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Subject            : Generic Function to perform SQL query to Netezza Server
+# Change Log:
+# 21/11/2015: Creation :spot:30171
+#[003] 16/11/2016 R. Cassis :spot:31493 Au STEPEND, le code retour est 1 et plus -1
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+usage() { 
+cat << EOF
+Usage:
+DBSQL -s DBSQL_SCHEMA -c *DBSQL_QUERY -o DBQSL_FILE -e DBSQL_EXTRA_PARAM -R DBSQL_NEWLINE_CHAR -F DBSQL_FIELD_SEPARATOR 
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# The following parameters must be previously defined:
+# NSTEP                     : STEP Identifier (Mandatory) defined from caller shell script or set by default to NLOAD_AUTONOMOUS_MODE
+# -s DBSQL_SCHEMA              : Name of schema to fill up (optional) - dbload option:  -schema
+# -c *DBSQL_QUERY              : Query or file to execute (Mandatory) (mandatory) - dbsql option: -c
+# -f *DBSQL_SCRIPT_FILE        : Script file -dbsql option -f
+# -o DBQSL_FILE              : Output file (optional) - dbload option: df
+# -e DBSQL_EXTRA_PARAM        : Special options which are not defined by default extra parameters (optional)
+# -R DBSQL_NEWLINE_CHAR     : Record delimiter
+# -F DBSQL_FIELD_SEPARATOR     : Field delimiter
+# -M DBSQL_MODE                 : if set to ODS or DWH, DBSQL function will fetch active ODS/DWH from DELIVERY${ENVIRONNEMENT} database, to set DBSQL_DBNAME
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Default options: -t -A  (used for sql data output)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+EOF
+STEPEND 1
+exit 1
+
+}
+
+#Run final dbsql command
+DBSQL3 ()
+{
+# Reinit parameters tab for getopt
+OPTIND=1
+DBSQL_DBNAME="BLUDB"
+
+while getopts "s:c:o:e:R:F:M:f:" o
+ do
+    case "${o}" in
+        s)
+            DBSQL_SCHEMA=${OPTARG}
+        ;;
+        c)
+            DBSQL_QUERY=${OPTARG}
+        ;;
+        o)
+            DBQSL_FILE=${OPTARG}
+        ;;
+        e)
+            DBSQL_EXTRA_PARAM=${OPTARG}
+        ;;
+        R)
+            DBSQL_NEWLINE_CHAR=${OPTARG}
+        ;;
+        F)
+            DBSQL_FIELD_SEPARATOR=${OPTARG}
+        ;;
+        M)
+            DBSQL_MODE=${OPTARG}
+        ;;
+        f)
+            DBSQL_SCRIPT_FILE=${OPTARG}
+        ;;
+        *)
+            echo "Unknown parameter ${o}"
+            usage
+        ;;
+    esac
+done
+shift $((OPTIND-1))
+
+# Default NSTEP when none defined
+if [ -z "${NSTEP}" ] 
+then
+    NSTEP="DBSQL_AUTONOMOUS_CALL"
+    IB=`hostname``date +%Y%m%d%H%M%S%N`
+fi
+
+# Default program name when none defined
+if [ -z "${PGM}" ]
+then
+    PGM=`basename $0 | cut -f1 -d'.'`
+fi
+
+# Log files management
+DBSQL_OUTLOG=$DDBFILT/${NSTEP}_${IB}_DBSQL`date "+%Y-%m-%d_%H-%M-%S-%N"`.log
+DBSQL_OUTDBSQLLOG=$DDBFILT/${NSTEP}_${IB}_dbsql`date "+%Y-%m-%d_%H-%M-%S-%N"`.log
+DBSQL_COMMAND="dbsql "
+
+if [ -f ${DBSQL_OUTDBSQLLOG} ] ; then
+    mv ${DBSQL_OUTDBSQLLOG} "${DBSQL_OUTDBSQLLOG}.bak"
+fi
+
+if [ -f ${DBSQL_OUTLOG} ] ; then
+    mv ${DBSQL_OUTLOG} "${DBSQL_OUTLOG}.bak"
+fi
+
+touch ${DBSQL_OUTDBSQLLOG} ${DBSQL_OUTLOG}
+# End of log files management
+
+#SCOR Toolbox Job management specific code
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+    STEP_PRG=DBSQL
+    export PRGLOG=`basename ${DBSQL_OUTLOG}`
+    STEPSTART
+
+    DBLOGINIT3 -l LEV2 -j ${PGM}
+    DBSQL_TREAT_PARAMS
+
+    echo "# [COMMAND]         $DBSQL_COMMAND" >> ${DBSQL_OUTLOG}
+    echo "# [OUTPUT FILE]     $DBSQL_FILE" >> ${DBSQL_OUTLOG}
+    echo "# [dbsql LOG]       $DBSQL_OUTDBSQLLOG" >> ${DBSQL_OUTLOG}
+    echo "# [DBSQL FILE]      $DBSQL_OUTLOG" >> ${DBSQL_OUTLOG}
+
+    eval ${DBSQL_COMMAND}  >  $DBSQL_OUTDBSQLLOG 2>&1
+    DBSQL_RETURN_CODE=$?
+
+    if [ $DBSQL_RETURN_CODE -ne 0 ]
+    then
+        echo "# Log file:  ${DBSQL_OUTLOG}"
+        echo "# Ano file:  ${DBSQL_OUTDBSQLLOG}"
+        DBLOGEND3 -l LEV2 -j ${PGM} -r ${DBSQL_RETURN_CODE} -m "Error when executing DBSQL"
+        STEPEND ${DBSQL_RETURN_CODE}
+
+    else
+        echo "# Log file:  ${DBSQL_OUTLOG}"
+        DBLOGEND3 -l LEV2 -j ${PGM} -r 0 -m "DBSQL execution succeeded"
+    fi
+
+fi
+
+DBSQL_SCHEMA=""
+DBSQL_QUERY=""
+DBQSL_FILE=""
+DBSQL_EXTRA_PARAM=""
+DBSQL_NEWLINE_CHAR=""
+DBSQL_FIELD_SEPARATOR=""
+DBSQL_MODE=""
+STEPEND 0
+return 0
+}
+
+#Generate final dbsql command from input params
+DBSQL_TREAT_PARAMS ()
+{
+# -c/-f Query/Input script parameters 
+if [ -z "${DBSQL_QUERY}" -a -z "${DBSQL_SCRIPT_FILE}" ]
+then
+    echo "need -c or -f option"
+    usage
+    STEPEND 1
+else
+    if [ -z "${DBSQL_QUERY}"  ]
+    then
+        echo "# [DBSQL_SCRIPT_FILE]: ${DBSQL_SCRIPT_FILE}" >> ${DBSQL_OUTLOG}
+        DBSQL_COMMAND=${DBSQL_COMMAND}"  -f \"${DBSQL_SCRIPT_FILE}\" "
+    else
+        echo "# [DBSQL_QUERY]: ${DBSQL_QUERY}"
+        DBSQL_COMMAND=${DBSQL_COMMAND}"  -c \"${DBSQL_QUERY}\" "
+    fi
+fi
+
+# -M/-d target database/auto modes
+if [ -z ${DBSQL_MODE} ]
+then
+    if [ -z "${DBSQL_SCHEMA}" ]
+    then
+        DBSQL_SCHEMA=$DB_SCHEMA
+    fi
+else
+    DBSQL_SCHEMA=`$DUTI/functions/fctdb2/DBGETACTIVEDB.cmd -M ${DBSQL_MODE}`
+fi
+
+echo "# [DBSQL MODE]:   ${DBSQL_MODE}" >> ${DBSQL_OUTLOG}
+echo "# [DBSQL_DBNAME] : ${DBSQL_DBNAME}" >> ${DBSQL_OUTLOG}
+DBSQL_COMMAND=${DBSQL_COMMAND}" -d ${DBSQL_DBNAME}"
+
+#-s target schema
+if [ ! -z "${DBSQL_SCHEMA}" ]
+then
+    DBSQL_COMMAND=${DBSQL_COMMAND}" -schema ${DBSQL_SCHEMA}"
+fi
+echo "# [DBSQL_SCHEMA]: ${DBSQL_SCHEMA}" >> ${DBSQL_OUTLOG}
+
+#-o output file
+if [ -z "${DBQSL_FILE}" ]
+then
+    DBSQL_DEFAULT_OUTFILE=$DDBFILT/${NSTEP}_${IB}_DBSQL.default.dat
+    DBSQL_FILE=${DBSQL_DEFAULT_OUTFILE}       
+else
+    DBSQL_FILE="$DDBFILT/${DBQSL_FILE}"
+fi
+echo "# [DBSQL_FILE]: ${DBQSL_FILE}" >> ${DBSQL_OUTLOG}
+DBSQL_COMMAND=${DBSQL_COMMAND}" -o ${DBSQL_FILE}"
+
+#-R
+if [ ! -z "${DBSQL_NEWLINE_CHAR}" ]
+then
+    DBSQL_COMMAND=${DBSQL_COMMAND}" -R \"${DBSQL_NEWLINE_CHAR}\""
+fi
+echo "# [DBSQL_NEWLINE_CHAR]: ${DBSQL_NEWLINE_CHAR}" >> ${DBSQL_OUTLOG}
+
+#-F
+if [ -z "${DBSQL_FIELD_SEPARATOR}" ]
+then
+    DBSQL_FIELD_SEPARATOR="~"
+fi
+echo "# [DBSQL_FIELD_SEPARATOR]: ${DBSQL_FIELD_SEPARATOR}" >> ${DBSQL_OUTLOG}
+DBSQL_COMMAND=${DBSQL_COMMAND}" -F \"${DBSQL_FIELD_SEPARATOR}\""
+
+#Special default settings on dbsql command + extra params
+DBSQL_COMMAND=${DBSQL_COMMAND}" -t -A ${DBSQL_EXTRA_PARAM} -nps"
+}

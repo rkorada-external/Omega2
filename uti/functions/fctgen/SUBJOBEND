@@ -1,0 +1,24 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SUBJOBEND
+# no input parameter:
+# Subject: This function reports end of job execution
+# call   : SUBJOBEND
+#   
+#----------------------------------------------------------------------------
+SUBJOBEND () {
+#set -x
+
+# Delete volatile files of the job
+/bin/rm ${DTMP}/${NJOB}_*_${IB}_TBB_*.tmp >/dev/null 2>&1
+
+echo '#-------------------------------------------------------------------------' 
+echo '# End of subjob: ' $NSUBJOB  " Date: " `date +"%Y/%m/%d %H:%M:%S"` 
+echo '#-------------------------------------------------------------------------' 
+
+NJOB=${PREV_JOB}
+
+# Signal Trap management
+trap EXCEPTION 0
+
+exit 0
+}

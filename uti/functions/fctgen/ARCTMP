@@ -1,0 +1,14 @@
+if [ "GZIP_DISABLED" != "YES" ]
+then
+
+
+     ### gzip all temporary NCHAIN data files and replace $IB by $IDF_CT except retro chain
+	for line in  `ls  $DFILT/${NCHAIN}_*_${IB}_*.dat| grep -v /${ENV_PREFIX}_RT`
+	do
+        	#zip  ${DARCH}/${NCHAIN}_${IB} $line
+        	v=`echo ${line}|sed s"/${IB}/${IDF_CT}/"`
+        	gzip -c ${line} > ${v}.gz
+        	rm   $line
+	done
+fi
+

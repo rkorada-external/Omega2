@@ -1,0 +1,111 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SPLIT_SSDESB
+#
+# parameters must be previously defined:
+# Parametre
+# en entree :
+#   SPLIT_PREFIX=${NSTEP}
+#   SPLIT_PREFIX_NEW=${NSTEP}
+# Fichiers
+# en entree :
+#   SPLIT_I: $NJOB_$NUMSTEP_$IB_<prog>.dat
+# en sortie
+#   $NJOB_<subs>_<etabl.>_$NUMSTEP_$IB_<prog>.dat
+#
+# Subject: Eclate un fichier d'edition en n fichier (par filiale etablissement)
+# Le fichier doit etre construit ainsi :
+# La 1ere ligne de chaque page comporte : langue filiale etablissement
+# Exemple :
+# F 03 01
+#
+#------------------------------------------------------------------------------
+
+SPLIT_SSDESB () {
+#set -x
+# Begin Awk command
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+        STEP_PRG=SPLIT_SSDESB
+        STEPSTART
+
+   if [ ! -s ${SPLIT_I} ]
+   then
+     echo "# !!!!!! DATA FILE IS EMPTY"
+     STEPEND 0
+     return 0
+   fi
+
+   echo "# Split Data File by SSD/ESB"
+
+   AWK_I=${SPLIT_I}
+   AWK_PARAM="SPLIT_PREFIX=${SPLIT_PREFIX} SPLIT_PREFIX_NEW=${SPLIT_PREFIX_NEW}"
+   AWK_O=/dev/null
+   AWK_CMD=`CFTMP`
+   INPUT_TEXT ${AWK_CMD} <<EOF
+BEGIN {
+	FILOUT = "" # Nom du fichier en sortie
+	FILCUR = "" # Valeur courante du critere de rupture
+	RUPT   = "" # Critere de rupture
+}
+{
+# En rupture sur , on ferme le fichier et on change le nom de la sortie
+# Warning : premiere ligne > pas de  avant
+# Warning : derniere ligne > un  et rien apres
+	NEW = 0     # detection de changement de page
+	if (match(\$0, "\") != 0)
+	{	DERNIER1 = 1 # test dernier enregistrement pour cette maquette
+			for (I = 1; I <= length(\$0); I ++)
+			{	if (substr(\$0,I,1) == "\")
+				{	continue
+				}	
+				if (substr(\$0,I,1) == " " )
+				{	continue
+				}	
+				NEW = 1
+				DERNIER1 = 0
+				break 
+			}
+                        # pas d'edition du dernier enregistrement des maquettes
+			if (DERNIER1 == 1) 
+			{ next }
+	}
+
+        # ==> 1ere ligne de chaque page
+	if (NEW == 1 || FNR == 1) 
+	{
+		SSD = \$2
+		ESB = \$3
+		RUPT  = \$2"_"\$3 # calcul du critere de rupture
+
+
+		if (RUPT != FILCUR)
+		{
+			if (NR != 1) 
+			{
+				print "\" > FILOUT
+				close (FILOUT)
+			}
+
+			gsub ("\","",\$0)
+			FILCUR  = RUPT  # sauvegarde de la rupture courante
+			FILE = FILENAME 
+			sub(SPLIT_PREFIX,SPLIT_PREFIX_NEW"_"SSD"_"ESB,FILE)
+			FILOUT  = FILE
+print "FileName=" FILOUT
+		}
+	}
+	print \$0 > FILOUT
+}
+END {
+print "\" > FILOUT
+close (FILOUT)
+}
+exit
+EOF
+
+#   STEP_NOECHO="YES"
+   AWK
+fi
+}
+
+

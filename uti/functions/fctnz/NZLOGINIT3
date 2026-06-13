@@ -1,0 +1,240 @@
+#!/bin/ksh
+#------------------------------------------------------------------------------------------------------------------------------------------------------------
+# FUNCTION: NZLOGINIT
+# Authors   : Laurent Planche
+# Creation  : 12/01/2016
+#------------------------------------------------------------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Subject            : Generic Function to init log into Netezza tables
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Options            :  -d : database name to log to (DELIVERY_${ENVIRONNEMENT} by default)
+#                       -t : table name prefix to be used (followed by the level given) (by default JOB_LOG)
+#                   	-l : Log level (mandatory) (LEV1, LEV2, LEV3 to write logs into *_LEV1, *_LEV2 or *_LEV3 tables)
+#                       -j : job name (by default $NJOB will be used)
+#                       -s : step name (by default $NSTEP will be used)
+#                       -p : proc step name (by default $NPROC will be used)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Change Log:
+# 12/01/2016: Creation :spot:30171
+#[003] 16/11/2016 R. Cassis :spot:31493 Au STEPEND, le code retour est 1 et plus -1
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+#set -x
+# JOB_REF=$JDATE_YYYYMMDDHHMMSS
+
+usage() { 
+cat << EOF
+Usage:
+NZLOGINIT -d LOG_DATABASE -t LOG_TABLE_PREFIX -l LOG_LEVEL -j JOB_NAME -s STEP_NAME -p PROC_NAME 
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+#                       -d : database name to log to (DELIVERY_${ENVIRONNEMENT} by default)
+#                       -t : table name prefix to be used (followed by the level given) (by default JOB_LOG)
+#                   	-l : Log level (mandatory) (LEV1, LEV2, LEV3 to write logs into *_LEV1, *_LEV2 or *_LEV3 tables)
+#                       -j : job name (by default $NJOB will be used)
+#                       -s : step name (by default $NSTEP will be used)
+#                       -p : proc step name (by default $NPROC will be used)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+EOF
+STEPEND 1
+exit 1
+}
+
+# Perform nzsql generated command (See NZLOG_TREAT_PARAMS)
+NZLOGINIT3()
+{
+OPTIND=1
+
+if [ -z "${NSTEP}" ] 
+then
+	NSTEP="NZLOG_AUTONOMOUS_CALL"
+	IB=`hostname``date +%Y%m%d%H%M%S%N`
+fi
+
+typeset NZLOG_OUTLOG=$DNZFILT/${NSTEP}_${IB}_NZLOGINIT.log
+typeset NZLOG_COMMAND="nzsql "
+touch ${NZLOG_OUTLOG}
+
+
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then 
+	ADT="${NSTEP}"
+	STEP_PRG=NZLOGINIT
+	export PRGLOG=`basename ${NZLOG_OUTLOG}`
+	#STEPSTART
+
+
+	while getopts "d:t:l:j:s:p:" o; do
+		case "${o}" in
+			d)
+			NZLOG_DBNAME=${OPTARG}
+			;;
+			t)
+			NZLOG_TABLE=${OPTARG}
+			;;
+			l)
+			NZLOG_LOG_LEVEL=${OPTARG}
+			;;
+			j)
+			NZLOG_JOB_NAME=${OPTARG}
+			;;
+			s)	
+			NZLOG_STEP_NAME=${OPTARG}
+			;;	
+			p)
+			NZLOG_PROC_NAME=${OPTARG}
+			;;
+			* | -h)
+			usage
+			;;
+		esac
+	done
+	shift $((OPTIND-1))
+
+	NZLOG_TREAT_PARAMS
+	echo "[GENERATED COMMAND]       : $NZLOG_COMMAND" >> $NZLOG_OUTLOG
+
+
+	#eval ${NZLOG_COMMAND}  >> $NZLOG_OUTLOG 
+	NZLOG_RETURN_CODE=$?
+
+	if [ $NZLOG_RETURN_CODE -ne 0 ]
+	then
+		STEPEND ${NZLOG_RETURN_CODE}
+	#else
+	#	echo "# Log file:  ${NZLOG_OUTLOG}"
+	fi
+
+fi
+
+NZLOG_DBNAME=''
+NZLOG_TABLE=''
+NZLOG_JOB_NAME=''
+NZLOG_JOB_REF=''
+NZLOG_STEP_NAME=''
+NZLOG_PROC_NAME=''
+
+#STEPEND 0
+return 0
+}
+
+
+
+#Generated final nzlog command from input options
+NZLOG_TREAT_PARAMS()
+{
+
+# Check mandatory arguments : log level
+if [ -z "${NZLOG_LOG_LEVEL}" ] 
+then
+    echo "Missing mandatory parameters -l"
+    usage
+    STEPEND 1
+fi
+
+# Check lov level values (LEV1, LEV2 or LEV3 only)
+case ${NZLOG_LOG_LEVEL} in
+    LEV1) echo "Log level 1 selected" >> ${NZLOG_OUTLOG}
+    ;;
+    LEV2) echo "Log level 2 selected" >> ${NZLOG_OUTLOG}
+    ;;
+    LEV3) echo "Log level 3 selected" >> ${NZLOG_OUTLOG}
+    ;;
+    *) echo "Invalid value for level parameter -l"
+    usage
+    STEPEND 1
+    ;;
+esac
+
+# Set default database name if needed
+if [ -z ${NZLOG_DBNAME} ] 
+then
+    NZLOG_DBNAME="DELIVERY_"${ENVIRONNEMENT}
+    echo "Default database used: $NZLOG_DBNAME" >> ${NZLOG_OUTLOG}
+else
+    echo "Database used: $NZLOG_DBNAME" >> ${NZLOG_OUTLOG}
+fi
+
+# Set default table name if needed
+if [ -z ${NZLOG_TABLE} ] 
+then
+    NZLOG_TABLE="JOB_LOG_"${NZLOG_LOG_LEVEL}
+    echo "Default table used: $NZLOG_TABLE" >> ${NZLOG_OUTLOG}
+else
+    NZLOG_TABLE=${NZLOG_TABLE}"_"${NZLOG_LOG_LEVEL}
+    echo "Table used: $NZLOG_TABLE" >> ${NZLOG_OUTLOG}
+fi
+
+# Update command to include database and table names
+NZLOG_COMMAND=${NZLOG_COMMAND}"-d ${NZLOG_DBNAME} -A -t -r  -c \" insert into ${NZLOG_TABLE} "
+
+# Check job name  and set the default one if needed
+if [ -z ${NZLOG_JOB_NAME} ] 
+then
+    NZLOG_JOB_NAME=${NJOB}
+	
+	if [ -z ${NZLOG_JOB_NAME} ]
+	then
+		echo "Missing mandatory parameters -j"
+	    usage
+	    STEPEND 1
+	else	
+	    echo "Default job name used: $NZLOG_JOB_NAME" >> ${NZLOG_OUTLOG}
+	fi
+else
+	echo "Job name used: $NZLOG_JOB_NAME" >> ${NZLOG_OUTLOG}
+fi
+
+# Retrieve JOB REF based on the batch timestamp
+NZLOG_JOB_REF=${JDATE_YYYYMMDDHHMMSS}
+
+# Check step name if needed (for log level 2 only)
+if [ -z ${NSTEP} -a -z "${NZLOG_STEP_NAME}" -a "${NZLOG_LOG_LEVEL}" != "LEV1" ]
+then
+    echo "Missing mandatory parameters -s"
+	usage
+	STEPEND 1
+fi
+
+# Set default step name if needed
+if [ -z ${NZLOG_STEP_NAME} ]
+then
+    NZLOG_STEP_NAME=${NSTEP}
+	echo "Default step name used: $NZLOG_STEP_NAME" >> ${NZLOG_OUTLOG}
+else
+	echo "Step name used: $NZLOG_STEP_NAME" >> ${NZLOG_OUTLOG}
+fi
+
+# Check Proc name if needed (for log level 3 only)
+if [ -z ${NPROC} -a -z ${NZLOG_PROC_NAME} -a "${NZLOG_LOG_LEVEL}" = "LEV3" ]
+then
+    echo "Missing mandatory parameters -p"
+	usage
+	STEPEND 1
+fi
+
+# Set default proc name if needed
+if [ -z ${NZLOG_PROC_NAME}  ] 
+then
+    NZLOG_PROC_NAME=${NPROC}
+	echo "Default step name used: $NZLOG_PROC_NAME" >> ${NZLOG_OUTLOG}
+else
+	echo "Step name used: $NZLOG_PROC_NAME" >> ${NZLOG_OUTLOG}
+fi
+
+T_START="`echo ${NZLOG_JOB_REF:0:4}`-`echo ${NZLOG_JOB_REF:4:2}`-`echo ${NZLOG_JOB_REF:6:2}` `echo ${NZLOG_JOB_REF:8:2}`:`echo ${NZLOG_JOB_REF:10:2}`:`echo ${NZLOG_JOB_REF:12:2}`"
+T_END=`date +'%Y-%m-%d %H:%M:%S'`
+	
+# Construct final insert command bases on the log level selected
+case ${NZLOG_LOG_LEVEL} in
+    LEV1) #NZLOG_COMMAND=${NZLOG_COMMAND}" (JOB_NAME,JOB_REF,JOB_START) values ('${NZLOG_JOB_NAME}',TO_TIMESTAMP('${NZLOG_JOB_REF}','YYYYMMDDHHMISS'),current_timestamp);\""
+	echo "${NZLOG_JOB_NAME}~${T_START}~${T_START}">> ${DLOG}/${NJOB}_JOB_LOG_LEV1.dat
+	;;
+	LEV2) NZLOG_COMMAND=${NZLOG_COMMAND}" (JOB_NAME,JOB_REF,STEP_NAME,STEP_START) values ('${NZLOG_JOB_NAME}',TO_TIMESTAMP('${NZLOG_JOB_REF}','YYYYMMDDHHMISS'),'${NZLOG_STEP_NAME}',current_timestamp) ;\""
+	echo "${NZLOG_JOB_NAME}~${T_START}~${NZLOG_STEP_NAME}~${T_START}">> ${DLOG}/${NJOB}_JOB_LOG_LEV2.dat
+	;;
+	LEV3) NZLOG_COMMAND=${NZLOG_COMMAND}" (JOB_NAME,JOB_REF,STEP_NAME,PROC_STEP_NAME,PROC_STEP_START) values ('${NZLOG_JOB_NAME}',TO_TIMESTAMP('${NZLOG_JOB_REF}','YYYYMMDDHHMISS'),'${NZLOG_STEP_NAME}','${NZLOG_PROC_NAME}',current_timestamp) ;\""
+	echo "${NZLOG_JOB_NAME}~`echo ${NZLOG_JOB_REF:0:4}`-`echo ${NZLOG_JOB_REF:4:2}`-`echo ${NZLOG_JOB_REF:6:2}` `echo ${NZLOG_JOB_REF:8:2}`:`echo ${NZLOG_JOB_REF:10:2}`:`echo ${NZLOG_JOB_REF:12:2}`~${NZLOG_STEP_NAME}~${NZLOG_PROC_NAME}~`date +'%Y-%m-%d %H:%M:%S'`" >> ${DLOG}/${NJOB}_JOB_LOG_LEV3.dat
+	;;
+esac
+
+}

@@ -1,0 +1,143 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SENDMAIL
+#
+# 6 parameters must be previously defined:
+# NSTEP        : STEP Number (mandatory)
+# MAIL_ADR     : Email of recipient (mandatory)
+# MAIL_SUBJECT : Subject of email (description of the report to send ; optional parameter) '~' should not be used in SUBJECT LINE
+# MAIL_FILE    : File to send (zip extension required ; optional parameter)
+# MAIL_CONTENT : File containing the message body (required if MAIL_FILE is not defined)
+# MAIL_SENDER  : Set the sender of the mail (optional)
+#
+# Subject:  Generic Function for Mail sending
+# The mail is sent to the user mailbox directly from Unix servers.
+#----------------------------------------------------------------------------
+# Modification History
+# MOD 01 - SPIRA 96246 - Include SCOR banner and logo in emails
+#----------------------------------------------------------------------------
+SENDMAIL ()
+{
+
+test -n "$DEBUG_SENDMAIL" && set -x
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then 
+   ADT="${NSTEP}"
+   : ${MAIL_SUBJECT:="${NSTEP} mail"}
+   : ${MAIL_SENDER:="${NSTEP}"}
+
+   STEP_PRG=SENDMAIL
+   STEPSTART
+
+   # Check if the attached file is a zip
+   INTERN_ERROR=SENDMAIL_${NSTEP}_05
+   MAIL_FILE_SUFFIX=`basename "${MAIL_FILE}" | sed -e's/.*\.//g'`
+
+   if test ! "${MAIL_FILE_SUFFIX}" == "zip" -a -s "${MAIL_FILE}"
+   then
+      echo '# Critical: the attached file must be a zip'
+      STEPEND 1
+      return 1
+   fi
+
+   # check if the destination is defined
+   INTERN_ERROR=SENDMAIL_${NSTEP}_10
+   if test -z "${MAIL_ADR}"
+   then
+      echo '# Critical: the destination address is not defined'
+      STEPEND 1
+      return 1
+   fi
+	
+	# MOD 1 starts
+	EML_FILE="${DFILT}/${NSTEP}_${IB}_EMAIL.eml"
+	BASE64_ATTACHMENT="${DFILT}/${NSTEP}_${IB}_BASE64_ATTACHMENT.dat"
+	HTML_CONTENT=$(echo "${MAIL_CONTENT}" | sed 's/\.[a-z][a-z][a-z]$/\.html/i')
+	
+	# Convert Plain Text To HTML
+	if [ -n "${MAIL_CONTENT}" ]
+	then
+		TEXT2HTML "${MAIL_CONTENT}"
+	else
+		HTML_CONTENT=`CFTMP`
+	fi
+	# MOD 1 ends	
+	
+   # Test if Input file exists
+   INTERN_ERROR=SENDMAIL_${NSTEP}_15
+   if test ! -s "${MAIL_FILE}" -a -n "${MAIL_FILE}"
+   then
+      echo '# Information: No input file produced after data formatting'
+#      { echo 'Information: No input file produced after data formatting' ; cat -s "${MAIL_CONTENT}" ; }  |
+#       mail -s "${MAIL_SUBJECT}" -- -f "${MAIL_SENDER}"		#$# Replaced by sendmail for MOD 1
+#      mailx -s "${MAIL_SUBJECT}" -r "${MAIL_SENDER}"   #$# Replaced mailx with mail for Phase1b migration to Linux
+		
+		cp ${DFILP}/EmailWithoutAttachment.eml ${EML_FILE}
+		sed -e "s/TO_DATA_HERE/${MAIL_ADR}/" -i ${EML_FILE}
+		sed -e "s/FROM_DATA_HERE/${MAIL_SENDER}/" -i ${EML_FILE}
+		sed -e "s~SUBJECT_DATA_HERE~${MAIL_SUBJECT}~" -i ${EML_FILE}
+		sed -e "/EMAIL_CONTENT_GOES_HERE/ {" -e "r ${HTML_CONTENT}" -e "d" -e "}" -i ${EML_FILE}
+
+		sendmail -t < ${EML_FILE}
+		
+      STEPEND 0
+	  rm "${EML_FILE}" "${BASE64_ATTACHMENT}" "${HTML_CONTENT}"	  
+      unset MAIL_ADR MAIL_SUBJECT MAIL_FILE MAIL_CONTENT MAILERR INTERN_ERROR MAIL_FILE_SUFFIX MAIL_SENDER EML_FILE BASE64_ATTACHMENT HTML_CONTENT
+
+      return 0
+   fi
+
+   if test -s "${MAIL_FILE}"
+   then
+#      { cat -s "${MAIL_CONTENT}" ; uuencode "${MAIL_FILE}" "$(basename ${MAIL_FILE})" ; } |
+#      mail -s "${MAIL_SUBJECT}" ${MAIL_ADR} -- -f "${MAIL_SENDER}"			#$# Replaced by sendmail for MOD 1
+#      mailx -s "${MAIL_SUBJECT}" -r "${MAIL_SENDER}" ${MAIL_ADR}    #$# #$# Replaced mailx with mail for Phase1b migration to Linux
+		
+		#Conversion of Attchment file to base64 version for file transfer
+		base64 "${MAIL_FILE}" > "${BASE64_ATTACHMENT}"
+
+		#Get attachment filename without extension
+		FILENAME="${MAIL_FILE##*/}"
+		FILENAME="${FILENAME%.*}"
+
+		cp ${DFILP}/EmailWithAttachment.eml ${EML_FILE}
+		sed -e "s/TO_DATA_HERE/${MAIL_ADR}/" -i ${EML_FILE}
+		sed -e "s/FROM_DATA_HERE/${MAIL_SENDER}/" -i ${EML_FILE}
+		sed -e "s~SUBJECT_DATA_HERE~${MAIL_SUBJECT}~" -i ${EML_FILE}
+		sed -e "/EMAIL_CONTENT_GOES_HERE/ {" -e "r ${HTML_CONTENT}" -e "d" -e "}" -i ${EML_FILE}
+		sed -e "s/FILENAME_DATA_HERE/${FILENAME}/" -i ${EML_FILE}
+		sed -e "/ATTACHMENT_CONTENT_HERE/ {" -e "r ${BASE64_ATTACHMENT}" -e "d" -e "}" -i ${EML_FILE}
+
+		sendmail -t < ${EML_FILE}
+		
+      MAILERR=$?
+
+		rm "${BASE64_ATTACHMENT}"
+   else
+#      cat -s "${MAIL_CONTENT}" | mail -s "${MAIL_SUBJECT}" ${MAIL_ADR} -- -f "${MAIL_SENDER}"
+#      cat -s "${MAIL_CONTENT}" | mailx -s "${MAIL_SUBJECT}" -r "${MAIL_SENDER}" ${MAIL_ADR}   #$# Replaced mailx with mail for Phase1b migration to Linux 
+
+		cp ${DFILP}/EmailWithoutAttachment.eml ${EML_FILE}
+		sed -e "s/TO_DATA_HERE/${MAIL_ADR}/" -i ${EML_FILE}
+		sed -e "s/FROM_DATA_HERE/${MAIL_SENDER}/" -i ${EML_FILE}
+		sed -e "s~SUBJECT_DATA_HERE~${MAIL_SUBJECT}~" -i ${EML_FILE}
+		sed -e "/EMAIL_CONTENT_GOES_HERE/ {" -e "r ${HTML_CONTENT}" -e "d" -e "}" -i ${EML_FILE}
+
+		sendmail -t < ${EML_FILE}
+
+      MAILERR=$?
+   fi
+
+   INTERN_ERROR=SENDMAIL_${NSTEP}_20
+   STEPEND $MAILERR
+
+   test ${MAILERR} -eq 0 -a -n "${MAIL_FILE}" && rm "${MAIL_FILE}" 2>&-
+
+fi
+rm "${EML_FILE}" "${HTML_CONTENT}"
+unset MAIL_ADR MAIL_SUBJECT MAIL_FILE MAIL_CONTENT MAILERR INTERN_ERROR MAIL_FILE_SUFFIX MAIL_SENDER EML_FILE BASE64_ATTACHMENT HTML_CONTENT
+
+
+
+}
+

@@ -1,0 +1,13 @@
+#----------------------------------------------------------------------------
+# FUNCTION: WS_LIST_RUNNING_BATCHES
+#
+# Subject: Technical function that lists all the running batches on the
+# standard output.
+#----------------------------------------------------------------------------
+WS_LIST_RUNNING_BATCHES() {
+	echo "# List running batches"
+	WS_OUTPUT_STDOUT=true
+	_DO_WS_CALL ${BATCH_SRV_HOSTNAME:-localhost} ${BATCH_SRV_PORT:-8080} ${BATCH_SRV_APPLI:-omega2-batch-web} batch status "" 0
+	rc=$?
+	return $rc
+}

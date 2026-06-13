@@ -1,0 +1,217 @@
+#----------------------------------------------------------------------------
+# FUNCTION: LOOP_AS_PRINT 
+#
+# 1 Parameters
+# $1: SCRIPT FILE TO EXECUTE 
+#
+# Subject: Generic Function that loops on requested job reports by the user
+# the different steps are as follows:
+# - Extracts list of required report executions from 
+#   the daemon table (ttaskqueue) with the associated parameter values
+# - for each required report execute the associated job  
+# - after each job execution, fill daemon tables (tjobcompletion and
+#   ttaskcompletion) to say that is finished with success or failure
+# 
+# if one job fails, the chain is not stopped. The following jobs must be
+# launched.
+#----------------------------------------------------------------------------
+LOOP_AS_PRINT () {
+
+#set -x
+# Get PARAMETER ON JOB FROM DAEMON TABLES
+export CHAINSTOP_ON_JOBABORT="NO"
+DAEMON_JOB_SCRIPT=`basename $1`
+DAEMON_JOB_EXE=$1
+
+NSTEP=${NJOB}_LOOP_AS_PRINT
+
+
+  # Disable DEBUG ISQL_MODE inside toolbox function
+  ISQL_MODE_PREV=${ISQL_MODE}
+  ISQL_MODE=""
+
+  # It forces function execution 
+  # considered as a step, even if the restart step is not reached
+  STEPSTART_FORCE YES
+
+  # Generic Function that loops on job execution by ssd
+  #-------------------------------------------
+  LIBEL="GET JOB PARAMETER FROM DAEMON TABLES"
+  ISQL_BASE="BTEC"
+  ISQL_O=${DFILT}/${NSTEP}_${IB}_LOOP_AS_PRINT_01.tmp
+  ISQL_QRY=`CFTMP`
+
+  # SQL Query
+  # -----------
+  INPUT_TEXT ${ISQL_QRY} <<EOF
+select
+	convert(varchar, tt.t_job_lnch, 109),
+	"~",
+	tt.i_job,
+	"~",
+        tt.i_job_user,
+        c_parm_val_9    ,
+        n_parm_val_1    ,
+        n_parm_val_2    ,
+        n_parm_val_3    ,
+        n_parm_val_4    ,
+        n_parm_val_5    ,
+        n_parm_val_6    ,
+        n_parm_val_7    ,
+        n_parm_val_8    ,
+        n_parm_val_9    ,
+        c_parm_val_1    ,
+        c_parm_val_2    ,
+        c_parm_val_3    ,
+        c_parm_val_4    ,
+        c_parm_val_5    ,
+        c_parm_val_6    ,
+        c_parm_val_7    ,
+        c_parm_val_8
+from tjobqueue tj, ttaskqueue tt
+where V_IN_FILE_PATH_1 like '\%${DAEMON_JOB_SCRIPT}'
+and tj.t_job_lnch = tt.t_job_lnch
+and tj.i_job = tt.i_job
+and tj.c_job_status=9
+
+exit
+EOF
+
+  STEP_NOECHO="YES"
+  ISQL
+
+  NBROWS=`tail -1 ${ISQL_O}`
+  if test "${NBROWS}" = "(0 rows affected)"
+  then
+    echo "# NO REQUESTED TASK FOUND IN THE DAEMON TABLES"
+    /bin/rm -f ${ISQL_O} 2>&1
+    exit 0
+  fi
+
+  # Extract information from the query
+  ISQL_FRES=${DFILT}/${NSTEP}_${IB}_LOOP_AS_PRINT_02.tmp
+  LIB_ERR="NO TASK FOUND IN THE DAEMON TABLES"
+
+  # Delete titles of the results (line 1 and 2) 
+  # and the last line (n rows affected)
+  # --------------------------------------------
+  #sed -n -e '3,$p' ${ISQL_O} | sed -e '$d'>${ISQL_FRES}
+  # Modif HG le 18.9.2000
+  # Prise en compte de l'open client 11.1.1
+  # qui peut renvoyer un return status dans le fichier de sortie
+
+  sed -n -e '3,$p' $ISQL_O  | \
+        grep -v "row affected"  | \
+        grep -v "rows affected" | \
+        grep -v "return status" | \
+        awk '{if (NF!=0) print $0'} \
+        >${ISQL_FRES}
+
+  /bin/rm -f ${ISQL_O} 2>&1
+
+  # Get the number of results
+  NBLINE=`cat ${ISQL_FRES} | wc -l`
+
+
+# LOOP FOR EACH REQUIRED TASK
+#----------------------------
+LOOP_COUNT=0
+while [ "${NBLINE}" -gt "${LOOP_COUNT}" ]
+do
+   let LOOP_COUNT=LOOP_COUNT+1 
+
+   # Substitute parameter values having ';' by ' ' and # by _ 
+   # as it is done for as_print.exe
+   #---------------------------------------------------------
+   JOB_CMD="${DAEMON_JOB_EXE} "`awk 'BEGIN { FS="~"} {$1=""; $2=""; if (NR==COUNT) print $0;}' COUNT=${LOOP_COUNT} ${ISQL_FRES} |  sed -e '1,$s/;/ /g' | sed -e '1,$s/#/_/g'`
+   USR_CF=`echo ${JOB_CMD} | cut -d" " -f2`
+
+   # Get Daemon job launch date
+   DAEMON_DATE=`awk 'BEGIN { FS="~"} {if (NR==COUNT) print $1;}' COUNT=${LOOP_COUNT} ${ISQL_FRES}`
+   # Get Logical Job Id
+   DAEMON_JOB_ID=`awk 'BEGIN { FS="~"} {if (NR==COUNT) print $2;}' COUNT=${LOOP_COUNT} ${ISQL_FRES}| sed -e'1,$s/\ //g'`
+
+   # eval is used to evaluate directoriy variables in the shell command 
+   #-------------------------------------------------------------------
+   COMMAND=`eval echo ${JOB_CMD} | cut -d" "  -f1`
+
+
+   # Cancel Function Execution Forcing
+   # Step execution Rules are respected
+   STEPSTART_FORCE NO
+
+   # Launch the required job
+   #------------------------
+   export NJOB=`basename ${COMMAND} | cut -d"." -f1`_${LOOP_COUNT}
+   LOOP_PRM=`eval echo ${JOB_CMD} ${DATE_YYYYMMDD} | awk '{$1=""; print $0}'`
+   JOB_LIBEL="LOOP_AS_PRINT: ${NJOB}.cmd ${LOOP_PRM}"
+
+   `eval echo ${JOB_CMD} ${DATE_YYYYMMDD}`
+
+   # Fill up TTASKCOMPLETION
+   if [ $? = "0" ]
+   then
+      DAEMON_JOB_STATUS=8
+      DAEMON_TASK_STATUS=2
+   else
+      DAEMON_JOB_STATUS=2
+      DAEMON_TASK_STATUS=5
+   fi
+
+
+   # Inform Daemon tables that the task ended
+   LIBEL="INFORM END OF DAEMON JOB"
+   ISQL_BASE="BTEC"
+   ISQL_O=`CFTMP`
+   ISQL_QRY=`CFTMP`
+
+   # SQL Query
+   # -----------
+INPUT_TEXT ${ISQL_QRY} <<EOF
+begin tran
+
+execute BTEC..sp_mul_jbc_jbq_1
+		@job_id = '${DAEMON_JOB_ID}',
+		@launch_time='${DAEMON_DATE}',
+		@launch_user='${USR_CF}',
+		@job_status=${DAEMON_JOB_STATUS}
+if (@@error = 0)
+execute BTEC..sp_mul_tkc_tkq_1
+		@job_id = '${DAEMON_JOB_ID}',
+                @q_task_seq = 1,
+		@launch_time='${DAEMON_DATE}',
+		@launch_user='${USR_CF}',
+		@task_status=${DAEMON_TASK_STATUS},
+		@task_stage=2
+if (@@error = 0)
+execute BTEC..sp_del_tkq_1
+		@job_id = '${DAEMON_JOB_ID}',
+                @launch_time='${DAEMON_DATE}',
+                @launch_user='${USR_CF}'   
+if (@@error = 0)
+--   rollback tran
+   commit tran
+else
+   rollback tran
+exit
+EOF
+
+   STEP_NOECHO="YES"
+   ISQL
+
+   /bin/rm -f ${ISQL_O} 2>&1
+   /bin/rm -f ${ISQL_QRY} 2>&1
+
+done
+ 
+if [ ! -s ${DABORT}/${NCHAIN}_${HOSTNAME}.rst ]
+then
+  /bin/rm -f ${ISQL_FRES} 2>&1
+fi
+
+# Enable DEBUG ISQL_MODE outside toolbox function
+ISQL_MODE=${ISQL_MODE_PREV}
+
+
+}
+

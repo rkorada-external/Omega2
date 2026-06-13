@@ -1,0 +1,19 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SQR
+# The following parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# SQR_PRG :  SQR Program
+# SQR_PARAM: Parameters to pass to SQR program
+# SQR_BASE:  Output Data File
+# SQR_LAG_CF: Language Code
+# Subject: Generic Function for SQR 
+#
+#----------------------------------------------------------------------------
+SQR ()
+{
+
+	echo "# start of ${SQR_PRG}"
+        echo "#exiting SQR dummy"
+return 0
+}
+

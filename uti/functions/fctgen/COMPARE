@@ -1,0 +1,250 @@
+#! /bin/ksh
+#===============================================================================
+# application name               : Data comparator
+# source name                    : COMPARE
+# revision                       : $Revision:   0.1  $
+# extraction date                : 01/02/2019
+# author                         : Lagha Belaid
+# specifications reference       :
+#                                :
+#-------------------------------------------------------------------------------
+# description : compar data between envirenments
+#
+# parameters :
+# 
+# environement file (by default is "=")
+# prm file   : this fille must be contain the parameters needed for data reporting
+#
+#-------------------------------------------------------------------------------
+# modifications chronology  :
+#
+#===============================================================================
+
+# Call generic functions
+#-------------------------------------------------------------------------------
+. ${DUTI}/fctgen.cmd
+. ${DUTI}/functions/fctgen/GETSTRUCT
+. ${DUTI}/functions/fctgen/DATACMP
+
+COMPARE () {
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]; then
+ADT="${NSTEP}"
+STEP_PRG=COMPARE
+STEPSTART 
+COMPARE_ERR=0
+FLOG=${DFILT}/${NSTEP}_${IB}_COMPARE.log
+
+if [ "${COMP_FPRM}" = "" ]; then
+  echo "# ERROR! PARAM file not found"
+  COMPARE_ERR=-1
+  STEPEND ${COMPARE_ERR}
+fi
+FPRM=${COMP_FPRM}
+LENV_NAME=$(GETV ${FPRM} LENV)
+RENV_NAME=$(GETV ${FPRM} RENV)
+typeset -n LENV_=$(GETV ${FPRM} LENV)
+typeset -n RENV_=$(GETV ${FPRM} RENV)
+SUFFIX=$(echo $DFILI | awk -F'/' '{
+               N=NF-1;
+               if ($N == "ubeu" || $N == "ubas" || $N == "ubam" || $N == "ubgl")
+               {print $N "/" $NF} else {print "ubeu/interm"}
+              }' 2>/dev/null)
+LENV=$(echo "${LENV_}")/${SUFFIX}
+RENV=$(echo "${RENV_}")/${SUFFIX}
+LEFT_TYPE=($( GETV ${FPRM}  LEFT_TYPE  | sed -e 's/_//g'))
+RIGHT_TYPE=($( GETV ${FPRM} RIGHT_TYPE | sed -e 's/_//g'))
+if [[ "${RIGHT_TYPE}" =~  ^[ \t]*$ ]]; then
+  RIGHT_TYPE=(${LEFT_TYPE[@]})
+fi
+
+LKEYS=$(  GETV ${FPRM} LEFT_KEYS    | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/')
+RKEYS=$(  GETV ${FPRM} RIGHT_KEYS   | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/')
+LFIELDS=$(GETV ${FPRM} LEFT_FIELDS  | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/')
+RFIELDS=$(GETV ${FPRM} RIGHT_FIELDS | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/')
+LEFT_ADD_FIELDS=$(GETV ${FPRM} LEFT_ADD_FIELDS   | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/')
+RIGHT_ADD_FIELDS=$(GETV ${FPRM} RIGHT_ADD_FIELDS | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/')
+export LDATE=$(GETV  ${FPRM} LDATE | sed -e 's/ *//g' |  sed -e 's/\///g')
+export RDATE=$(GETV  ${FPRM} RDATE | sed -e 's/ *//g' |  sed -e 's/\///g')
+
+if [ "${LDATE}" = "" ]; then
+   LDATE=${RDATE}
+fi
+
+if [ "${RDATE}" = "" ]; then
+   RDATE=${LDATE}
+fi
+DATACMP_O_SN=$(GETV ${FPRM} LENV)-${LDATE}_$(GETV ${FPRM} RENV)-${RDATE}
+
+echo "# ${LENV_NAME} - \${DFILI}='${LENV}'" >> ${FLOG}
+echo "# ${RENV_NAME} - \${DFILI}='${RENV}'" >> ${FLOG}
+
+# Test if Left ENV and Right ENV are not null
+#--------------------------------------------
+if [ "${LENV}" != "" ] && [ "${RENV}" != "" ]; then
+  # Type param is != "" and the date param is "" case
+  # we will compare all files of each type from LENV with RENV
+  #-----------------------------------------------------------
+  if [ ${#LEFT_TYPE[@]} -gt 0 ]; then
+    let "nb_type=${#LEFT_TYPE[@]}-1"
+    for i in $(seq 0  ${nb_type}); do
+      left_type=${LEFT_TYPE[$i]}
+      right_type=${RIGHT_TYPE[$i]}
+
+      if [ "${LDATE}" == "" ] || [ "${RDATE}" == "" ]; then
+        FILES=($(ls ${LENV}/*${left_type}*_* 2>/dev/null))
+        IS_DONE="null"
+        for FILE in ${FILES[@]}; do
+          if [[ ${FILE} = *${left_type}*${IS_DONE}* ]]; then; continue; fi
+          TABLE=$(print ${FILE} | cut -d . -f 1 | rev | cut -d / -f 1 | rev | cut -d _ -f 7)
+          DATE_=$(print ${FILE} | cut -d . -f 1 | rev | cut -d _ -f 1 | rev)
+          DATACMP_O_SN=$(GETV ${FPRM} LENV)-${DATE_}_$(GETV ${FPRM} RENV)-${DATE_}
+          if [[ "${left_type}" != "${right_type}" ]];then
+            DATACMP_O=${left_type}-${right_type}_${TABLE}_${DATE_}_${DATACMP_O_SN}
+          else
+            DATACMP_O=${left_type}_${TABLE}_${DATE_}_${DATACMP_O_SN}
+          fi
+          
+          if [ "${FILE}" != "" ]; then
+            LEFT_STRUCT=$(GETSTRUCT ${FILE} ';' YES | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/');
+          fi
+          FILE2=$(ls ${RENV}/*${right_type}_*${DATE_}.* 2>/dev/null | head -n1)
+          if [ "${FILE2}" != "" ]; then
+            RIGHT_STRUCT=$(GETSTRUCT ${FILE2} ';' YES | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/');
+          fi
+          echo "# Left_Type  = ${left_type}, Date = ${DATE_}" >> ${FLOG}
+          echo "# Right_Type = ${right_type}, Date = ${DATE_}" >> ${FLOG}
+          LNbF=$(ls ${LENV}/*${left_type}*_*${DATE_}.* 2>/dev/null | wc -l)
+          RNbF=$(ls ${RENV}/*${right_type}*_*${DATE_}.* 2>/dev/null | wc -l)
+          if [ ${LNbF} -le 0 ]; then
+            echo "# Failed! '${left_type}' de ${DATE_} not found in ${LENV}" >> ${FLOG}
+            COMPARE_ERR=2
+            continue
+          fi
+          if [ ${RNbF} -le 0 ]; then
+            echo "# Failed! '${right_type}' de ${DATE_} not found in ${RENV}" >> ${FLOG}
+            COMPARE_ERR=2
+            continue
+          fi
+         
+          ${DSH}/DATACMP  -lsf ${LENV}/*${left_type}-EXFP*_*${DATE_}.* -rsf ${RENV}/*${right_type}-EXFP*_*${DATE_}.* -o ${DATACMP_O} -lstr "${LEFT_STRUCT}" -rstr "${RIGHT_STRUCT}" -lk ${LKEYS} -rk ${RKEYS} -lf ${LFIELDS} -rf ${RFIELDS} -d ';' -ws ${DFILT} -H 1 -lenv ${LENV_NAME} -renv ${RENV_NAME} #>>${FLOG} 2>&1 
+          COMPARE_ERR=$?
+          IS_DONE=${DATE_}
+          cat ${FLOG}
+        done
+
+      # Type and date are != "" case
+      # we will compare all files of type and date from LENV with RENV
+      #---------------------------------------------------------------
+      else
+        echo "# Left_Type  = ${left_type}" >> ${FLOG}
+        echo "# Right_Type = ${right_type}" >> ${FLOG}
+        LNbF=$(ls ${LENV}/*${left_type}*${LDATE}.*  2>/dev/null | wc -l)
+        RNbF=$(ls ${RENV}/*${right_type}*${RDATE}.*  2>/dev/null | wc -l)
+        if [ ${LNbF} -le 0 ]; then
+          echo "# Failed! '${type}' de ${LDATE} not found in ${LENV}" >> ${FLOG}
+          COMPARE_ERR=2
+        fi
+        if [ ${RNbF} -le 0 ]; then
+          echo "# Failed! '${type}' de ${RDATE} not found in ${RENV}" >> ${FLOG}
+          COMPARE_ERR=2
+        fi
+        if [ ${LNbF} -gt 0 ] && [ ${RNbF} -gt 0 ]; then
+          LEFT_FILES=($(ls ${LENV}/*${left_type}-EXFP*_*${LDATE}.* 2>/dev/null))
+          RIGHT_FILES=($(ls ${RENV}/*${right_type}-EXFP*_*${RDATE}.* 2>/dev/null))
+          TABLE=$(print ${LEFT_FILES[0]} | cut -d . -f 1 | rev | cut -d / -f 1 | rev | cut -d _ -f 7)
+          if [[ "${left_type}" != "${right_type}" ]];then
+            DATACMP_O=${left_type}-${right_type}_${TABLE}_${DATACMP_O_SN}
+          else
+            DATACMP_O=${left_type}_${TABLE}_${DATACMP_O_SN}
+          fi
+          if [ "${LEFT_FILES[0]}" != "" ]; then
+            LEFT_STRUCT=$(GETSTRUCT ${LEFT_FILES[0]} ';' YES   | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/');
+          fi
+          if [ "${RIGHT_FILES[0]}" != "" ]; then
+            RIGHT_STRUCT=$(GETSTRUCT ${RIGHT_FILES[0]} ';' YES | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/');
+          fi
+
+          DATACMP -lsf ${LENV}/*${left_type}-EXFP*_*${LDATE}.* -rsf ${RENV}/*${right_type}-EXFP*_*${RDATE}.* -o ${DATACMP_O} -lstr "${LEFT_STRUCT}" -rstr "${RIGHT_STRUCT}" -lk ${LKEYS} -rk ${RKEYS} -lf ${LFIELDS} -rf ${RFIELDS} -olf ${LEFT_ADD_FIELDS} -orf ${RIGHT_ADD_FIELDS} -d ';' -ws ${DFILT} -H 1 -lenv ${LENV_NAME} -renv ${RENV_NAME} #>>${FLOG} 2>&1
+          COMPARE_ERR=$?
+          cat ${FLOG}
+        fi
+      fi
+    done
+  # no type param case
+  #-------------------
+  else
+    # no type and date param case
+    #----------------------------
+    if [ "${LDATE}" == "" ] || [ "${RDATE}" == "" ]; then
+      FILES=($(ls ${LENV}/*EXTJ0010* 2>/dev/null))
+      for FILE in ${FILES[@]}; do
+        if [ "${FILE}" != "" ]; then
+          STRUCT=$(GETSTRUCT ${FILE} ';' YES | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/');
+        fi
+        TABLE=$(print ${FILE} | cut -d . -f 1 | rev | cut -d / -f 1 | rev | cut -d _ -f 7)
+        DATE_=$(print ${FILE} | cut -d . -f 1 | rev | cut -d _ -f 1 | rev)
+        type=$( print ${FILE} | cut -d . -f 1 | rev | cut -d _ -f 3 | rev | cut -d-  -f 2)
+        DATACMP_O_SN=$(GETV ${FPRM} LENV)-${DATE_}_$(GETV ${FPRM} RENV)-${DATE_}
+        DATACMP_O=${type}_${TABLE}_${DATE_}_${DATACMP_O_SN}
+        echo "# Type = ${type}, Date = ${DATE}" >> ${FLOG}
+        LNbF=$(ls ${LENV}/*${type}*${DATE_}*  2>/dev/null | wc -l)
+        RNbF=$(ls ${RENV}/*${type}*${DATE_}*  2>/dev/null | wc -l)
+        if [ ${LNbF} -le 0 ]; then
+          echo "# Failed! ${type} de ${DATE_} not found in ${LENV}" >> ${FLOG}
+          COMPARE_ERR=2
+          continue
+        fi
+        if [ ${RNbF} -le 0 ]; then
+          echo "# Failed! ${type} de ${DATE_} not found in ${RENV}" >> ${FLOG}
+          COMPARE_ERR=2
+          continue
+        fi
+
+        ${DSH}/DATACMP -lsf ${LENV}/*${type}*${DATE_}.* -rsf ${RENV}/*${type}*${DATE_}.* -o ${DATACMP_O} -lstr "${STRUCT}" -k ${LKEYS} -f ${LFIELDS} -d ';' -ws ${DFILT} -H 1 -lenv ${LENV_NAME} -renv ${RENV_NAME} #>>${FLOG} 2>&1
+        COMPARE_ERR=$?
+      done
+
+    # no type param but date param is != to "" case
+    #----------------------------------------------
+    else
+      FILES=($(ls ${LENV}/*EXTJ0010*${LDATE}* 2>/dev/null))
+      for FILE in ${FILES[@]}; do
+        TABLE=$(print ${FILE} | cut -d . -f 1 | rev | cut -d / -f 1 | rev | cut -d _ -f 7)
+        type=$( print ${FILE} | cut -d . -f 1 | rev | cut -d _ -f 3 | rev | cut -d-  -f 2)
+        DATACMP_O=${type}_${TABLE}_${DATACMP_O_SN}
+        if [ "${FILE}" != "" ]; then
+          STRUCT=$(GETSTRUCT ${FILE} ';' YES | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/');
+        fi
+
+        echo "# Type = ${type}" >> ${FLOG}
+        LNbF=$(ls ${LENV}/*${type}*${LDATE}.*  2>/dev/null | wc -l)
+        RNbF=$(ls ${RENV}/*${type}*${RDATE}.*  2>/dev/null | wc -l)
+        if [ ${LNbF} -le 0 ]; then
+          echo "# Failed! ${type} de ${LDATE} not found in ${LENV}" >> ${FLOG}
+          COMPARE_ERR=2
+          continue
+        fi
+        if [ ${RNbF} -le 0 ]; then
+          echo "# Failed! ${type} de ${RDATE} not found in ${RENV}" >> ${FLOG}
+          COMPARE_ERR=2
+          continue
+        fi
+
+        ${DSH}/DATACMP -lsf ${LENV}/*${type}*${LDATE}.* -rsf ${RENV}/*${type}*${RDATE}.* -o ${DATACMP_O} -lstr "${STRUCT}" -k ${LKEYS} -f ${LFIELDS} -d ';' -ws ${DFILT} -H 1 -lenv ${LENV_NAME} -renv ${RENV_NAME} #>>${FLOG} 2>&1
+        COMPARE_ERR=$?
+      done
+    fi
+  fi
+fi 
+if [ ${COMPARE_ERR} -ne 0 ]; then
+  mv ${FLOG} ${DFILT}/${NSTEP}_${IB}_COMPARE.ano
+  export PRGANO=${NSTEP}_${IB}_COMPARE.ano
+else
+  echo "# ${NSTEP}_${IB}_COMPARE.log"
+fi
+STEPEND ${COMPARE_ERR}
+fi
+return 0 
+}
+# End of function
+#-------------------------------------------------------------------------------

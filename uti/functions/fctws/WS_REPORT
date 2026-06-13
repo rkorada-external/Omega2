@@ -1,0 +1,87 @@
+#----------------------------------------------------------------------------
+# FUNCTION: WS_REPORT
+#
+# Input parameters:
+# WS_REPORT_NAME : Name of the Spring bean that contains the report service to
+#                  call (mandatory)
+# WS_INPUT_FILE  : Optional parameter that contains the path of a file that
+#                  will be uploaded to the Java server and consumed by the Java
+#                  service.
+# WS_OUTPUT_FILE : Optional parameter that contains the path of a file that
+#                  will be created by the Java report service upon completion
+#                  of the call.
+# WS_PARAMS      : Optional file that contains parameters to pass to the report
+#                  service. Each line of the file is decomposed in two fields,
+#                  separated by a space: name value. Can be constructed with
+#                  help of WS_PARAMS_TEXT function.
+# WS_SYNCHRONOUS : Optional parameter that can be set to true to force
+#                  synchronous execution of the report, or to false to force
+#                  asynchronous execution in a thread pool. By default, all
+#                  reports are executed in asynchronous mode.
+# WS_OPT         : Optional parameters that can be passed to the curl command.
+# WS_DEBUG       : If true, trace the HTTP request and response to the log.
+#
+# Global variables:
+# NCHAIN, NJOB, NSTEP
+# REPORT_SRV _HOSTNAME  Hostname where the Java report application is deployed.
+#                       If unset in environment file, defaults to localhost.
+# REPORT_SRV_PORT       TCP port where the Java report application is deployed.
+#                       If unset in environment file, defaults to 8080.
+# REPORT_SRV_APPLI      Name of the Java application for reports.
+#                       If unset in environment file, defaults to
+#                       omega2-report-web.
+#
+# Subject: Technical function that allows to call a Java report running in an
+# Application Server (Web Service call). Needs the "curl" command to be
+# installed on Unix/Linux.
+# Return 0 if OK, >0 otherwise
+#----------------------------------------------------------------------------
+WS_REPORT() {
+	if [ "${RP}" = "" -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]; then
+		ADT="${NSTEP}"
+
+		STEP_PRG=WS_REPORT
+		STEPSTART
+
+		# Check mandatory parameters
+		if [ -z "${WS_REPORT_NAME}" ]; then
+			echo "# Missing required parameter WS_REPORT_NAME"
+			STEPEND 99
+			return 99
+		fi
+
+		# Asynchronous call by default
+		WS_SYNCHRONOUS=${WS_SYNCHRONOUS:-false}
+
+		# Test if input file exists
+		if [ -n "${WS_INPUT_FILE}" ]; then
+			if [ ! -s ${WS_INPUT_FILE} ]; then
+				echo '# Information: No input file produced after data formatting'
+				STEPEND 0
+				# Clear global variables
+				_WS_FINALLY()
+				unset WS_REPORT_NAME
+				return 0
+			fi
+		fi
+
+		# Perform the call. Global variables that can be overridden in environment
+		# file:
+		#	REPORT_SRV_HOSTNAME
+		#	REPORT_SRV_PORT
+		#	REPORT_SRV_APPLI
+		#
+		#	# get the first 3 characters of the ws_batch_name
+		isLIRAS=$(echo "${WS_REPORT_NAME}" | cut -c-3 ) 
+		if [ "${isLIRAS}" = "LIR" ]
+		then 
+			_DO_WS_CALL ${REPORT_SRV_HOSTNAME_LIR:-localhost} ${REPORT_SRV_PORT_LIR:-8080} ${REPORT_SRV_APPLI_LIR:-liras-report-web} report start ${WS_REPORT_NAME} 1
+		else 
+			_DO_WS_CALL ${REPORT_SRV_HOSTNAME:-localhost} ${REPORT_SRV_PORT:-8080} ${REPORT_SRV_APPLI:-omega2-report-web} report start ${WS_REPORT_NAME} 1
+		fi
+		rc=$?
+		STEPEND $rc
+		unset WS_REPORT_NAME
+		return $rc
+	fi
+}

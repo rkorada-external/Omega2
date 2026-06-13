@@ -1,0 +1,73 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GZIPM
+# The following parameters must be previously defined:
+# 3 parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# GZIPM_I  : Input Files
+# GZIPM_O  : Output Files, by default empty, otherwise must be the output gz files in the same order and number than in GZIPM_I,
+#            gz extension is added by the function !
+# GZIPM_DEL : by default empty, YES to delete the original file
+# GZIPM_NAME  : string that replace the ${IB}, can be empty
+# Subject: Generic Function gzip file(s) in a standard maner: without the IB in the name,
+#           and the original filename is kept in the gz file (option N), by default the original file is preserved 
+# Modifications
+# [01] Florent 29/07/2016 :spot:30978 création 
+#----------------------------------------------------------------------------
+GZIPM () {
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+  STEP_PRG=GZIPM
+	STEPSTART
+
+  [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+  if [[ "${GZIPM_DEL}" = "YES" ]];then
+    GZIPM_OPTION=-N
+  else
+    GZIPM_OPTION=-cN
+  fi
+
+  if [[ "${GZIPM_O}" != "" ]];then
+    set -A TBFIC_O ${GZIPM_O}
+    set -A TBFIC_I ${GZIPM_I}
+    if [[ ${#TBFIC_O[@]} -ne ${#TBFIC_I[@]} ]]; then
+      echo "#  Number of files in: ${#TBFIC_O[@]} different than number of files out: ${#TBFIC_I[@]}"
+      STEPEND 1
+    fi
+  fi
+
+  [ "${GZIPM_NAME}" != "" ] && GZIPM_NAME=_${GZIPM_NAME}
+  let tb_index=0
+  for FIC in ${GZIPM_I}; do
+    if [[ "${GZIPM_O}" != "" ]];then
+      FIC_O=${TBFIC_O[$tb_index]}.gz
+    else
+      FIC_O=${FIC/_${IB}/${GZIPM_NAME}}.gz
+    fi
+    #on enlève le $IB du nom pour le fichier gzip
+    # l'option c garde le fichier d'origine
+    if [[ ${GZIPM_OPTION} =~ c ]];then
+      gzip ${GZIPM_OPTION} ${FIC} > ${FIC_O}
+      GZIPM_ERR=$?
+    else
+      gzip ${GZIPM_OPTION} ${FIC} 
+      GZIPM_ERR=$?
+      mv -f ${FIC}.gz ${FIC_O}
+    fi
+    echo "#  gzip file ${FIC}"
+    echo "#         to ${FIC_O}"
+    if [[ ${GZIPM_ERR} -ne 0 ]]; then break; fi
+    let tb_index+=1
+  done
+  [ "${FCT_DEBUG}" = "YES" ] && set +x
+  STEPEND ${GZIPM_ERR}
+fi
+export GZIPM_DEL=""
+export GZIPM_NAME=""
+export GZIPM_I=""
+export GZIPM_O=""
+export GZIPM_OPTION=""
+export GZIPM_NAME=""
+
+return 0
+}

@@ -1,0 +1,200 @@
+#----------------------------------------------------------------------------
+# FUNCTION: LOOP_JOB_SSD
+#
+# parameters :
+# The complete command line of the job including ssd on the 
+#  first two parameters
+#
+# Subject: Generic Function that loops on job execution by ssd/esb
+# 2 cases are processed. Either the job is executed
+#   1) for all ssd found in TPRINTB, TSUBSID
+#   2) for one specified ssd
+#
+# The different steps are as follows:
+# - Extracts list of subsidiarie (TPRINTB, TSUBSID)
+# - Loop on subsidiary
+#    - Get printer information associated to the subsidiary
+#    - execute the job  with the ssd subsituted to the adequate value
+# 
+# if one job fails, the chain is not stopped. The following jobs must be
+# launched.
+#
+# Modification
+# 1 - 26/09/2013 - JBG : Do not execute the JOB in the loop if subsidiary is not valid for the user (VALID_SD)
+# [02] Florent 01/08/2014 :spot:27252 we do not use the unix user for the partition name but the Sybase user !
+#----------------------------------------------------------------------------
+LOOP_JOB_SSD () {
+#set -x
+
+JOB_CMD=$1
+SSD_CF=$2
+JOBNAME=${NJOB}
+
+if test -s ${DABORT}/${NCHAIN}_${HOSTNAME}.rst && [ "${CHAINSTOP_ON_JOBABORT}" = "YES" ]
+then
+   exit 0
+fi
+
+export CHAINSTOP_ON_JOBABORT="NO"
+
+if [ -s ${DABORT}/${NCHAIN}_${IB}.rst ]  # Restart Mode ?
+then
+  # Is the current job is to restart  
+  if [ `grep ${NJOB} ${DABORT}/${NCHAIN}_${IB}.rst | wc -l` -eq 0 ]
+  then
+    exit 0
+  else
+    LOOPRST="YES"
+    /bin/mv ${DABORT}/${NCHAIN}_${IB}.rst ${DABORT}/${NCHAIN}_${HOSTNAME}_${DATE_YYYYMMDDHHMMSS}.rst
+  fi
+fi
+
+
+# Disable DEBUG ISQL_MODE inside toolbox function
+ISQL_MODE_PREV=${ISQL_MODE}
+ISQL_MODE=""
+
+# Loop to make the command
+while [ $#  -ge 1 ]
+do
+   shift 1
+	JOB_SSD_CMD="${JOB_SSD_CMD} $1"
+done
+
+# It forces function execution 
+# considered as a step, even if the restart step is not reached
+STEPSTART_FORCE YES
+
+# 2 possible cases
+#   1) SSD_CF is specified, so execute job for that SSD_CF
+#   2) SSD_CF are not specified, so execute jobs for all 
+#      SSD_CF found in the list.
+
+NSTEP=${NJOB}_LOOP_JOB_SSD
+INTERN_ERROR=${NSTEP}_05
+
+# If the error was on this step, the job must be launched normaly
+if [ "${LOOPRST}" = "YES" ] && [ "${RP}" = "${NSTEP}" ]
+then
+  LOOPRST=""
+fi
+
+
+# CASE 1
+if [ "$SSD_CF" = "99" ]
+then
+
+   # Read ssd switch list from TPRINTB table
+   #----------------------------------------------------------------------------
+   LIST_SWITCH_SSD 
+else
+# CASE 2
+
+   # Read the ssd switch from TPRINTB table
+   #----------------------------------------------------------------------------
+   GET_SWITCH_SSD  ${SSD_CF}
+fi
+
+if [ -n "${FLIST_SSD}" ]; then
+        if [ ! -s ${FLIST_SSD} ]; then
+                echo "# No information found in TPRINTB"
+                STEPEND 12
+        fi
+fi
+set `cat ${FLIST_SSD} | cut -d"~" -f1`
+
+LOOP_COUNT=0
+
+# Loop for all subsidiaries/establishments
+while [ $#  -ge 1 ]
+do
+
+      let LOOP_COUNT=LOOP_COUNT+1 
+
+      # export these values for PRN function use
+      export SSD_CF=$1
+      export PRDSIT_CF=$2
+      export GEOSIT_CF=$3
+      export PRT_CF=$4
+	  export VALID_SD=$5
+      export PRTID=${PRDSIT_CF}';'${GEOSIT_CF}';'${PRT_CF}
+      shift 5
+
+      SSD_LS=`cat ${FLIST_SSD} | cut -d"~" -f2 | sed -n -e "${LOOP_COUNT}p"`
+
+      INTERN_ERROR=${NSTEP}_10
+      # test exported variable content
+      #-----------------------------------------------------------------------
+      if [ -z "${PRDSIT_CF}" ] || [ -z "$GEOSIT_CF" ] || [ -z "${PRT_CF}" ]
+      then
+         echo "Printer not identified" 
+         STEPEND 12
+      fi
+	  # Modification 1
+	  if [ $VALID_SD == "0" ]; then
+		 echo "# The subsidiary ${SSD_CF} of site ${PRDSIT_CF} is not valid for user ${USR}"
+	  else
+		 # Substitute SSD to the right values
+		 AWK_CMD=`CFTMP`
+		 echo "echo $JOB_SSD_CMD | awk '{\$""1=${SSD_CF}; print \$""0}' " >${AWK_CMD}
+		 JOB_SSD_CMD=`. ${AWK_CMD}`
+
+		 /bin/rm -f ${AWK_CMD} 2>&1
+
+
+		 # Cancel Function Execution Forcing
+		 # Step execution Rules are respected
+		 STEPSTART_FORCE NO
+
+		 # Launch the JOB
+		 # --------------
+		 # Execute the JOB
+		 NJOB=`printf "%s_%02d" ${JOBNAME} ${SSD_CF}`
+		 if [ "${LOOPRST}" = "YES" ]
+		 then
+			 # Launch the job for each line in the rst file
+			 grep ${NJOB} ${DABORT}/${NCHAIN}_${HOSTNAME}_${DATE_YYYYMMDDHHMMSS}.rst > ${DABORT}/${NCHAIN}_${IB}.rst
+			 if [ -s ${DABORT}/${NCHAIN}_${IB}.rst ]
+			 then
+				DOMAIN=`echo ${NJOB} | awk '{ print substr($0, 1, 2)}'	`
+				if [ "${DOMAIN}" = "MO" ]
+				then
+					JOBRST=${NJOB}
+				else
+					JOBRST=${NCHAIN}_${NJOB}
+				fi
+				RP=`cat ${DABORT}/${NCHAIN}_${IB}.rst | cut -d";" -f3`
+			 else
+				/bin/rm -f ${DABORT}/${NCHAIN}_${IB}.rst > /dev/null 2>&1
+				continue
+			 fi
+		 fi    
+		 echo "#"
+		 echo '#*************************************************************************'
+		 echo "# LOOP_JOBSSD Executes job  ${JOBNAME}"
+		 echo "#   Subsidiary: ${SSD_LS} - code ${SSD_CF}"
+		 echo "#   Job occurence: ${NCHAIN}_${NJOB}"
+		 echo '#*************************************************************************'
+		 echo "#"
+
+		 JOB_LIBEL="LOOP_JOB_SSD: Job for SSD_CF:${SSD_CF}"
+		 $JOB_CMD ${JOB_SSD_CMD}
+	  fi
+done
+
+INTERN_ERROR=""
+export CHAINSTOP_ON_JOBABORT="YES"
+
+/bin/rm -f ${FLIST_SSD} 2>&1
+
+echo "#"
+echo '#*************************************************************************'
+echo "# End of LOOP_JOBSSB for job ${JOBNAME}"
+echo '#*************************************************************************'
+echo "#"
+
+# Enable DEBUG ISQL_MODE outside toolbox function
+ISQL_MODE=${ISQL_MODE_PREV}
+
+}
+

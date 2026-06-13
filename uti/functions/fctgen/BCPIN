@@ -1,0 +1,234 @@
+#----------------------------------------------------------------------------
+# FUNCTION: BCPIN
+# The following parameters must be previously defined:
+#
+# NSTEP  : STEP Identifier
+#
+# BCP_I                   : Path and name of Input File
+# BCP_TABLE               : Name of table to fill up
+# BCP_SPECIAL_OPT         : Special options which are not defined by default
+# BCPIN_SPECIAL_OPT_CHAIN : Special options which are defined for the chain
+#                           in the environmnent file
+# BCP_TRUNCATE            : Truncate the table before BCPIN (YES/NO)
+# BCP_PARTITION           : Add the partition when BCPIN (YES/NO). It add the partition
+#                           on TRUNCATE and INDEX update.
+# BCP_UPDATE_INDEX_STAT   : Update the index on partition, works only if BCP_PARTITION is set to YES.
+#
+# Subject: Generic Function of bcp in
+# The separator field is ~ by default
+# Last Mofified: May 2000 H. Guiheux
+# Reliability improved on error management
+#
+# Modifications
+# July 19, 2013     : Ashish (CAPG) - modified to handle SPECIAL_OPTION on Linux (Phase1b)
+# September 4, 2013 : JBG (CAPG) - modified to support PARTITION
+# [03] Florent 01/08/2014 :spot:27252 we do not use the unix user for the partition name but the Sybase user !
+#----------------------------------------------------------------------------
+BCPIN()
+{
+#set -x
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+  STEP_PRG=BCPIN
+  STEPSTART
+
+  ISQL_BASE=`echo ${BCP_TABLE} | cut -f1 -d"."`
+  ISQL_TABL=`echo ${BCP_TABLE} | cut -f3 -d"."`
+  echo $ISQL_TABL | grep -qv ^T
+  [[ $? -ne 0 ]] && ISQL_PART=`echo ${ISQL_TABL} | sed 's/.\{1\}/P/'` || ISQL_PART=`echo ${ISQL_TABL} | sed 's/^/P/'`
+  ISQL_PART="${ISQL_PART}_$(echo ${USR} | tr 'a-z' 'A-Z')"
+
+  [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+  if [ "${BCP_TRUNCATE}" = "YES" ]
+  then
+    # It forces function execution
+    # considered as a step, even if the restart step is not reached
+    STEPSTART_FORCE YES
+    STEP_NOECHO=YES
+    if [ "${BCP_PARTITION}" = "YES" ]
+    then
+      echo "# TRUNCATE TABLE ${BCP_TABLE} partition ${ISQL_PART}"
+      ISQL_QRY="TRUNCATE TABLE ${BCP_TABLE} partition ${ISQL_PART}"
+    else
+      echo "# TRUNCATE TABLE ${BCP_TABLE}"
+      ISQL_QRY="TRUNCATE TABLE ${BCP_TABLE}"
+    fi
+    ISQL
+    STEPSTART_FORCE NO
+  fi
+
+  # Test if file is empty
+  if test ! -s "${BCP_I}"
+  then
+    # Delete input file
+    if [ "${BCP_RMINFILE}" = "YES" ]
+    then
+      /bin/rm -f ${BCP_I}
+    fi
+    echo "# !!! Empty file file for bcp in :("`basename ${BCP_I}`")"
+    STEPEND 0
+    BCP_SPECIAL_OPT=""
+    BCP_FS=""
+    BCP_RS=""
+    BCP_TRUNCATE=""
+    BCP_UPDATE_INDEX_STAT=""
+    BCP_PARTITION=""
+    ISQL_PART=""
+    return 2
+  fi
+
+  if [ -z "${BCP_FS}" ]
+  then
+    # May 2000: H. Guiheux
+    # Modification for bcp 11.1.1 compatibilty
+    #BCP_FS="\~"
+    BCP_FS="~"
+  fi
+
+  if [ -z "${BCP_RS}" ]
+  then
+    BCP_RS="\\n"
+  fi
+
+  if [ -z "${BCP_MODE}" ]
+  then
+    BCP_MODE="c"
+  fi
+
+  [ -z "${BCP_SPECIAL_OPT}" ] && BCP_SPECIAL_OPT="-${BCP_MODE} -t${BCP_FS} -r${BCP_RS}"
+
+  # HG Correction du 13/11/1998
+  if [ "${BCP_SPECIAL_OPT}"  != "" ]
+  then
+    if [ `echo ${BCP_SPECIAL_OPT} | grep '\-[c,n]' | wc -l` -eq 0 ]
+    then
+      # Il faut rajouter l'option chargement mode caractere qui manque
+      BCP_SPECIAL_OPT='-c '"${BCP_SPECIAL_OPT}"
+    fi
+    
+    # HG Correction du 04/12/1998
+    # Add Default field and record delimitors on bcp command
+    # only if we are on character mode
+    if [ `echo ${BCP_SPECIAL_OPT} | grep '\-[c]' | wc -l` -ne 0 ]
+    then
+      if [ `echo ${BCP_SPECIAL_OPT} | grep '\-[t]' | wc -l` -eq 0 ]
+      then
+        # Il faut rajouter l'option delimiteur de champ qui manque
+        BCP_SPECIAL_OPT="${BCP_SPECIAL_OPT} -t${BCP_FS}"
+      fi
+      
+      if [ `echo ${BCP_SPECIAL_OPT} | grep '\-[r]' | wc -l` -eq 0 ]
+      then
+        # Il faut rajouter l'option delimiteur d'enregistrement qui manque
+        BCP_SPECIAL_OPT="${BCP_SPECIAL_OPT} -r${BCP_RS}"
+      fi
+    fi
+  fi
+
+  #added below condition for Phase1b
+  if [ `echo ${BCP_SPECIAL_OPT} | grep '\-[n]' | wc -l` -eq 1 ]
+  then
+    BCP_SPECIAL_OPT="-c -n"
+  fi
+
+  # define ANO filename
+  BCP_ANO=${DFILT}/${NSTEP}_${IB}_BCPIN.ano
+  BCP_LOG=${DFILT}/${NSTEP}_${IB}_BCPIN.log
+  BCP_ERR=`CFTMP`
+  
+  export PRGLOG=${NSTEP}_${IB}_BCPIN.log
+  export PRGANO=${NSTEP}_${IB}_BCPIN.ano
+  #
+  SVC_USR=
+  SVC_PSWD=
+
+  # execute bcp program
+  if [ "${BCP_PARTITION}" = "YES" ]
+  then
+    if [ "${BCP_DBO}" = "YES" ]
+    then
+      GET_SVC_LOGIN ${SRV} "batch"
+      ${SYBASE}/${SYBASE_OCS}/bin/bcp ${BCP_TABLE} partition ${ISQL_PART} in ${BCP_I} -U${SVC_USR} -S${SRV} -A ${PACKET_SIZE} -Jiso_1 -P${SVC_PSWD} -e${BCP_ERR} ${BCP_SPECIAL_OPT} ${BCPIN_SPECIAL_OPT_CHAIN}  >${BCP_LOG}
+    else
+      ${SYBASE}/${SYBASE_OCS}/bin/bcp ${BCP_TABLE} partition ${ISQL_PART} in ${BCP_I} -U${USR} -S${SRV} -A ${PACKET_SIZE} -Jiso_1 -P${PSWD} -e${BCP_ERR} ${BCP_SPECIAL_OPT} ${BCPIN_SPECIAL_OPT_CHAIN}  >${BCP_LOG}
+    fi
+  else
+    if [ "${BCP_DBO}" = "YES" ]
+    then
+      GET_SVC_LOGIN ${SRV} "batch"
+      ${SYBASE}/${SYBASE_OCS}/bin/bcp ${BCP_TABLE} in ${BCP_I} -U${SVC_USR} -S${SRV} -Jiso_1 -P${SVC_PSWD} -e${BCP_ERR} ${BCP_SPECIAL_OPT} ${BCPIN_SPECIAL_OPT_CHAIN}  >${BCP_LOG}
+    else
+      ${SYBASE}/${SYBASE_OCS}/bin/bcp ${BCP_TABLE} in ${BCP_I} -U${USR} -S${SRV} -Jiso_1 -P${PSWD} -e${BCP_ERR} ${BCP_SPECIAL_OPT} ${BCPIN_SPECIAL_OPT_CHAIN}  >${BCP_LOG}
+    fi
+  fi
+  BCP_SPECIAL_OPT=""
+  BCP_FS=""
+  BCP_RS=""
+  BCP_MODE=""
+  BCP_TRUNCATE=""
+  BCP_DBO=""
+
+  if [ -s ${BCP_ERR} ]
+  then
+    echo " BCP ERROR : " >> ${BCP_LOG}
+    cat ${BCP_ERR} >> ${BCP_LOG}
+  fi
+  
+  # Analyse ano file for Return Code Management
+  # Modification H. Guiheux May 2000
+  # Fiabilisation gestion des erreurs
+  BCP_NBERR1=`grep error ${BCP_LOG} | wc -l`
+  BCP_NBERR2=`grep failed  ${BCP_LOG} | wc -l`
+  
+  if [ "${BCP_NBERR1}" -ne 0 ] || [ "${BCP_NBERR2}" -ne 0 ] || [ -s ${BCP_ERR} ]
+  then
+    echo "# " `grep 'bcp copy in partially failed' ${BCP_LOG}`
+    echo "# " `grep 'rows copied.' ${BCP_LOG}`
+    mv ${BCP_LOG} ${BCP_ANO}
+    PRGLOG=""
+    STEPEND 12
+  fi
+  echo "# " `grep 'rows copied.' ${BCP_LOG}`
+  # Display  Warning if necessary
+  # Add new controls
+  # Modification May 2000: H. Guiheux
+  BCP_NBWARN1=`grep "Attempt to bulk-copy an oversized row to the SQL Server" ${BCP_LOG} | wc -l`
+  BCP_NBWARN3=`grep "Can't get localized message." ${BCP_LOG} | wc -l`
+  if [ "${BCP_NBWARN1}" -ne 0 ] || [ "${BCP_NBWARN2}" -ne 0 ] 
+  then
+    echo "# WARNING: oversized data found - data truncation done !!!"
+  fi
+  /bin/rm -f ${BCP_LOG} 2>&1
+  # Delete input file after load
+  if [ "${BCP_RMINFILE}" = "YES" ]
+  then
+    /bin/rm -f ${BCP_I}
+  fi
+  STEPEND 0
+
+	# End of BCPIN
+  
+  if [ "${BCP_UPDATE_INDEX_STAT}" = "YES" ] && [ "${BCP_PARTITION}" = "YES" ]
+  then
+    STEPSTART_FORCE YES
+    STEP_NOECHO=YES
+    echo "# UPDATE index on partition " ${ISQL_PART}
+    ISQL_QRY="update index statistics ${BCP_TABLE} partition ${ISQL_PART}"
+    ISQL
+    STEPSTART_FORCE NO
+  fi
+  STEPSTART_FORCE NO
+fi
+BCP_TABLE=""
+BCP_SPECIAL_OPT=""
+BCP_FS=""
+BCP_RS=""
+BCP_MODE=""
+BCP_TRUNCATE=""
+BCP_UPDATE_INDEX_STAT=""
+BCP_PARTITION=""
+ISQL_PART=""
+
+return 0
+}

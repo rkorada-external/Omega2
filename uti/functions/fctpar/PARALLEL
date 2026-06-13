@@ -1,0 +1,43 @@
+#----------------------------------------------------------------------------
+# FUNCTION: PARALLEL
+#
+#
+# Subject: Parallelization Inititialisation
+#----------------------------------------------------------------------------
+
+PARALLEL ()
+{
+# set -x
+
+   PARALLEL_MANAGE_ACTIVE_PROCESS
+
+   $1 2>&1 > ${DFILT}/${NSTEP}_${IB}_PARALLEL.log &
+   PROCESS=$!
+
+   echo "   STEP ${NSTEP} WITH PID ${PROCESS} IS IN PROGRESS..."  | tee -a ${FLOG}
+   case ${1} in
+        SORT)
+           RESET_SORT
+           break;;
+        *)
+        A=0
+        break;
+   esac
+
+   echo ${DFILT}/${NSTEP}_${IB}_PARALLEL.log $PROCESS >>${DFILT}/${NJOB}_${IB}_PARALLEL.log
+
+   i=0
+   until [ $i -ge ${PARALLEL_MAX_NB_PROCESSUS_ONLINE} ]
+   do
+      PARALLEL_CUR_PROCESSUS_ONLINE=${PARALLEL_TAB_PROCESSUS_ONLINE[$i]}
+
+      if [ ${PARALLEL_CUR_PROCESSUS_ONLINE} -eq 0 ]
+      then
+         PARALLEL_TAB_PROCESSUS_ONLINE[$i]=${PROCESS}
+         return 0
+      fi
+      let i=$i+1
+   done
+}
+
+

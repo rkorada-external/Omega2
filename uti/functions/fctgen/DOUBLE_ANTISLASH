@@ -1,0 +1,20 @@
+#----------------------------------------------------------------------------
+# FUNCTION: DOUBLE_ANTISLASH 
+# 1 parameter: input string to transform
+# DB_ANTISLASH: Output string
+# Subject: Generic Function to double antislash in a string
+#----------------------------------------------------------------------------
+DOUBLE_ANTISLASH () {
+
+# put input string into temporary file
+FANTISLASH1=`CFTMP`
+FANTISLASH2=`CFTMP`
+printf "%s\n" $1 >${FANTISLASH1}
+sed '1,1 s/\\/\\\\/g' ${FANTISLASH1} >${FANTISLASH2}
+export DB_ANTISLASH=`cat ${FANTISLASH2}`
+
+/bin/rm -f ${FANTISLASH1} 2>&1 > /dev/null
+/bin/rm -f ${FANTISLASH2} 2>&1 > /dev/null
+
+}
+

@@ -1,0 +1,109 @@
+#----------------------------------------------------------------------------
+# FUNCTION: EXECJSP
+# Facultative parameters :
+# 	JSB_COMMIT_INTERVAL : spring batch commit interval
+# 	JSB_CONCURRENCY_LIMIT : spring batch concurrency limit
+# 	JSB_BUFFER_SIZE : spring batch buffer size
+# 	JSB_JAR_PATH : spring batch jar location
+# Mandatory parameters :
+# 	JSB_CHAIN : chain to call
+#	JSB_PARAMS : input params
+# Subject: Generic Function To execute Spring Batch program
+#----------------------------------------------------------------------------
+EXECJSB () {
+	#set -x
+
+	# Common variable
+	export LOG_DIR=${DLOG}
+	export LOG_NAME=${NCHAIN}_${JR}_javalog
+	export USE_JAVA_SORT_MERGE=false
+	
+	# Commit Interval
+	if [ "${JSB_COMMIT_INTERVAL}" != "" ]
+	then
+		export COMMIT_INTERVAL=${JSB_COMMIT_INTERVAL}
+	else
+		export COMMIT_INTERVAL=500
+	fi
+	
+	# Concurrency Limit
+	if [ "${JSB_CONCURRENCY_LIMIT}" != "" ]
+	then
+		export CONCURRENCY_LIMIT=${JSB_CONCURRENCY_LIMIT}
+	else
+		export CONCURRENCY_LIMIT=2
+	fi
+	
+	# Buffer Size
+	if [ "${JSB_BUFFER_SIZE}" != "" ]
+	then
+		export BUFFER_SIZE=${JSB_BUFFER_SIZE}
+	else
+		export BUFFER_SIZE=50000
+	fi
+	
+	# Jar Location
+	if [ "${JSB_JAR_PATH}" != "" ]
+	then
+		JAR_PATH=${JSB_JAR_PATH}
+	else
+		JAR_PATH=${DJAR}/jar/OMEGA-IFRS17.jar
+	fi
+	
+	# Chain Name
+	if [ "${JSB_CHAIN}" = "" ]
+	then
+		echo "# JSB_CHAIN must be defined !"
+		echo "${IB};${NJOB};${NSTEP};1" >> ${DABORT}/${NCHAIN}_${HOSTNAME}.rst
+		STEPEND 2
+	fi
+	
+	# Chain Params
+	if [ "${JSB_PARAMS}" = "" ]
+	then
+		echo "# JSB_PARAMS must be defined !"
+		echo "${IB};${NJOB};${NSTEP};1" >> ${DABORT}/${NCHAIN}_${HOSTNAME}.rst
+		STEPEND 3
+	fi
+	
+	if [ "${JSB_ENV_SRV}" != "" ]
+	then 	
+		SRV_PARAMS=" -DJSB_ENV=${JSB_ENV_SRV}"
+	fi
+	
+	if [ "${JSB_PRD_SRV}" != "" ]
+	then 	
+		GET_SQL_LOGIN_PSWD ${JSB_PRD_SRV}
+		if [[ "${USR}" != "" && "${PSWD}" != "" ]] 
+		then
+			SRV_PARAMS=${SRV_PARAMS}" -DTP_USR=${USR} -DTP_PSWD=${PSWD}"
+		fi
+	fi
+	
+	if [ "${JSB_INF_SRV}" != "" ]
+	then 	
+		GET_SQL_LOGIN_PSWD ${JSB_INF_SRV}
+		if [[ "${USR}" != "" && "${PSWD}" != "" ]] 
+		then
+			SRV_PARAMS=${SRV_PARAMS}" -DDW_USR=${USR} -DDW_PSWD=${PSWD}"
+		fi
+	fi
+	
+	# Jar execution
+	echo '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
+	echo $JAR_PATH
+	echo $JSB_CHAIN
+	echo $JSB_PARAMS
+	java -Xms5g -Xmx8g -XX:+UseG1GC $SRV_PARAMS -jar $JAR_PATH $JSB_CHAIN $JSB_PARAMS 
+	export JAR_RETOUR=$?
+	echo '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
+	echo "JAR_RETOUR:" $JAR_RETOUR
+	echo '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
+	if [ $JAR_RETOUR != 0 ]
+	then
+		echo "${IB};${NJOB};${NSTEP};1" >> ${DABORT}/${NCHAIN}_${HOSTNAME}.rst
+		STEPEND $JAR_RETOUR
+	fi
+
+	return 0
+}

@@ -1,0 +1,91 @@
+#----------------------------------------------------------------------------
+# FUNCTION: FTP_MDEL2
+#
+# :spot:30348
+#
+# The following parameters must be previously defined:
+# 7 parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# FTP_DELAY     : Waiting Delay before each retry
+# FTP_NBRETRY   : Number of times the function tries to connect
+# FTP_IP        : IP Address of the target host
+# FTP_USR       : User of the target host
+# FTP_PWD       : Passwd of the user address
+# FTP_MODE      : transfer mode (default value ascii)
+# FTP_RDIR      : Remote directory (Host)
+# FTP_LDIR      : Local directory
+# FTP_I         : Name of Input file or a regular expression
+#
+# Subject: This function uses FTP program output command to delete files
+# on a target host
+#----------------------------------------------------------------------------
+FTP_MDEL2 () {
+#set -x
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+   STEP_PRG=FTP_MFEL
+   STEPSTART
+
+   LIBEL="Ftp Transfer"
+
+   DOUBLE_ANTISLASH ${FTP_RDIR}
+   CDFTP1=${DB_ANTISLASH}
+
+   # move to local data directory
+   cd ${FTP_LDIR}
+
+   # --- MAKE FILE TRANSFER ---
+   # --------------------------
+   # --------------------------
+   #
+   FTP_CUR_COUNTRETRY=0
+   while [ ${FTP_NBRETRY} -gt ${FTP_CUR_COUNTRETRY} ]
+   do
+
+      # Start FTP transfer
+      # ----------------------------
+      FTP_LOG=`CFTMP`
+      #$$ftp -i -n ${FTP_IP} <<EOF 1>${FTP_LOG} 2>&1
+	/usr/bin/ftp -i -n ${FTP_IP} <<EOF 1>${FTP_LOG} 2>&1
+verbose
+user ${FTP_USR} ${FTP_PSWD}
+cd ${CDFTP1}
+mdel ${FTP_I}
+quit
+EOF
+      # The process is terminated,
+      # so, FTP Error Code is rested
+      # 331 User  OK
+      # 230 Login OK
+      # 2.0 CWD   OK
+      # 250 Delete OK
+
+      FTP_ERROR=$?
+      FTMP=`CFTMP`
+
+      RC1=`cut -d" " -f1 ${FTP_LOG}`
+
+      if [ `echo ${RC1} | grep -c 331.230` -eq 1 ] && [ ${FTP_ERROR} -eq 0 ]
+      then
+           echo "# Delete succeeded  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+           break
+      else
+           # Error: Let's try again
+           echo "# Delete failed  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+           cat ${FTP_LOG}
+           FTP_ERROR=1
+           let FTP_CUR_COUNTRETRY=FTP_CUR_COUNTRETRY+1
+      fi
+      sleep ${FTP_DELAY}
+
+   done
+   # --- END OF FTP CONNECTION ---
+
+   /bin/rm -f "${FTP_LOG}" >/dev/null 2>&1
+   STEPEND ${FTP_ERROR}
+   return ${FTP_ERROR}
+
+fi
+return 0
+}
+

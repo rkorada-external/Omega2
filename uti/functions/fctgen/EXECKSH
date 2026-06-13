@@ -1,0 +1,78 @@
+#----------------------------------------------------------------------------
+# FUNCTION: EXECKSH 
+# The following parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# 1 input parameter
+# $1:  Shell command
+#       EXECKSH_MODE :  W(overWrite) or A(ppend)
+#       EXECKSH_O:  Output file
+#       EXECKSH_I:  Input file
+# Subject: Generic Function To execute Korn shell Command
+#----------------------------------------------------------------------------
+EXECKSH () {
+#set -x
+# Begin shell command 
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+   STEP_PRG=EXECKSH
+   STEPSTART
+   echo # Start of shell command ${1}
+
+   if [ "${EXECKSH_I}" = "" ]
+   then
+       case ${EXECKSH_MODE} in
+        W)
+	${1} > ${EXECKSH_O}
+   	EXECKSH_ERR=$?
+        break;;
+        A)
+	${1} >> ${EXECKSH_O}
+   	EXECKSH_ERR=$?
+        break;;
+       P)
+        EXECKSH_CMD=`CFTMP`
+        cat <<EOF >${EXECKSH_CMD}
+$@
+EOF
+        . ${EXECKSH_CMD}
+        EXECKSH_ERR=$?
+        /bin/rm -f ${EXECKSH_CMD}
+        break;;
+        *)
+        echo command: $1
+	${1} 
+   	EXECKSH_ERR=$?
+        break;;
+       esac
+   else
+       case ${EXECKSH_MODE} in
+        W)
+	${1} > ${EXECKSH_O} <${EXECKSH_I}
+   	EXECKSH_ERR=$?
+        break;;
+        A)
+	${1} >> ${EXECKSH_O} <${EXECKSH_I}
+   	EXECKSH_ERR=$?
+        break;;
+        *)
+	${1} <${EXECKSH_I}
+   	EXECKSH_ERR=$?
+        break;;
+      esac
+   fi
+
+   # End program 
+
+   EXECKSH_MODE=""
+   EXECKSH_I=""
+
+   STEPEND ${EXECKSH_ERR}
+
+fi
+
+EXECKSH_MODE=""
+EXECKSH_I=""
+return 0
+}
+
+

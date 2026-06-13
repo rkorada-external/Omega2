@@ -1,0 +1,10 @@
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)[[io]]
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)[[dataType]]
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)[[value]]
+)))

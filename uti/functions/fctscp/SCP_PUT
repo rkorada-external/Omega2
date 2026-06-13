@@ -1,0 +1,64 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SCP_PUT 
+#
+# The following parameters must be previously defined:
+# 8 parameters must be previously defined:
+# NSTEP     : STEP Identifier
+# SCP_IP	   : IP Address of the target host
+# SCP_USR	: User of the target host
+# SCP_MODE	: transfer mode (default value ascii)
+# SCP_RDIR	: Remote directory (Host)
+# SCP_LDIR	: Local directory
+# SCP_I		: Input file to transfer (may be generic files)
+# SCP_O		: Output file after transfer
+#
+# Subject: This function uses SCP program output command to transfer a file
+# to a target host
+#
+#historique des modifications :
+#[001] 02/06/2015 Alain Spinosa :spot:28843 Mise en oeuvre, adaptation de la fonction au login sans pwd et a la gestion multi-fichiers
+#----------------------------------------------------------------------------
+SCP_PUT () {
+
+SCP_ERROR=0
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+	STEP_PRG=SCP_PUT
+	STEPSTART
+	
+	# Transfert par SCP des fichiers
+	
+	LIBEL="Scp Transfer"
+	
+	# move to local data directory
+	
+	cd ${SCP_LDIR}
+	
+	# --------------------------
+	# Start SCP transfer
+	# ----------------------------
+	SCP_LOG=`CFTMP`
+	
+	scp -Bpv ${SCP_LDIR}/${SCP_I} ${SCP_USR}@$SCP_IP:${SCP_RDIR}/${SCP_O} >${SCP_LOG} 2>&1
+	
+	if [ $? = 0 ]
+	then
+		# OK
+		echo "# Transfer of " `basename ${SCP_I}` " to server $SCP_IP succeeded  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+	else
+		# NOT OK
+		echo "# Transfer of " `basename ${SCP_I}` " to server $SCP_IP failed  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+		cat ${SCP_LOG}
+		SCP_ERROR=1
+	fi
+           
+	# --------------------------
+	# --- END OF SCP CONNECTION ---
+	# --------------------------
+
+	/bin/rm -f $SCP_LOG >/dev/null 2>&1
+	STEPEND ${SCP_ERROR} 
+fi
+return $SCP_ERROR 
+}

@@ -1,0 +1,1269 @@
+
+
+
+(% style="margin: 0cm 0cm 7.5pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); line-height: normal; font-family: Arial; font-size: 18pt;" %)**R1 (STEP 10): extract table TEXPRAT into perm file ESF_FEXPRAT **
+
+
+
+(% style="border: 1pt solid windowtext; border-image: none; width: 1198.1px; border-collapse: collapse;" %)
+|(% width="157" style="background: rgb(0, 79, 105); border: 1pt solid windowtext; border-image: none; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Service name
+)))|(% width="448" style="background: rgb(0, 79, 105); border-width: 1pt 1pt 1pt 0px; border-style: solid solid solid none; border-color: windowtext windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Comments
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)extract table TEXPRAT into perm file ESF_FEXPRAT 
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Input
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_WAY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"OUT"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_VER
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"+"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_QRY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"execute BSEG..PsTEXPRAT_01 '${NORME_CF}','${PARM_ICLODAT_D}','${TYPEINV}' "
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)output
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_O
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)${ESF_FEXPRAT}
+)))
+
+
+
+(% style="margin: 0cm 0cm 7.5pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); line-height: normal; font-family: Arial; font-size: 18pt;" %)**R2 (STEP 20): extract table TRARAT into perm file ESF_FRARAT **
+
+
+
+(% style="border: 1pt solid windowtext; border-image: none; width: 1198.1px; border-collapse: collapse;" %)
+|(% width="157" style="background: rgb(0, 79, 105); border: 1pt solid windowtext; border-image: none; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Service name
+)))|(% width="448" style="background: rgb(0, 79, 105); border-width: 1pt 1pt 1pt 0px; border-style: solid solid solid none; border-color: windowtext windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Comments
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)extract table TRARAT into perm file ESF_FRARAT 
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Input
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_WAY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"OUT"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_VER
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"+"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_QRY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"execute BSEG..PsTRARAT_01 '${NORME_CF}','${PARM_ICLODAT_D}','${TYPEINV}' "
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)output
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_O
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)${ESF_FRARAT}
+)))
+
+
+
+(% style="margin: 0cm 0cm 7.5pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); line-height: normal; font-family: Arial; font-size: 18pt;" %)**R3 (STEP 30): EXTRACTION de la table BSBO..TUWSEC to Permanent file ESF_FMARKET_O...**
+
+
+
+(% style="border: 1pt solid windowtext; border-image: none; width: 1198.1px; border-collapse: collapse;" %)
+|(% width="157" style="background: rgb(0, 79, 105); border: 1pt solid windowtext; border-image: none; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Service name
+)))|(% width="448" style="background: rgb(0, 79, 105); border-width: 1pt 1pt 1pt 0px; border-style: solid solid solid none; border-color: windowtext windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Comments
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)EXTRACTION de la table BSBO..TUWSEC to Permanent file ESF_FMARKET_O...
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Input
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_WAY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"OUT"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_VER
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"+"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_QRY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"execute BSAR..PsGetMARKET_01"
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)output
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_O
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)${ESF_FMARKET}
+)))
+
+
+
+(% style="margin: 0cm 0cm 7.5pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); line-height: normal; font-family: Arial; font-size: 18pt;" %)**R4 (STEP 32): EXTRACTION of file ESF_FUWRETSEC ...**
+
+
+
+(% style="border: 1pt solid windowtext; border-image: none; width: 1198.1px; border-collapse: collapse;" %)
+|(% width="157" style="background: rgb(0, 79, 105); border: 1pt solid windowtext; border-image: none; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Service name
+)))|(% width="448" style="background: rgb(0, 79, 105); border-width: 1pt 1pt 1pt 0px; border-style: solid solid solid none; border-color: windowtext windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Comments
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)EXTRACTION of file ESF_FUWRETSEC ...
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Input
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_WAY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"OUT"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_VER
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"+"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_QRY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"execute BSAR..PsTUWRETSEC_01"
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)output
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_O
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)${ESF_FUWRETSEC}
+)))
+
+
+
+(% style="margin: 0cm 0cm 7.5pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); line-height: normal; font-family: Arial; font-size: 18pt;" %)**R5 (STEP 35): **
+
+
+
+(% style="border: 1pt solid windowtext; border-image: none; width: 1198.1px; border-collapse: collapse;" %)
+|(% width="157" style="background: rgb(0, 79, 105); border: 1pt solid windowtext; border-image: none; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Service name
+)))|(% width="448" style="background: rgb(0, 79, 105); border-width: 1pt 1pt 1pt 0px; border-style: solid solid solid none; border-color: windowtext windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Comments
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)]
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Input
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)output
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))
+
+
+
+(% style="margin: 0cm 0cm 7.5pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); line-height: normal; font-family: Arial; font-size: 18pt;" %)**R6 (STEP 40): **
+
+
+
+(% style="border: 1pt solid windowtext; border-image: none; width: 1198.1px; border-collapse: collapse;" %)
+|(% width="157" style="background: rgb(0, 79, 105); border: 1pt solid windowtext; border-image: none; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Service name
+)))|(% width="448" style="background: rgb(0, 79, 105); border-width: 1pt 1pt 1pt 0px; border-style: solid solid solid none; border-color: windowtext windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Comments
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)]
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Input
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)output
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))
+
+
+
+(% style="margin: 0cm 0cm 7.5pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); line-height: normal; font-family: Arial; font-size: 18pt;" %)**R7 (STEP 45): ##Generation of Retro Loss Occuring File ESF_FLORETFACTOR**
+
+
+
+(% style="border: 1pt solid windowtext; border-image: none; width: 1198.1px; border-collapse: collapse;" %)
+|(% width="157" style="background: rgb(0, 79, 105); border: 1pt solid windowtext; border-image: none; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Service name
+)))|(% width="448" style="background: rgb(0, 79, 105); border-width: 1pt 1pt 1pt 0px; border-style: solid solid solid none; border-color: windowtext windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Comments
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)extract table TUOASII into perm file ESF_FUOASII 
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)##Generation of Retro Loss Occuring File ESF_FLORETFACTOR
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)##Generation of Retro Loss Occuring File ESF_FLORETFACTOR
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Input
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_WAY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"OUT"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_VER
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"+"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_QRY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"execute BEST..PsUOASII_01"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)##BCP_WAY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)OUT
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)##BCP_VER
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)+
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)##BCP_QRY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)execute
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)##BCP_WAY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)OUT
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)##BCP_VER
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)+
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)##BCP_QRY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)execute
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)output
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_O
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)${ESF_FUOASII}
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)##BCP_O
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)${ESF_FLORETFACTOR_STD}
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)##BCP_O
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)${ESF_FLORETFACTOR_INI}
+)))
+
+
+
+(% style="margin: 0cm 0cm 7.5pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); line-height: normal; font-family: Arial; font-size: 18pt;" %)**R8 (STEP 60): extract TEXPRAT table for RETRO NP Ratios**
+
+
+
+(% style="border: 1pt solid windowtext; border-image: none; width: 1198.1px; border-collapse: collapse;" %)
+|(% width="157" style="background: rgb(0, 79, 105); border: 1pt solid windowtext; border-image: none; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Service name
+)))|(% width="448" style="background: rgb(0, 79, 105); border-width: 1pt 1pt 1pt 0px; border-style: solid solid solid none; border-color: windowtext windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Comments
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)extract TEXPRAT table for RETRO NP Ratios
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Input
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_WAY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"OUT"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_VER
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"+"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_QRY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"execute BEST..PsTEXPRAT_RETRO_01 '${NORME_CF}','${PARM_ICLODAT_D}','${TYPEINV}'"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)## [016] PARM_PSTOMGEN_D --> PARM_ICLODAT_D  BCP_QRY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)exec
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)output
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_O
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)${ESF_RET_FEXPRAT}
+)))
+
+
+
+(% style="margin: 0cm 0cm 7.5pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); line-height: normal; font-family: Arial; font-size: 18pt;" %)**R9 (STEP 90): Selection of service writings and update of service writings table I17 for ${TYPEINV}_${NORME_CF}**
+
+
+
+(% style="border: 1pt solid windowtext; border-image: none; width: 1198.1px; border-collapse: collapse;" %)
+|(% width="157" style="background: rgb(0, 79, 105); border: 1pt solid windowtext; border-image: none; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Service name
+)))|(% width="448" style="background: rgb(0, 79, 105); border-width: 1pt 1pt 1pt 0px; border-style: solid solid solid none; border-color: windowtext windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Comments
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)Selection of service writings and update of service writings table I17 for ${TYPEINV}_${NORME_CF}
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Input
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_WAY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"OUT"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_VER
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"+"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_QRY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"exec BEST..PiESTACCSUP_05I  '${PARM_DATE_DEB_D}', '${PARM_DATE_FIN_D}', '${NORME_CF}', '${SPEENTNAT_CT}', ${PARM_CONSOYEA}, ${PARM_CONSOMTH}"
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)output
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_O
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)${ESF_EPOSOCI}
+)))
+
+
+
+(% style="margin: 0cm 0cm 7.5pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); line-height: normal; font-family: Arial; font-size: 18pt;" %)**R10 (STEP 120): extract table TEXPRAT into perm file ESF_FEXPRAT **
+
+
+
+(% style="border: 1pt solid windowtext; border-image: none; width: 1198.1px; border-collapse: collapse;" %)
+|(% width="157" style="background: rgb(0, 79, 105); border: 1pt solid windowtext; border-image: none; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Service name
+)))|(% width="448" style="background: rgb(0, 79, 105); border-width: 1pt 1pt 1pt 0px; border-style: solid solid solid none; border-color: windowtext windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Comments
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)extract table TEXPRAT into perm file ESF_FEXPRAT 
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Input
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_WAY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"OUT"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_VER
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"+"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_QRY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"execute BEST..PsTEXPRAT_02 '${NORME_CF}','${PARM_ICLODAT_D}','${TYPEINV}' "
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)output
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_O
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)${ESF_RATIO_TEXPRAT}
+)))
+
+
+
+(% style="margin: 0cm 0cm 7.5pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); line-height: normal; font-family: Arial; font-size: 18pt;" %)**R11 (STEP 130): extract SEG_NF TSECIFRS into perm file ESF_FSEG_TSECIFRS_I17 **
+
+
+
+(% style="border: 1pt solid windowtext; border-image: none; width: 1198.1px; border-collapse: collapse;" %)
+|(% width="157" style="background: rgb(0, 79, 105); border: 1pt solid windowtext; border-image: none; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Service name
+)))|(% width="448" style="background: rgb(0, 79, 105); border-width: 1pt 1pt 1pt 0px; border-style: solid solid solid none; border-color: windowtext windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Comments
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)extract SEG_NF TSECIFRS into perm file ESF_FSEG_TSECIFRS_I17 
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Input
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_WAY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"OUT"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_VER
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"+"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_QRY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"execute BEST..PsGetSegment_01 '${NORME_CF}' "
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)output
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_O
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)${ESF_FSEG_TSECIFRS_I17}
+)))
+
+
+
+(% style="margin: 0cm 0cm 7.5pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); line-height: normal; font-family: Arial; font-size: 18pt;" %)**R12 (STEP 133): **
+
+
+
+(% style="border: 1pt solid windowtext; border-image: none; width: 1198.1px; border-collapse: collapse;" %)
+|(% width="157" style="background: rgb(0, 79, 105); border: 1pt solid windowtext; border-image: none; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Service name
+)))|(% width="448" style="background: rgb(0, 79, 105); border-width: 1pt 1pt 1pt 0px; border-style: solid solid solid none; border-color: windowtext windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Comments
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)]
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Input
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)output
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))
+
+
+
+(% style="margin: 0cm 0cm 7.5pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); line-height: normal; font-family: Arial; font-size: 18pt;" %)**R13 (STEP 135): Generation of the file ESF_GAAPMAP using Norme**
+
+
+
+(% style="border: 1pt solid windowtext; border-image: none; width: 1198.1px; border-collapse: collapse;" %)
+|(% width="157" style="background: rgb(0, 79, 105); border: 1pt solid windowtext; border-image: none; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Service name
+)))|(% width="448" style="background: rgb(0, 79, 105); border-width: 1pt 1pt 1pt 0px; border-style: solid solid solid none; border-color: windowtext windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Comments
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)Generation of the file ESF_GAAPMAP using Norme
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Input
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_WAY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"OUT"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_VER
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"+"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_QRY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"execute BREF..PsGAAPMAP_01 '${NORME_CF}', '${PARM_CRE_D}'"
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)output
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_O
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)${ESF_GAAPMAP}
+)))
+
+
+
+(% style="margin: 0cm 0cm 7.5pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); line-height: normal; font-family: Arial; font-size: 18pt;" %)**R14 (STEP 135A): Generation of the file ESF_GAAPMAP using Norme**
+
+
+
+(% style="border: 1pt solid windowtext; border-image: none; width: 1198.1px; border-collapse: collapse;" %)
+|(% width="157" style="background: rgb(0, 79, 105); border: 1pt solid windowtext; border-image: none; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Service name
+)))|(% width="448" style="background: rgb(0, 79, 105); border-width: 1pt 1pt 1pt 0px; border-style: solid solid solid none; border-color: windowtext windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Comments
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)Generation of the file ESF_GAAPMAP using Norme
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Input
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_WAY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"OUT"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_VER
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"+"
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_QRY
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Parameters
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)"execute BREF..PsGAAPMAP_LIFE_01 '${NORME_CF}', '${PARM_CRE_D}'"
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)output
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)BCP_O
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)Data file
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)${ESF_GAAPMAPLIF}
+)))
+
+
+
+(% style="margin: 0cm 0cm 7.5pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); line-height: normal; font-family: Arial; font-size: 18pt;" %)**R15 (STEP 137): **
+
+
+
+(% style="border: 1pt solid windowtext; border-image: none; width: 1198.1px; border-collapse: collapse;" %)
+|(% width="157" style="background: rgb(0, 79, 105); border: 1pt solid windowtext; border-image: none; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Service name
+)))|(% width="448" style="background: rgb(0, 79, 105); border-width: 1pt 1pt 1pt 0px; border-style: solid solid solid none; border-color: windowtext windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Comments
+)))
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)]
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Input
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))
+|(% width="157" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)output
+)))|(% width="106" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN-US" style="color: white; font-family: Calibri; font-size: 1em;" %)Type (Data file/Parameter)
+)))|(% width="341" style="background: rgb(0, 79, 105); border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: white; font-family: Calibri; font-size: 1em;" %)Value
+)))
+|(% width="157" style="background: white; border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="106" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 95px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))|(% width="341" style="background: white; border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 905.1px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)
+)))

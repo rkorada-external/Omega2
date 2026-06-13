@@ -1,0 +1,47 @@
+#----------------------------------------------------------------------------
+# FUNCTION: STR_CAT
+#
+# Subject: This function is used to build a chain corresponding to a list 
+#          of data files to transfer
+#
+# 5 parameters :
+#          NSTEP
+#          STR_CAT_PREFIX : prefix of data files names to get with path
+#          STR_CAT_O      : result chain ( ch1 | ch2 | ch3 | ...... )
+#   
+#----------------------------------------------------------------------------
+STR_CAT() {
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+# MODIF HG: 2001/02/14 Added for restart management
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then
+   ADT="${NSTEP}"
+fi
+
+STEP_PRG=STR_CAT
+STEPSTART                                                 
+STR_CAT_O=""
+DATA=""
+
+for FDAT in `ls ${STR_CAT_PREFIX} 2>/dev/null`
+do  
+    if  [ -f ${FDAT} ]     # Fichier non vide ?
+    then
+      DATA="YES"
+      STR_CAT_O=${STR_CAT_O}"|"${FDAT}
+    fi
+done
+
+# Test if data files have been treated
+if [ "${DATA}" != "YES" ] 
+then
+    echo "# !!!! NO DATA TO TRANSFER"
+fi
+STEPEND 0
+}
+
+
+
+

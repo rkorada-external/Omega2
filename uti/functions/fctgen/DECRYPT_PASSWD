@@ -1,0 +1,26 @@
+#----------------------------------------------------------------------------
+# FUNCTION: DECRYPT_PASSWD
+# $1:  encrypted text
+# Subject: decrypt text
+#---------------------------------------------------------------------------
+
+DECRYPT_PASSWD () 
+{
+  #set -x
+  if [[ ${#1} -eq 0 ]]; then
+    echo "Null value given for ecrypted text argument!"
+    return 1
+  fi
+  
+  encrypted=${1}
+  # STDERR is redirected to /dev/null to hide file path in case of openssl command error
+  decoded=$(echo ${encrypted} | openssl enc -aes-256-cbc -d -pass file:${DPWDSQL}/dsap.pem -base64 2>/dev/null)
+  if [[ $? -ne 0 ]]; then
+    echo "Error while decoding string"
+    return 99
+  fi
+  
+  echo "$decoded"
+  return 0
+}
+

@@ -1,0 +1,6 @@
+component;Delivery revision;SPIRA;Label;Deploy;delivery date;Spot number;Repo;SPOC revision;Histo component;user;dev revision;dev date;deploy date
+oest/cmd/ESDC0000.cmd;;;repalce ITK path with DFILI;Y;2020/10/01 23:40;;;;;U008291;465513;2020-10-01 18:36:38 ;;
+oest/cmd/ESFD9001.cmd;;87596;SPIRA  87596  prise en compte de la norme Aoc + Ajout de la variable TYPEAOC_CT;Y;2020/10/01 23:40;;;;;frdev11;465527;2020-10-01 20:52:09 ;;
+oest/sc/ESTC3206.c;;89714;Spira 89714 Annulation MAJ Champ;Y;2020/10/01 23:40;;;;;U006596;465506;2020-10-01 18:22:02 ;;
+oest/sc/ESTC1015.c;;89714;Spira 89714 MAJ champ REIPRMPTP_R Pour Calcul RIP;Y;2020/10/01 23:40;;;;;U006596;465508;2020-10-01 18:23:37 ;;
+oest/sc/ESTC1067.c;;89714;Spira 89714 MAJ champ REIPRMPTP_R Pour Calcul RIP;Y;2020/10/01 23:40;;;;;U006596;465507;2020-10-01 18:23:15 ;;

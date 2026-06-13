@@ -1,0 +1,102 @@
+#----------------------------------------------------------------------------
+# FUNCTION: CHAINEND
+# no input parameter:
+#
+# Subject: This function reports end of chain execution
+# <200/10/17> <H. GUIHEUX> Identify  Warning file presence
+#
+#----------------------------------------------------------------------------
+#[001] 11/02/2021 JYP : Spira 84654: microAOC: make possible // runs by chain
+#[001] 06/04/2021 M.NAJI : Spira 91531: add trace permanets files size and date at END of CHAIN
+
+function TRACE_PERM_FILES {
+	fexport=`ls -t $DFILT/${NCHAIN}*_${IB}_PERM.dat  2> /dev/null| head -1 `
+	echo
+	echo '#-------------------------------------------------------------------------'  2>&1 | ${TEE}
+	echo "Trace  at End Chain: $fexport "  2>&1 | ${TEE}
+	echo '#-------------------------------------------------------------------------'  2>&1 | ${TEE}
+	if [  "$fexport" != "" ]
+		then
+		while  read -r line
+		do
+				expo=`echo $line| cut -d' ' -f1`
+				str=`echo $line | cut -d' ' -f2-1000`
+				f=`echo $str | cut -d'=' -f1`
+				value=`echo $str | cut -d'=' -f2-1000`
+				if [ "$expo" = "export" ]
+				then
+						val=` eval echo  $value`
+						if [ "$val" != "" ] 
+						then
+							infos=`[ -f "$val" ] &&  ls -l --time-style="+%Y-%m-%d_%H:%M:%S" "$val" | cut -d' ' -f5-6`
+						fi	
+						printf '#CHAINEND---> %-30s = %s %s %s\n'  $f $val $infos  2>&1 | ${TEE}
+				fi
+		done <"$fexport"
+	fi
+	echo '#-------------------------------------------------------------------------'  2>&1 | ${TEE}
+}	
+
+
+CHAINEND () {
+#set -x
+
+# use if RMF
+STATUS=SUCCESS
+
+
+# Define the max return code
+if test -s ${DABORT}/${FRSTN}  
+then
+   MAX_RETURN_CODE=`awk -F";" 'BEGIN {prev=0} { if ($4>prev) prev=$4;} END {print prev}' ${DABORT}/${FRSTN} `
+   # use if RMF
+   STATUS=FAILED
+   
+   # create rst file of last failure for DBATOOLS (1 instance file) 
+   cp ${DABORT}/${FRSTN} ${DABORT}/${FRSTR}
+   
+fi
+
+# Warning Identification (2000/10/17)
+IDENTIFY_WARNING
+
+if [ -f ${DABORT}/${NCHAIN}_${IB}.wng ]
+then
+  STATUS="${STATUS}-WARNING"
+fi
+
+# Elapsed time calculation  
+END_DATE1=`date +"%d/%m/%Y %H:%M"`
+END_DATE2=`date +"%Y%m%d%H%M%S"`
+LAPS_RMF ${DATE_YYYYMMDDHHMMSS} ${END_DATE2}
+
+if [ "${RMF}" = "YES" ]
+then
+  # Update FRMF to put the chain end status, its end date and its duration
+  awk -F\; 'BEGIN{OFS=";"} { if ($2~NCHAIN && $3!~NCHAIN) { $5=DATE;gsub("INRUN",STATUS,$7);$6=LAPS};print}' DATE="${END_DATE1}" NCHAIN="${NCHAIN}" STATUS="${STATUS}" LAPS="${LAPS_RMF_O}" ${FRMF} > ${FRMF}.tmp
+  # Rename FRMF to indicate in the name the chain end status, its end date and its duration
+  FRMF1=${DRMF}/`basename ${FRMF} | awk -F_ 'BEGIN {OFS="_"} {$NF=STATUS;$(NF-1)=LAPS;$(NF-2)=DATE;print}' STATUS="${STATUS}" DATE="${END_DATE2}" LAPS="${LAPS_RMF_O}"`
+  /bin/mv ${FRMF}.tmp ${FRMF1}
+  /bin/rm -f ${FRMF}
+fi
+
+TRACE_PERM_FILES
+
+echo '#-------------------------------------------------------------------------' 
+if [ "${LAUNCHER}" = "DAEMON" ]
+then
+   CHAINLOGWRITEFOOTER
+else
+   CHAINLOGWRITEFOOTER  2>&1 | ${TEE}
+fi
+
+if [ ${MAX_RETURN_CODE} -gt 0 ]
+then
+   exit  ${MAX_RETURN_CODE}
+else
+   nohup ${DUTI}/functions/fctgen/ARCTMP >/dev/null 2>&1 &
+   exit  0
+fi
+
+}
+

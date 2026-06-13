@@ -1,0 +1,22 @@
+#----------------------------------------------------------------------------
+# FUNCTION: INPUT_TEXT
+# 1 parameter
+# $1:  Output File
+# Subject: Generic Text Edit Function
+#----------------------------------------------------------------------------
+INPUT_TEXT () {
+# set -x
+while true
+    do
+ #  echo "\c";read REP  -- Modified for Phase1b Migration 
+    echo -e "\c"; read REP
+    case $REP in
+        exit) break;;
+        *) echo $REP >>$1;;
+    esac
+
+    done
+}
+
+
+

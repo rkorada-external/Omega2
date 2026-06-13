@@ -1,0 +1,38 @@
+#----------------------------------------------------------------------------
+# FUNCTION: DEBUGPRG
+# 2 parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# PRG:  Program to Execute
+# Subject: Generic Function To execute Programm with Sparcwork debugger
+#----------------------------------------------------------------------------
+DEBUGPRG()
+{
+#set -x
+
+export USR; export PSWD
+
+# Begin program
+        STEP_PRG=EXECPRG
+        STEPSTART
+        echo "# Start of ${PRG}.exe Execution "
+
+        export ${PRG}_ANO=${DFILT}/${NSTEP}_${IB}_${PRG}.ano
+        export ${PRG}_LOG=${DFILT}/${NSTEP}_${IB}_${PRG}.log
+
+        export PRGANO=${NSTEP}_${IB}_${PRG}.ano
+        export PRGLOG=${NSTEP}_${IB}_${PRG}.log
+
+        if [ ${SYSTEM} = "HPUX" ]
+        then
+           /opt/langtools/bin/dde $DEXE/${PRG}.exe
+        else
+           debugger -I $DSC ${DEXE}/${PRG}.exe
+        fi
+
+        # End program
+        STEPEND $?
+
+	return 0
+}
+
+

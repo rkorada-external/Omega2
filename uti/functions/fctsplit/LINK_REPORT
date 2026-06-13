@@ -1,0 +1,144 @@
+#----------------------------------------------------------------------------
+# FUNCTION: LINK_REPORT
+#
+# parameters must be previously defined:
+# Fichiers
+#  en entree :
+#   LINKRPT_I: "$NJOB_$NUMSTEP_nn_$IB_<prog>.dat $NJOB_$NUMSTEP_nn_$IB_<prog>.dat"
+#  en sortie
+#   LINKRPT_O: $NJOB_$NUMSTEP_$IB_<prog>.dat
+#
+# Subject: Rassemble n fichiers d'edition en un fichier trier
+# Le fichier doit etre construit ainsi :
+# La 1ere ligne de chaque page comporte : #.......cle de page ........#
+# Exemple :
+#    #Monsieur Dupond 001 #
+#
+#------------------------------------------------------------------------------
+LINK_REPORT () {
+#set -x
+# Begin Awk command
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+        STEP_PRG=LINK_REPORT
+        STEPSTART
+   	
+# awk qui fusionne et indexe les maquettes
+#-----------------------------------------------------------------------------
+   AWK_I=${LINKRPT_I}
+   AWK_O=${DTMP}/${NSTEP}_${IB}_AWK_LINKRPT.dat
+   AWK_CMD=`CFTMP`
+   INPUT_TEXT ${AWK_CMD} <<EOF
+BEGIN {
+	CLE = "            "
+}
+{
+#	Temoin de saut de page
+	FIN1 = 0
+	if (match(\$0, //) != 0 )
+	{	FIN1 = 1
+		DERNIER1 = 1 # test dernier enregistrement pour cette maquette
+		for (I = 1; I <= length(\$0); I ++)
+		{	if (substr(\$0,I,1) == "\")
+			{	continue
+			}	
+			if (substr(\$0,I,1) == " " )
+			{	continue
+			}	
+			DERNIER1 = 0
+			break 
+		}
+		if (DERNIER1 == 1) # pas d'édition du dernier enregistrement des maquettes
+		{	next
+		}
+	}
+#	Test rupture si premiere ligne de la page
+	if (FNR ==1 || FIN1 == 1)
+	{	if (match(\$0, "#") != 0 )
+		{	DEBUT2 = RSTART + 1
+	 		for (FIN2 = DEBUT2; FIN2 <= length(\$0); FIN2 ++)
+			{	if (substr(\$0,FIN2,1) == "#")
+				{	break
+				}	
+			}
+			LCLE = FIN2 - DEBUT2
+			CLESV = CLE
+			CLE=(substr(\$0,DEBUT2,LCLE))
+			if (CLE != CLESV)
+			{	NLIGNE = sprintf( "%07d" ,0)
+			}
+		}
+	}
+# 	Ecriture enregistrement
+	NLIGNE = sprintf( "%07d" , NLIGNE + 1)
+	if (FNR == 1) 	# insertion du saut de page sur le premier enregistrement des maquettes
+	{	print CLE NLIGNE "~" "\" \$0 
+	}
+	else
+	{	print CLE NLIGNE "~" \$0 
+	}
+}
+END {
+}
+exit
+EOF
+
+   STEP_NOECHO="YES"
+   AWK
+
+
+# sort triant les maquettes indexees
+#-----------------------------------------------------------------------------
+SORT_WDIR=${SORTWORK}
+SORT_CMD=`CFTMP`
+SORT_I="${DTMP}/${NSTEP}_${IB}_AWK_LINKRPT.dat 1000 2"
+SORT_O="${DTMP}/${NSTEP}_${IB}_SORT_LINKRPT.dat 1000 2"
+INPUT_TEXT $SORT_CMD <<EOF
+/FIELDS  CLE 1:, LIGNE 2:
+/KEYS    CLE
+exit
+EOF
+
+SORT 
+
+# RMFIL suppression du fichier indexe contenant la fusion des maquettes
+#----------------------------------------------------------------------------
+RMFIL ${DTMP}/${NSTEP}_${IB}_AWK_LINKRPT.dat
+
+# awk supprimant l'index des maquettes
+#-----------------------------------------------------------------------------
+   AWK_I=${DTMP}/${NSTEP}_${IB}_SORT_LINKRPT.dat
+   AWK_O=${LINKRPT_O}
+   AWK_CMD=`CFTMP`
+   INPUT_TEXT ${AWK_CMD} <<EOF
+
+BEGIN {
+	FILOUT = "" # Nom du fichier en sortie
+	CLE = "            "
+ FS="~"
+}
+{
+\$1=""
+sub (" ","", \$0)
+
+	if (NR == 1)			# premier enregistrement
+	{
+		gsub ("\","", \$0)
+	}
+	print \$0
+}
+END {
+	print "\" 			# dernier enregistrement
+}
+exit
+EOF
+
+   STEP_NOECHO="YES"
+   AWK
+
+# RMFIL suppression du fichier indexe contenant la fusion des maquettes triees
+#-----------------------------------------------------------------------------
+RMFIL ${DTMP}/${NSTEP}_${IB}_SORT_LINKRPT.dat 
+
+fi
+}

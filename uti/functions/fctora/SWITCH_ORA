@@ -1,0 +1,38 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SWITCH_ORA
+# 6 parameters must be previously defined:
+# NSTEP:        Number of STEP
+# $1:  Instance name
+# $2:  Schema name (optional)
+# Call SWITCH_ORA
+# Subject: Generic Function to switch oracle instance
+#----------------------------------------------------------------------------
+SWITCH_ORA ()
+{
+
+   if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+   then 
+      ADT="${NSTEP}"
+   fi
+
+   # defines User/pwd of Sql Server
+   export ORA=$1
+   export ORA=$1
+
+   if [ $# -eq 2 ]
+   then
+      export SCHEMA=$2
+   fi
+
+   GET_ORA_LOGIN_PSWD $ORA
+   if [ $?  -ne 0 ]
+   then
+      STEPEND 99
+   else
+      echo '#========================================================================='
+      echo "# Switch to Oracle Instance $ORA succeeded"
+      echo '#========================================================================='
+   fi
+
+}
+

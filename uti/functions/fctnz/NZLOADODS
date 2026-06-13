@@ -1,0 +1,131 @@
+#----------------------------------------------------------------------------
+# FUNCTION: NZLOADODS
+# The following parameters must be previously defined:
+#
+# NSTEP  : STEP Identifier
+#
+# then, Depending of the switch
+#    TL_SEQ_NUMBER
+#    TL_STEP_NAME_PREFIX
+#    TL_FILE_NAME_PATTERN
+#    TL_SPECIFIC_INPUT_DIR
+#    TL_MANDATORY_FILE
+#    TL_ZONED_DATA
+#    TL_SOURCE_ENCODING
+#    TL_TARGET_SCHEMA
+#    TL_TARGET_TABLE
+#    TL_TRUNCATE_TABLE
+#    TL_SPECIFIC_PROCESS
+#    TL_REMOVE_INFILE
+#
+# Subject: AAE LOAD
+#----------------------------------------------------------------------------
+NZLOADODS()
+{
+. ${DUTI}/functions/fctnz/NZLOAD3
+. ${DUTI}/functions/fctnz/NZSQL3
+. ${DUTI}/functions/fctnz/NZLOGINIT3
+. ${DUTI}/functions/fctnz/NZLOGEND3
+
+# Check input file if needed
+    if [[ -z ${TL_FILE_NAME_PATTERN} ]]
+    then
+        typeset FILE_OK='O'
+    else
+        typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_FILE_CHECK_01
+        typeset LIBEL="Checking input file"
+        
+		if [ "${TL_SPECIFIC_INPUT_DIR}" ]
+		then
+			typeset INPUT_FILE_LOCATION_LOCAL=${TL_SPECIFIC_INPUT_DIR}
+		else
+			typeset INPUT_FILE_LOCATION_LOCAL=${INPUT_FILE_LOCATION}
+		fi
+		
+        if [ -f ${INPUT_FILE_LOCATION_LOCAL}/${TL_FILE_NAME_PATTERN} ]
+        then
+            typeset INPUT_FILE_NAME=`ls ${INPUT_FILE_LOCATION_LOCAL}/${TL_FILE_NAME_PATTERN}`
+            typeset NB_RECORDS=`wc -l ${INPUT_FILE_NAME}`
+            typeset FILE_OK='O'
+        else
+            if [ -z ${TL_MANDATORY_FILE} -o "${TL_MANDATORY_FILE}" = "f" ]
+            then
+                NZLOGINIT3 -l LEV2 -j ${PGM}
+                NZLOGEND3 -l LEV2 -j ${PGM} -r 0 -m "No file found: skipping "${TL_FILE_NAME_PATTERN}
+                echo "No file found: skipping "${INPUT_FILE_LOCATION_LOCAL}"/"${TL_FILE_NAME_PATTERN}
+                typeset FILE_OK='N'
+            else
+                NZLOGINIT3 -l LEV2 -j ${PGM}
+                NZLOGEND3 -l LEV2 -j ${PGM} -r 1 -m "Mandatory file not found "${TL_FILE_NAME_PATTERN}
+                echo "Mandatory file not found "${TL_FILE_NAME_PATTERN}
+                STEPEND 1
+            fi
+        fi
+    fi
+
+    # Check if SSD_LIST_CF mandatory
+    if [ "${TL_ZONED_DATA}" = "t" ]
+    then
+        if [ ${SSD_LIST_CF_COUNT} != 0 ]
+        then
+            typeset FILTER_SSD_LIST=${SSD_LIST_CF}
+        else
+            typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_SSD_LIST_CHECK_01
+            typeset LIBEL="Checking subsidiaries list"
+            NZLOGINIT3 -l LEV2 -j ${PGM}
+            NZLOGEND3 -l LEV2 -j ${PGM} -r 1 -m "Invalid Subsidiaries list for Geo"
+            echo "Invalid Subsidiaries list for Geo"
+            STEPEND 1
+        fi
+    else
+        typeset FILTER_SSD_LIST='*'
+    fi
+
+    # Execute load and/or specific process
+    if [ "${FILE_OK}" = "O" ]
+    then
+        # Truncate table if needed
+        if [ "${TL_TRUNCATE_TABLE}" = "t" ]
+        then
+            typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_TRUNCATE_01
+            typeset LIBEL="Calling NZSQL3 function to truncate table "${TL_DWH_TARGET_TABLE}
+            NZSQL3 -M ODS -s ${TL_TARGET_SCHEMA} -c "truncate table ${TL_TARGET_TABLE};" -o ${TL_DWH_TARGET_TABLE}_TRUNCATE.out
+        fi        
+        
+        # Load file if needed
+        if [ "${TL_FILE_NAME_PATTERN}" ]
+        then
+            typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_LOAD_01
+            typeset LIBEL="Executing NZLOAD3 to load ODS Table ${TL_TARGET_SCHEMA}.${TL_TARGET_TABLE}"
+            if [ "${TL_SOURCE_ENCODING}" ]
+            then
+                NZLOAD3 -M ODS -s ${TL_TARGET_SCHEMA} -t ${TL_TARGET_TABLE} -i ${INPUT_FILE_NAME} -c ${TL_SOURCE_ENCODING}
+            else
+                NZLOAD3 -M ODS -s ${TL_TARGET_SCHEMA} -t ${TL_TARGET_TABLE} -i ${INPUT_FILE_NAME}
+            fi
+	fi
+
+	
+	# Remove input file if asked
+	# TODO check if NZLOAD3 is ok before applying RM
+	if [ "${TL_REMOVE_INFILE}" = "t" ] 
+	then
+		DATE_NOW=$(echo `date +"%Y%m%d%H%M%S"`)
+	        typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_RMINFILE_01
+            	typeset LIBEL="Renaming file: ${INPUT_FILE_NAME} to ${INPUT_FILE_NAME}.read.by.ra.${DATE_NOW}"
+		NZLOGINIT3 -l LEV2 -j ${PGM}
+		NZLOGEND3 -l  LEV2 -j ${PGM} -r 0 -m "${LIBEL}"
+		mv ${INPUT_FILE_NAME} "${INPUT_FILE_NAME}.read.by.ra.${DATE_NOW}"
+	fi
+
+        # Specific procedure to execute
+        if [ "${TL_SPECIFIC_PROCESS}" ]
+        then
+            typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_SPEC_01
+            typeset LIBEL="Calling NZSQL3 function to execute procedure specific process"
+            NZSQL3 -M ODS -c "select ${TL_SPECIFIC_PROCESS}" -o ${TL_DWH_TARGET_TABLE}_SP_DWHLOAD_SPECIFIC_EXEC.out
+        fi
+    fi
+
+return $?
+}

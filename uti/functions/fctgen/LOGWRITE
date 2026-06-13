@@ -1,0 +1,14 @@
+#----------------------------------------------------------------------------
+# FUNCTION: LOGWRITE
+# 2 input parameters:
+#   - code
+#   - message
+# Subject: This function insert code and message into log file
+# call : LOGWRITE <code> <message>
+#   
+#----------------------------------------------------------------------------
+LOGWRITE () {
+echo $1 " " $2
+}
+
+

@@ -1,0 +1,210 @@
+#----------------------------------------------------------------------------
+# FUNCTION: DBLOADDWH
+# The following parameters must be previously defined:
+#
+# NSTEP  : STEP Identifier
+#
+# then, Depending of the switch
+#    TL_SEQ_NUMBER
+#    TL_STEP_NAME_PREFIX
+#    TL_FILE_NAME_PATTERN
+#    TL_SPECIFIC_INPUT_DIR
+#    TL_MANDATORY_FILE
+#    TL_ZONED_DATA
+#    TL_SOURCE_ENCODING
+#    TL_ODS_SOURCE_SCHEMA=`echo 
+#    TL_ODS_SOURCE_TABLE=`echo $
+#    TL_DWH_TARGET_SCHEMA=`echo 
+#    TL_DWH_TARGET_TABLE=`echo $
+#    TL_LOADING_TYPE=`echo $TASK
+#    TL_AUTO_CONVERT=`echo $TASK
+#    TL_CONSTRAINT_CHECK_TYPE=`e
+#    TL_SPECIFIC_PROCESS=`echo $
+#
+# Subject: AAE LOAD
+#----------------------------------------------------------------------------
+DBLOADDWH()
+{
+. ${DUTI}/functions/fctdb2/DBLOAD3
+. ${DUTI}/functions/fctdb2/DBSQL3
+. ${DUTI}/functions/fctdb2/DBLOGINIT3
+. ${DUTI}/functions/fctdb2/DBLOGEND3
+DB_DATABASE_DWH=`. ${DUTI}/functions/fctdb2/DBGETACTIVEDB.cmd -M DWH`
+DB_DATABASE_ODS=`. ${DUTI}/functions/fctdb2/DBGETACTIVEDB.cmd -M ODS`
+DB_BLUDB=BLUDB
+
+#check input file if needed
+    if [[ -z ${TL_FILE_NAME_PATTERN} ]]
+    then
+        typeset FILE_OK='O'
+    else
+        typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_FILE_CHECK_01
+        typeset LIBEL="Checking input file"
+        
+		if [ "${TL_SPECIFIC_INPUT_DIR}" ]
+		then
+			typeset INPUT_FILE_LOCATION_LOCAL=${TL_SPECIFIC_INPUT_DIR}
+		else
+			typeset INPUT_FILE_LOCATION_LOCAL=${INPUT_FILE_LOCATION}
+		fi
+		
+        if [ -f ${INPUT_FILE_LOCATION_LOCAL}/${TL_FILE_NAME_PATTERN} ]
+        then
+            typeset INPUT_FILE_NAME=`ls ${INPUT_FILE_LOCATION_LOCAL}/${TL_FILE_NAME_PATTERN}`
+            typeset NB_RECORDS=`wc -l ${INPUT_FILE_NAME}`
+            typeset FILE_OK='O'
+        else
+            if [ -z ${TL_MANDATORY_FILE} -o "${TL_MANDATORY_FILE}" = "f" ]
+            then
+                DBLOGINIT3 -l LEV2 -j ${PGM}
+                DBLOGEND3 -l LEV2 -j ${PGM} -r 0 -m "No file found: skipping "${TL_FILE_NAME_PATTERN}
+                echo "No file found: skipping "${TL_FILE_NAME_PATTERN}
+                typeset FILE_OK='N'
+            else
+                DBLOGINIT3 -l LEV2 -j ${PGM}
+                DBLOGEND3 -l LEV2 -j ${PGM} -r 1 -m "Mandatory file not found "${TL_FILE_NAME_PATTERN}
+                echo "Mandatory file not found "${TL_FILE_NAME_PATTERN}
+                STEPEND 1
+            fi
+        fi
+    fi
+
+    # Check if SSD_LIST_CF mandatory
+    if [ "${TL_ZONED_DATA}" = "t" ]
+    then
+        if [ ${SSD_LIST_CF_COUNT} != 0 ]
+        then
+            typeset FILTER_SSD_LIST=${SSD_LIST_CF}
+			
+			##CHECK ODS ZONE
+			
+			if [ "${FILE_OK}" = "O" ]; then
+			if [ "$TL_SPECIFIC_PROCESS" = "NULL" ] || [ "$TL_SPECIFIC_PROCESS" = "" ]; then
+			
+			 if [ "$TL_ODS_SOURCE_SCHEMA" = "NULL" ] || [ "$TL_ODS_SOURCE_TABLE" = "NULL" ];then
+			    
+			    echo " JOB_NAME : ${PGM}   SEQ_NUMBER : ${TL_SEQ_NUMBER} "
+			    echo " ODS DATA ZONES NOT CHECK  TABLE: ${TL_ODS_SOURCE_SCHEMA}.${TL_ODS_SOURCE_TABLE} "  
+			    
+			    else 
+			     typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_CHECK_ZONES_01
+                    	     typeset LIBEL="Calling DBSQL3 function to execute ZONE CHECK"
+			     
+				#DTY adding substring 0,3 character from TL_ODS_SOURCE_SCHEMA because the schema name is know  the NZ database
+			    	if [ "${TL_ODS_SOURCE_SCHEMA:0:3}" = "DWH" ]; then
+			    	#IBM Migration: DBSQL3 -M DWH -c "SELECT count(*) FROM ${TL_ODS_SOURCE_SCHEMA}.${TL_ODS_SOURCE_TABLE} WHERE SSD_CF <> 0 AND SSD_CF NOT IN ${FILTER_SSD_LIST}" -o ${NSTEP}.out
+			    	DBSQL3 -M DWH -c "SELECT count(*) FROM ${TL_ODS_SOURCE_TABLE} WHERE SSD_CF <> 0 AND SSD_CF NOT IN ${FILTER_SSD_LIST}" -o ${NSTEP}.out
+			    	else
+			    	#IBM Migration: DBSQL3 -M ODS -c "SELECT count(*) FROM ${TL_ODS_SOURCE_SCHEMA}.${TL_ODS_SOURCE_TABLE} WHERE SSD_CF <> 0 AND SSD_CF NOT IN ${FILTER_SSD_LIST}" -o ${NSTEP}.out
+			    	DBSQL3 -M ODS -c "SELECT count(*) FROM ${TL_ODS_SOURCE_TABLE} WHERE SSD_CF <> 0 AND SSD_CF NOT IN ${FILTER_SSD_LIST}" -o ${NSTEP}.out
+			    	fi
+			    	if [ `cat $DFILT/${NSTEP}.out` -ne '0' ]
+			    	then 
+			    	echo "ERROR DATA ZONES"
+			    	STEPEND 1
+			    	else
+			    	echo "CHECK DATA ZONES OK"
+			    	fi
+			    fi
+			else
+			echo " JOB_NAME : ${PGM}   SEQ_NUMBER : ${TL_SEQ_NUMBER} "$TL_SPECIFIC_PROCESS" "
+			echo " ODS DATA ZONES NOT CHECK  TABLE: ${TL_ODS_SOURCE_SCHEMA}.${TL_ODS_SOURCE_TABLE} "   
+			fi
+			fi
+        else
+            typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_SSD_LIST_CHECK_01
+            typeset LIBEL="Checking subsidiaries list"
+            DBLOGINIT3 -l LEV2 -j ${PGM}
+            DBLOGEND3 -l LEV2 -j ${PGM} -r 1 -m "Invalid Subsidiaries list for Geo"
+            echo "Invalid Subsidiaries list for Geo"
+            STEPEND 1
+        fi
+    else
+        typeset FILTER_SSD_LIST='*'
+    fi
+
+    # Check loading type and execute it
+    if [ "${FILE_OK}" = "O" ]
+    then
+
+        case "${TL_LOADING_TYPE}" in
+            # Loading DWH using SCD0 
+            SCD0)
+                typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_SCD0_01
+                typeset LIBEL="Calling DBSQL3 function to execute procedure to load DWH table using SCD0"
+                DBSQL3 -M DWH -c "CALL ${DB_DATABASE_DWH}.ADMIN_SP_DWHLOAD_SCD0('${DB_BLUDB}','${DB_DATABASE_ODS}','${TL_ODS_SOURCE_TABLE}','${DB_BLUDB}','${DB_DATABASE_DWH}','${TL_DWH_TARGET_TABLE}','${FILTER_SSD_LIST}',true,${TL_AUTO_CONVERT})" -o ${TL_DWH_TARGET_TABLE}_SP_DWHLOAD_SCD0_EXEC.out
+            ;;
+            # Loading DWH using SCD0_APPEND (no delete or truncate) 
+            SCD0_APPEND)
+                typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_SCD0_APPEND_01
+                typeset LIBEL="Calling DBSQL3 function to execute procedure to load DWH table using SCD0"
+                DBSQL3 -M DWH -c "CALL ${DB_DATABASE_DWH}.ADMIN_SP_DWHLOAD_SCD0('${DB_BLUDB}','${DB_DATABASE_ODS}','${TL_ODS_SOURCE_TABLE}','${DB_BLUDB}','${DB_DATABASE_DWH}','${TL_DWH_TARGET_TABLE}','${FILTER_SSD_LIST}',false,${TL_AUTO_CONVERT})" -o ${TL_DWH_TARGET_TABLE}_SP_DWHLOAD_SCD0_EXEC.out
+            ;;
+            # Loading DWH using SCD1
+            SCD1)
+						
+				typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_CHECK_KEY_01
+                typeset LIBEL="Calling DBSQL3 function to execute procedure CHECK KEY"
+                DBSQL3 -M DWH -c "CALL  ${DB_DATABASE_DWH}.ADMIN_SP_CHECK_KEY_DWH('${DB_DATABASE_DWH}','${TL_DWH_TARGET_TABLE}')" -o ${TARGET_TABLE_NAME}_SP_CHECK_KEY_EXEC.out
+				
+                typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_MD5_01
+                typeset LIBEL="Calling DBSQL3 function to execute procedure MD5"
+                DBSQL3 -M ODS -c "CALL  ${DB_DATABASE_ODS}.ADMIN_SP_CALC_MD5('${DB_BLUDB}','${DB_DATABASE_ODS}','${TL_ODS_SOURCE_TABLE}')" -o ${TARGET_TABLE_NAME}_SP_DWHLOAD_MD5_EXEC.out
+
+                typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_SCD1_01
+                typeset LIBEL="Calling DBSQL3 function to execute procedure to load DWH table for SCD1"
+                DBSQL3 -M DWH -c "CALL  ${DB_DATABASE_DWH}.ADMIN_SP_DWHLOAD_SCD1('${DB_BLUDB}','${DB_DATABASE_ODS}','${TL_ODS_SOURCE_TABLE}','${DB_BLUDB}','${DB_DATABASE_DWH}','${TL_DWH_TARGET_TABLE}', current_timestamp,'${FILTER_SSD_LIST}')" -o ${TARGET_TABLE_NAME}_SP_DWHLOAD_SCD1_EXEC.out
+            ;;
+            # Loading DWH using SCD2
+            SCD2)
+				
+				typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_CHECK_KEY_01
+                typeset LIBEL="Calling DBSQL3 function to execute procedure CHECK KEY"
+                DBSQL3 -M DWH -c "CALL  ${DB_DATABASE_DWH}.ADMIN_SP_CHECK_KEY_DWH('${DB_DATABASE_DWH}','${TL_DWH_TARGET_TABLE}')" -o ${TARGET_TABLE_NAME}_SP_CHECK_KEY_EXEC.out
+				
+                typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_MD5_01
+                typeset LIBEL="Calling DBSQL3 function to execute procedure MD5"
+                DBSQL3 -M ODS -c "CALL  ${DB_DATABASE_ODS}.ADMIN_SP_CALC_MD5('${DB_BLUDB}','${DB_DATABASE_ODS}','${TL_ODS_SOURCE_TABLE}')" -o ${TARGET_TABLE_NAME}_SP_DWHLOAD_MD5_EXEC.out
+
+                typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_SCD2_01
+                typeset LIBEL="Calling DBSQL3 function to execute procedure to load DWH table for SCD2"
+                DBSQL3 -M DWH -c "CALL  ${DB_DATABASE_DWH}.ADMIN_SP_DWHLOAD_SCD2('${DB_BLUDB}','${DB_DATABASE_ODS}','${TL_ODS_SOURCE_TABLE}','${DB_BLUDB}','${DB_DATABASE_DWH}','${TL_DWH_TARGET_TABLE}', current_timestamp,'${FILTER_SSD_LIST}')" -o ${TARGET_TABLE_NAME}_SP_DWHLOAD_SCD2_EXEC.out
+            ;;
+            # For all other values, nothing to do
+            *)
+                DBLOGINIT3 -l LEV2 -j ${PGM}
+                DBLOGEND3 -l LEV2 -j ${PGM} -r 0 -m "No SCD to perform: skipping"
+            ;;
+        esac
+    
+        # Specific procedure to execute
+        if [ "${TL_SPECIFIC_PROCESS}" ]
+        then
+            typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_SPEC_01
+            typeset LIBEL="Calling DBSQL3 function to execute procedure specific process"
+            DBSQL3 -M DWH -c "CALL  ${DB_DATABASE_DWH}.${TL_SPECIFIC_PROCESS}" -o ${TL_DWH_TARGET_TABLE}_SP_DWHLOAD_SPECIFIC_EXEC.out
+        fi
+        
+        # Constraints checking
+        typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_CONS_CHECK_01
+        typeset LIBEL="Calling DBSQL3 function to execute procedure to load check constraints"
+        case "${TL_CONSTRAINT_CHECK_TYPE}" in
+            AUTO)
+                DBSQL3 -M DWH -c "CALL  ${DB_DATABASE_DWH}.ADMIN_SP_DWHLOAD_CONSTAINT_CHECK('${DB_BLUDB}','${DB_DATABASE_ODS}','${TL_ODS_SOURCE_TABLE}','${DB_BLUDB}','${DB_DATABASE_DWH}','${TL_DWH_TARGET_TABLE}')" -o ${TL_DWH_TARGET_TABLE}_SP_DWHLOAD_CONSTRAINT_EXEC.out
+            ;;
+            NONE | *)
+                DBLOGINIT3 -l LEV2 -j ${PGM}
+                DBLOGEND3 -l LEV2 -j ${PGM} -r 0 -m "No constraint to check"
+                echo "No constraint to check"
+            ;;
+        esac
+            
+    fi
+
+    # Delete the current task from the TODO list
+#    typeset NSTEP=${NJOB}_${TL_STEP_NAME_PREFIX}_DELETE_TASK_01
+#    typeset LIBEL="Executing DBSQL3 to remove task from the TODO list"
+#    REMOVE_TASK_SQL="DELETE FROM DELIVERY.DWH_LOADING_TODO WHERE JOB_NAME = '${PGM}' AND SEQ_NUMBER = ${TL_SEQ_NUMBER} AND STEP_NAME_PREFIX = '${TL_STEP_NAME_PREFIX}';"
+#    DBSQL3 -d ${DB_DATABASE_DELIVERY} -c "${REMOVE_TASK_SQL}" -o ${NSTEP}.out
+return $?
+}

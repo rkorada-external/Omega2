@@ -1,0 +1,7 @@
+|(% width="157" style="border-width: 0px 1pt 1pt; border-style: none solid solid; border-color: rgb(0, 0, 0) windowtext windowtext; width: 168.66px;" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% style="color: rgb(0, 0, 0); font-family: Calibri; font-size: 1em;" %)[[service]]
+)))|(% width="448" style="border-width: 0px 1pt 1pt 0px; border-style: none solid solid none; border-color: rgb(0, 0, 0) windowtext windowtext rgb(0, 0, 0); width: 1024.1px;" colspan="2" %)(((
+(% style="margin: 0cm 0cm 0pt; padding: 0cm 5.4pt;" %)
+(% lang="EN" style="color: rgb(51, 51, 51); font-family: ~"Helvetica~", sans-serif; font-size: 10.5pt;" %)[[comment]]
+)))

@@ -1,0 +1,13 @@
+#----------------------------------------------------------------------------
+# FUNCTION: WS_LIST_RUNNING_REPORTS
+#
+# Subject: Technical function that lists all the running reports on the
+# standard output.
+#----------------------------------------------------------------------------
+WS_LIST_RUNNING_REPORTS() {
+	echo "# List running reports"
+	WS_OUTPUT_STDOUT=true
+	_DO_WS_CALL ${REPORT_SRV_HOSTNAME:-localhost} ${REPORT_SRV_PORT:-8080} ${REPORT_SRV_APPLI:-omega2-report-web} report status "" 0
+	rc=$?
+	return $rc
+}

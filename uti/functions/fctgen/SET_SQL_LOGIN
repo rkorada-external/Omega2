@@ -1,0 +1,39 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SET_SQL_LOGIN
+# $1:  name of the variable of the Server
+# Subject: Get Sybase Login/Password
+#----------------------------------------------------------------------------
+SET_SQL_LOGIN () {
+
+SERVERNAME=$(eval echo '$'$1)
+FIND_SQL_LOGIN_PSWD $SERVERNAME
+
+if [ "${SQL_LOGIN_PWD}" = "" ]
+then
+   USR=NULL
+   PSWD=NULL
+   echo '#'
+   echo '#'
+   echo '#========================================================================='
+   echo "# Sybase Login not found for Sql Server $1 = "$(eval echo '$'$1)
+   echo '#========================================================================='
+
+   return 99
+else
+   if [ "$1" = "SRV" ]  
+   then
+      export USR=`echo ${SQL_LOGIN_PWD} | cut -d":" -f1`
+      # export PSWD=`echo ${SQL_LOGIN_PWD} | cut -d":" -f2`
+      export PSWD=$(DECRYPT_PASSWD $(echo ${SQL_LOGIN_PWD} | cut -d":" -f2)) 
+   else    # SRVx
+      SRV_NUMBER=$(echo $1 | awk '{ print substr($1,length ($1), 1)}' )
+      export USR${SRV_NUMBER}=`echo ${SQL_LOGIN_PWD} | cut -d":" -f1`
+      # export PSWD${SRV_NUMBER}=`echo ${SQL_LOGIN_PWD} | cut -d":" -f2`
+      export PSWD${SRV_NUMBER}=$(DECRYPT_PASSWD $(echo ${SQL_LOGIN_PWD} | cut -d":" -f2))
+   fi
+
+   return 0
+fi
+}
+
+

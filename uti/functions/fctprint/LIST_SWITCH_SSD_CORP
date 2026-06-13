@@ -1,0 +1,45 @@
+#----------------------------------------------------------------------------
+# FUNCTION: LIST_SWITCH_SSD_CORP
+#
+# No input parameter:
+# Output parameter:
+# FLIST_SSD List of switches
+#
+# Subject: Technical function that retrieves all subs
+# MODIFICATION 1 - JBG - 03/09/2013 - DATA SELECTION BASED ON SSD CF/SITE ID
+#----------------------------------------------------------------------------
+LIST_SWITCH_SSD_CORP () {
+#set -x
+
+# Get printer list by ssd
+STEP_NOECHO="YES"
+LIBEL="LIST OF SWITCH TO PRINTER INFORMATION"
+STEP_NOECHO=YES
+ISQL_BASE="BREF"
+ISQL_O=${DFILT}/${NSTEP}_${IB}_SSD_O1.tmp
+ISQL_QRY=`CFTMP`
+
+# SQL Query
+# -----------
+# MODIFICATION 1
+INPUT_TEXT $ISQL_QRY <<EOF
+select T1.SSD_CF, T1.PRDSIT_CF, 1, "~" + T1.SSD_LS +"~"
+from BREF..TSUBSID T1, BREF..TBATCHSSD TSSD
+where T1.SSD_CF = TSSD.SSD_CF
+and TSSD.BATCHUSER_CF=suser_name()
+order by SSD_CF
+exit
+EOF
+
+# Extract information from the query
+ISQL_FRES=${DFILT}/${NSTEP}_${IB}_SSD_O2.tmp
+ISQL_RES
+
+/bin/rm -f  ${ISQL_O} 2>&1
+
+# Output filename
+FLIST_SSD=${ISQL_FRES}
+
+}
+
+

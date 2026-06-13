@@ -1,0 +1,14 @@
+#------------------------------------------------------------------------------
+# FUNCTION: EXCEPTION 
+#
+# Subject: Signal Managment
+# This is the default function which does nothing
+# If a job needs exception management, an exception function must be defined
+# in the job that will overload the default one.
+# In the job exception function, start with EXCEPTION_INIT and finish with 
+# EXCEPTION_END
+#------------------------------------------------------------------------------
+EXCEPTION () {
+echo "#"
+}
+

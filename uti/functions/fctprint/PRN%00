@@ -1,0 +1,36 @@
+#----------------------------------------------------------------------------
+# FUNCTION: PRN
+#
+# 7 parameters must be previously defined:
+# NSTEP:        Number of STEP
+# PRN_NAME   :  Printer Identification
+# PRN_I      :  Data File to print
+# PRN_FMT    :  Format File
+#
+# PRN_TYPE: List of values - STARJET, STARPDF, WORD, DAESEND
+# PRN_OUT:  indicates if WEB AND/OR PRINT output
+#
+# Subject:  Generic Function for Printing
+# The report is printed either on the unix printer or to a netware printer
+# depending information defined 
+#
+# The report is directly printed to Unix printer if the geographic and 
+# production site are the same and the unix printer is defined
+# Otherwise, the report file and its associated control file are sent to 
+# the printing pool. They are two control files. The ftp file contains 
+# information to connect the remote printing server. The dae file is used as
+# a command file by the VB daemon that will execute starpage on the printing
+# server.
+#
+# HISTORICAL: HG 2001/02/22 - PRN_OUT variable added
+# 
+# 
+#----------------------------------------------------------------------------
+PRN ()
+{
+
+   echo "#inside dummy PRN function"
+   echo "#exiting dummy PRN function" 
+
+
+}

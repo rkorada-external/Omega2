@@ -1,0 +1,48 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_PRTUNIX_NAME
+#
+# 3 input parameters
+# $1 PRDSIT_CF
+# $2 GEOSIT_CF
+# $3 PRT_CF
+# Output parameter:
+# UNIXPRT_CF : Unix printer name
+#
+# Subject: Technical function that determines the Unix printer 
+# from input parameters (TPRINTER)
+# The query extracts the Unix printer name from the table TPRINTER
+# with the criteria production site, geographic site, the logical printer name
+#----------------------------------------------------------------------------
+GET_PRTUNIX_NAME () {
+#set -x
+
+# Get The Unix printer name
+LIBEL="GET UNIX PRINTER NAME"
+ISQL_BASE="BREF"
+ISQL_O=${DFILT}/${NSTEP}_${IB}_GET_PRTUNIX_NAME_01.tmp
+ISQL_QRY=`CFTMP`
+
+# Extract the information from the query
+INPUT_TEXT $ISQL_QRY <<EOF
+SELECT IsNull(UNIXPRT_CF, 'dummy')
+FROM BREF..TPRINTER
+WHERE
+   PRDSIT_CF='${1}' AND
+   GEOSIT_CF='${2}' AND
+   PRT_CF='${3}'
+exit
+EOF
+
+STEP_NOECHO="YES"
+ISQL_FRES=${DFILT}/${NSTEP}_${IB}_GET_PRTUNIX_NAME_02.tmp
+LIB_ERR="ERROR ON GET_PRTUNIX_NAME: $1 $2 $3"
+ISQL_INFO
+
+UNIXPRT_CF=`cat ${ISQL_FRES} | awk ' {print $1}'`
+
+/bin/rm  -f ${ISQL_FRES} 2>&1
+/bin/rm  -f ${ISQL_O} 2>&1
+LIB_ERR=""
+}
+
+

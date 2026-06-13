@@ -1,0 +1,27 @@
+#----------------------------------------------------------------------------
+# FUNCTION: ZIP
+# The following parameters must be previously defined:
+#
+# NSTEP  : STEP Identifier
+#
+# ZIP_MODE: Z/U
+# then, Depending of the switch
+#    ZIP_IDIR : Directory from input (source) files
+#    ZIP_ODIR : Directory from output (target) files
+#    ZIP_I : Name of the input file(s)
+#    ZIP_O : Name of the output file(s)
+#    ZIP_OPT  : Option
+#
+# Subject: Generic Function of zip. It switches to pkzip or pkunzip
+#----------------------------------------------------------------------------
+ZIP()
+{
+if test "${ZIP_MODE}" = "U"
+then
+	PKUNZIP
+else
+	PKZIP
+fi
+return $?
+}
+

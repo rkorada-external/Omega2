@@ -1,0 +1,226 @@
+#!/bin/ksh
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# AUTHORS:               Nour Miloua, Vincent Gautier, Roger Cassis
+# CREATE DATE:           21/11/2015
+# LAST MODIF DATE:       21/11/2015
+# DESCRIPTION:           Netezza nzsql utility for SCOR batch SQL Querying
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Subject            : Generic Function to perform SQL query to Netezza Server
+# Change Log:
+# 21/11/2015: Creation :spot:30171
+#[003] 16/11/2016 R. Cassis :spot:31493 Au STEPEND, le code retour est 1 et plus -1
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+usage() { 
+cat << EOF
+Usage:
+NZSQL  -d NZSQL_DBNAME -s NZSQL_SCHEMA -c *NZSQL_QUERY -o NZQSL_FILE -e NZSQL_EXTRA_PARAM -R NZSQL_NEWLINE_CHAR -F NZSQL_FIELD_SEPARATOR 
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# The following parameters must be previously defined:
+# NSTEP                     : STEP Identifier (Mandatory) defined from caller shell script or set by default to NLOAD_AUTONOMOUS_MODE
+# -d NZSQL_DBNAME            : Target Database (optional) -db
+# -s NZSQL_SCHEMA              : Name of schema to fill up (optional) - nzload option:  -schema
+# -c *NZSQL_QUERY              : Query or file to execute (Mandatory) (mandatory) - nzsql option: -c
+# -f *NZSQL_SCRIPT_FILE        : Script file -nzsql option -f
+# -o NZQSL_FILE              : Output file (optional) - nzload option: df
+# -e NZSQL_EXTRA_PARAM        : Special options which are not defined by default extra parameters (optional)
+# -R NZSQL_NEWLINE_CHAR     : Record delimiter
+# -F NZSQL_FIELD_SEPARATOR     : Field delimiter
+# -M NZSQL_MODE                 : if set to ODS or DWH, NZSQL function will fetch active ODS/DWH from DELIVERY${ENVIRONNEMENT} database, to set NZSQL_DBNAME
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Default options: -t -A  (used for sql data output)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+EOF
+STEPEND 1
+exit 1
+
+}
+
+#Run final nzsql command
+NZSQL ()
+{
+# Reinit parameters tab for getopt
+OPTIND=1
+
+while getopts "d:s:c:o:e:R:F:M:f:" o
+ do
+    case "${o}" in
+        d)
+           NZSQL_DBNAME=${OPTARG}
+        ;;
+        s)
+            NZSQL_SCHEMA=${OPTARG}
+        ;;
+        c)
+            NZSQL_QUERY=${OPTARG}
+        ;;
+        o)
+            NZQSL_FILE=${OPTARG}
+        ;;
+        e)
+            NZSQL_EXTRA_PARAM=${OPTARG}
+        ;;
+        R)
+            NZSQL_NEWLINE_CHAR=${OPTARG}
+        ;;
+        F)
+            NZSQL_FIELD_SEPARATOR=${OPTARG}
+        ;;
+        M)
+            NZSQL_MODE=${OPTARG}
+        ;;
+        f)
+            NZSQL_SCRIPT_FILE=${OPTARG}
+        ;;
+        *)
+            echo "Unknown parameter ${o}"
+            usage
+        ;;
+    esac
+done
+shift $((OPTIND-1))
+
+# Default NSTEP when none defined
+if [ -z "${NSTEP}" ] 
+then
+    NSTEP="NZSQL_AUTONOMOUS_CALL"
+    IB=`hostname``date +%Y%m%d%H%M%S%N`
+fi
+
+# Default program name when none defined
+if [ -z "${PGM}" ]
+then
+    PGM=`basename $0 | cut -f1 -d'.'`
+fi
+
+# Log files management
+NZSQL_OUTLOG=$DNZFILT/${NSTEP}_${IB}_NZSQL`date "+%Y-%m-%d_%H-%M-%S-%N"`.log
+NZSQL_OUTNZSQLLOG=$DNZFILT/${NSTEP}_${IB}_nzsql`date "+%Y-%m-%d_%H-%M-%S-%N"`.log
+NZSQL_COMMAND="nzsql "
+
+if [ -f ${NZSQL_OUTNZSQLLOG} ] ; then
+    mv ${NZSQL_OUTNZSQLLOG} "${NZSQL_OUTNZSQLLOG}.bak"
+fi
+
+if [ -f ${NZSQL_OUTLOG} ] ; then
+    mv ${NZSQL_OUTLOG} "${NZSQL_OUTLOG}.bak"
+fi
+
+touch ${NZSQL_OUTNZSQLLOG} ${NZSQL_OUTLOG}
+# End of log files management
+
+#SCOR Toolbox Job management specific code
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+    STEP_PRG=NZSQL
+    export PRGLOG=`basename ${NZSQL_OUTLOG}`
+    STEPSTART
+
+    NZLOGINIT -l LEV2 -j ${PGM}
+    NZSQL_TREAT_PARAMS
+
+    echo "# [COMMAND]         $NZSQL_COMMAND" >> ${NZSQL_OUTLOG}
+    echo "# [OUTPUT FILE]     $NZSQL_FILE" >> ${NZSQL_OUTLOG}
+    echo "# [nzsql LOG]       $NZSQL_OUTNZSQLLOG" >> ${NZSQL_OUTLOG}
+    echo "# [NZSQL FILE]      $NZSQL_OUTLOG" >> ${NZSQL_OUTLOG}
+
+    eval ${NZSQL_COMMAND}  >  $NZSQL_OUTNZSQLLOG 2>&1
+    NZSQL_RETURN_CODE=$?
+
+    if [ $NZSQL_RETURN_CODE -ne 0 ]
+    then
+        echo "# Log file:  ${NZSQL_OUTLOG}"
+        echo "# Ano file:  ${NZSQL_OUTNZSQLLOG}"
+        NZLOGEND -l LEV2 -j ${PGM} -r ${NZSQL_RETURN_CODE} -m "Error when executing NZSQL"
+        STEPEND ${NZSQL_RETURN_CODE}
+
+    else
+        echo "# Log file:  ${NZSQL_OUTLOG}"
+        NZLOGEND -l LEV2 -j ${PGM} -r 0 -m "NZSQL execution succeeded"
+    fi
+
+fi
+
+NZSQL_DBNAME=""
+NZSQL_SCHEMA=""
+NZSQL_QUERY=""
+NZQSL_FILE=""
+NZSQL_EXTRA_PARAM=""
+NZSQL_NEWLINE_CHAR=""
+NZSQL_FIELD_SEPARATOR=""
+NZSQL_MODE=""
+STEPEND 0
+return 0
+}
+
+#Generate final nzsql command from input params
+NZSQL_TREAT_PARAMS ()
+{
+# -c/-f Query/Input script parameters 
+if [ -z "${NZSQL_QUERY}" -a -z "${NZSQL_SCRIPT_FILE}" ]
+then
+    echo "need -c or -f option"
+    usage
+    STEPEND 1
+else
+    if [ -z "${NZSQL_QUERY}"  ]
+    then
+        echo "# [NZSQL_SCRIPT_FILE]: ${NZSQL_SCRIPT_FILE}" >> ${NZSQL_OUTLOG}
+        NZSQL_COMMAND=${NZSQL_COMMAND}"  -f \"${NZSQL_SCRIPT_FILE}\" "
+    else
+        echo "# [NZSQL_QUERY]: ${NZSQL_QUERY}"
+        NZSQL_COMMAND=${NZSQL_COMMAND}"  -c \"${NZSQL_QUERY}\" "
+    fi
+fi
+
+# -M/-d target database/auto modes
+if [ -z ${NZSQL_MODE} ]
+then
+    if [ -z "${NZSQL_DBNAME}" ]
+    then
+        NZSQL_DBNAME=$NZ_DATABASE
+    fi
+else
+    NZSQL_DBNAME=`$DUTI/functions/fctnz/NZGETACTIVEDB.cmd -M ${NZSQL_MODE}`
+fi
+
+echo "# [NZSQL MODE]:   ${NZSQL_MODE}" >> ${NZSQL_OUTLOG}
+echo "# [NZSQL_DBNAME] : ${NZSQL_DBNAME}" >> ${NZSQL_OUTLOG}
+NZSQL_COMMAND=${NZSQL_COMMAND}" -d ${NZSQL_DBNAME}"
+
+#-s target schema
+if [ ! -z "${NZSQL_SCHEMA}" ]
+then
+    NZSQL_COMMAND=${NZSQL_COMMAND}" -schema ${NZSQL_SCHEMA}"
+fi
+echo "# [NZSQL_SCHEMA]: ${NZSQL_SCHEMA}" >> ${NZSQL_OUTLOG}
+
+#-o output file
+if [ -z "${NZQSL_FILE}" ]
+then
+    NZSQL_DEFAULT_OUTFILE=$DNZFILT/${NSTEP}_${IB}_NZSQL.default.dat
+    NZSQL_FILE=${NZSQL_DEFAULT_OUTFILE}       
+else
+    NZSQL_FILE="$DNZFILT/${NZQSL_FILE}"
+fi
+echo "# [NZSQL_FILE]: ${NZQSL_FILE}" >> ${NZSQL_OUTLOG}
+NZSQL_COMMAND=${NZSQL_COMMAND}" -o ${NZSQL_FILE}"
+
+#-R
+if [ ! -z "${NZSQL_NEWLINE_CHAR}" ]
+then
+    NZSQL_COMMAND=${NZSQL_COMMAND}" -R \"${NZSQL_NEWLINE_CHAR}\""
+fi
+echo "# [NZSQL_NEWLINE_CHAR]: ${NZSQL_NEWLINE_CHAR}" >> ${NZSQL_OUTLOG}
+
+#-F
+if [ -z "${NZSQL_FIELD_SEPARATOR}" ]
+then
+    NZSQL_FIELD_SEPARATOR="~"
+fi
+echo "# [NZSQL_FIELD_SEPARATOR]: ${NZSQL_FIELD_SEPARATOR}" >> ${NZSQL_OUTLOG}
+NZSQL_COMMAND=${NZSQL_COMMAND}" -F \"${NZSQL_FIELD_SEPARATOR}\""
+
+#Special default settings on nzsql command + extra params
+NZSQL_COMMAND=${NZSQL_COMMAND}" -t -A ${NZSQL_EXTRA_PARAM}"
+}

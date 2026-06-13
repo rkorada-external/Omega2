@@ -1,0 +1,28 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_ORA_LOGIN_PSWD
+# $1:  Instance Name
+# Subject: Get oracle Login/Password
+#----------------------------------------------------------------------------
+GET_ORA_LOGIN_PSWD () {
+
+FIND_ORA_LOGIN_PSWD $1
+
+if [ "${ORA_LOGIN_PWD}" = "" ]
+then
+   ORA_USR=NULL
+   ORA_PSWD=NULL
+   echo '#'
+   echo '#'
+   echo '#========================================================================='
+   echo "# Login for oracle instance $1 not found"
+   echo '#========================================================================='
+
+   return 99
+else
+   export ORA_USR=`echo ${ORA_LOGIN_PWD} | cut -d":" -f1`
+   export ORA_PSWD=`echo ${ORA_LOGIN_PWD} | cut -d":" -f2`
+   return 0
+fi
+
+}
+ 

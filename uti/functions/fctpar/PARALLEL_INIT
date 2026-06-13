@@ -1,0 +1,64 @@
+#----------------------------------------------------------------------------
+# FUNCTION: PARALLEL_INIT
+#
+#
+# Subject: Parallelization Inititialisation
+#----------------------------------------------------------------------------
+
+PARALLEL_INIT () {
+# set -x
+>${DFILT}/${NJOB}_${IB}_PARALLEL.log
+
+echo '' | tee -a ${FLOG}
+echo '   ---> INITIALIZE CONCURRENT STEPS EXECUTION' | tee -a ${FLOG}
+# This variable defines how many steps can run simultanously
+if [ $# -lt 1 ]
+then
+   export PARALLEL_MAX_NB_PROCESSUS_ONLINE=1
+   echo "!!! UNDEFINED NUMBER OF CONCURRENT PROCESS"  | tee -a ${FLOG}
+   echo "!!! It will be set to 1"  | tee -a ${FLOG}
+else
+   export PARALLEL_MAX_NB_PROCESSUS_ONLINE=$1
+   echo "        WITH UNTIL ${PARALLEL_MAX_NB_PROCESSUS_ONLINE} AUTHORIZED CONCURRENT PROCESSES"  | tee -a ${FLOG}
+fi
+
+typeset -i TAB_PROCESSUS_ONLINE[${PARALLEL_MAX_NB_PROCESSUS_ONLINE}]
+
+# typeset -i TAB_PROCESSUS_ONLINE[100]
+i=0
+until [ $i -ge ${PARALLEL_MAX_NB_PROCESSUS_ONLINE} ]
+do
+   PARALLEL_TAB_PROCESSUS_ONLINE[$i]=0
+   let i=$i+1
+done
+}
+
+# This function determines which child processes are finished
+# and updates the child processes table
+PARALLEL_CLEAN_TAB_PROCESS ()
+{
+# set -x
+
+i=0
+until [ $i -ge ${PARALLEL_MAX_NB_PROCESSUS_ONLINE} ]
+do
+   PARALLEL_CUR_PROCESSUS_ONLINE=${PARALLEL_TAB_PROCESSUS_ONLINE[$i]}
+
+   if [ ${PARALLEL_CUR_PROCESSUS_ONLINE} -ne 0 ]
+   then
+      SEARCH_PROCESSUS_ONLINE=`ps -p "${PARALLEL_CUR_PROCESSUS_ONLINE}" | awk '$1=='"${PARALLEL_CUR_PROCESSUS_ONLINE}"' { print $1}'`
+
+      if [ "${SEARCH_PROCESSUS_ONLINE}" = "" ]
+      then
+         SEARCH_PROCESSUS_ONLINE=0
+      fi
+
+      if [ "${PARALLEL_CUR_PROCESSUS_ONLINE}" != "${SEARCH_PROCESSUS_ONLINE}"  ]
+      then
+         PARALLEL_TAB_PROCESSUS_ONLINE[$i]=0
+      fi
+   fi
+   let i=$i+1
+done
+}
+

@@ -1,0 +1,64 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_SWITCH_SSDESB_CORP 
+#
+# 1 input parameter:
+# $1 SSD_CF 
+# Output parameter:
+# FLIST_SSDESB List of switches
+#
+# Subject: Technical function that allows switching the printer identification 
+# from specific ssd/esb
+# The information contained in FLIST_SSD are subsidiary, establishment
+# 
+# Modification 1 - 26/09/2013 - JBG : Verify if subsidiary is valid with
+# BATCHUSER_SD from BATCHNIGHT table
+#----------------------------------------------------------------------------
+GET_SWITCH_SSDESB_CORP () {
+#set -x
+
+# Get printer list by ssd/esb
+STEP_NOECHO="YES"
+LIBEL="LIST OF SSD/ESB"
+ISQL_BASE="BREF"
+ISQL_O=${DFILT}/${NSTEP}_${IB}_SSDESB_O1.tmp
+ISQL_QRY=`CFTMP`
+STEP_NOECHO="YES"
+ISQL_FRES=${DFILT}/${NSTEP}_${IB}_SSDESB_O2.tmp
+
+# Extract information from the query
+#INPUT_TEXT $ISQL_QRY <<EOF
+#select T1.SSD_CF, T2.ESB_CF, "~" + T1.SSD_LS +"~" + rtrim(T2.ESB_LS) +"~"
+#from BREF..TSUBSID T1, BREF..TESB T2
+#where T1.SSD_CF=T2.SSD_CF
+#and T1.SSD_CF IN ($1)
+#order by 1,2
+#exit
+#EOF
+#ISQL_RES
+
+# Modification 1
+# Extract information from the query
+INPUT_TEXT $ISQL_QRY <<EOF
+select T1.SSD_CF, T2.ESB_CF, T1.PRDSIT_CF,
+case
+	when B.BATCHUSER_CF is null
+	then 0
+	else 1
+end, "~" + T1.SSD_LS +"~" + rtrim(T2.ESB_LS) +"~"
+from BREF..TSUBSID T1, BREF..TESB T2, BREF..TBATCHNIGHT B
+where T1.SSD_CF=T2.SSD_CF
+and T1.SSD_CF IN ($1)
+and T1.PRDSIT_CF *= B.PRDSIT_CF 
+AND B.BATCHUSER_CF = suser_name()
+order by 1,2
+exit
+EOF
+ISQL_RES
+
+/bin/rm -f  ${ISQL_O} 2>&1
+
+# Output filename
+FLIST_SSDESB=${ISQL_FRES}
+
+}
+

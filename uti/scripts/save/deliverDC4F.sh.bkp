@@ -1,0 +1,8 @@
+#set -x
+export DELIVERY_ENV='DC4F'
+/scor/scoromega/runnable/uti/scripts/deliverDC.py $1 
+ret=$?
+if [ "$ret" = "0" ]
+then
+    /scor/scoromega/runnable/uti/scripts/deliver.py $1 $2 $3  2>&1 | tee -a ${DLOG}/delivery_${delivryEnv}_`date +"%Y%m%d"`.log
+fi

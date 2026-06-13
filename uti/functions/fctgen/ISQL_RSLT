@@ -1,0 +1,234 @@
+#----------------------------------------------------------------------------
+# FUNCTION: ISQL_RSLT
+# The following parameters must be previously defined:
+# NSTEP            : STEP Identifier
+# ISQL_BASE        : Target Database
+# ISQL_QRY         : Query or file to execute
+# ISQL_O           : iOutput file
+# ISQL_FRES        : File getting the information
+# ISQL_SPECIAL_OPT : Special options which are not defined by default
+#
+# Subject          : Generic Function to execute query on Sql Server and extracts result lies into ISQL_FRES.
+# Is considered that more than one result line can be found
+#
+# Modifications
+# [00] : Belaid LAGHA 25/01/2019
+#----------------------------------------------------------------------------
+ISQL_RSLT()
+{
+#set -x
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+
+   STEP_PRG=ISQL
+   STEPSTART 
+   ISQL_ERR=0
+   D_HEAD=""
+   ISQL_O=""
+
+   ISQL_I=`CFTMP`
+
+   [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+   [ "${USE_TRIGGERS_OFF}" != "" ] && USE_TRIGGERS_OFF=`echo $USE_TRIGGERS_OFF | tr 'a-z' 'A-Z'`
+   [ "${ISQL_TRIGGERS_OFF}" != "" ] && ISQL_TRIGGERS_OFF=`echo $ISQL_TRIGGERS_OFF | tr 'a-z' 'A-Z'`
+
+   #Determine if query or file
+   set `echo ${ISQL_QRY}`
+   if [ "$#" -gt 1 ]
+   then # Query 
+        # -----
+      if [ "${ISQL_BASE}" != "" ]
+      then
+         echo "use ${ISQL_BASE}"  >${ISQL_I}
+         echo "go"               >>${ISQL_I}
+      fi
+ 
+      if [ "${ISQL_MODE}" = "DEBUG" ]
+      then
+         echo "set showplan on"        >>${ISQL_I}
+         echo "go"                     >>${ISQL_I}
+         echo "set statistics io on"   >>${ISQL_I}
+         echo "set statistics time on" >>${ISQL_I}
+      fi
+
+      if [ "${ISQL_TRIGGERS_OFF}" = "YES" ] && [ "${USE_TRIGGERS_OFF}" = "YES" ]
+      then
+         echo "if exists (select 1 where proc_role('replication_role') != 1)"        >>${ISQL_I}
+         echo "   raiserror 20010 'ERROR ON set triggers off'" >>${ISQL_I}
+         echo "go"                     >>${ISQL_I}
+
+         echo "set triggers off"       >>${ISQL_I}
+         echo "if @@error != 0"        >>${ISQL_I}
+         echo "begin"                  >>${ISQL_I}
+         echo "   raiserror 20010 'ERROR ON set triggers off'" >>${ISQL_I}
+         echo "end"                    >>${ISQL_I}
+         echo "go"                     >>${ISQL_I}
+
+         echo "set triggers off"       >>${ISQL_I}
+         echo "if @@error != 0"        >>${ISQL_I}
+         echo "begin"                  >>${ISQL_I}
+         echo "   select syb_quit()"   >>${ISQL_I}
+         echo "end"                    >>${ISQL_I}
+         echo "go"                     >>${ISQL_I}
+
+         echo "print 'set triggers off option has been successfully activated'"       >>${ISQL_I}
+         echo "go"                     >>${ISQL_I}
+           
+      fi
+
+           echo "${ISQL_QRY}"      >>${ISQL_I}
+           echo "go"               >>${ISQL_I}
+           echo "exit"             >>${ISQL_I}
+   else # File
+        # -----
+      # Test input file existence
+      if [ -s "${ISQL_QRY}" ]
+      then
+         if [ "${ISQL_BASE}" != "" ]
+         then
+            echo "use ${ISQL_BASE}" >${ISQL_I}
+            echo "go"             >>${ISQL_I}
+         fi 
+
+         if [ "${ISQL_MODE}" = "DEBUG" ]
+         then
+            echo "set showplan on"        >>${ISQL_I}
+            echo "go"                     >>${ISQL_I}
+            echo "set statistics io on"   >>${ISQL_I}
+            echo "set statistics time on" >>${ISQL_I}
+         fi
+
+         if [ "${ISQL_TRIGGERS_OFF}" = "YES" ] && [ "${USE_TRIGGERS_OFF}" = "YES" ]
+         then
+            echo "if exists (select 1 where proc_role('replication_role') != 1)"        >>${ISQL_I}
+            echo "   raiserror 20010 'ERROR ON set triggers off'" >>${ISQL_I}
+            echo "go"                     >>${ISQL_I}
+
+            echo "set triggers off"       >>${ISQL_I}
+            echo "if @@error != 0"        >>${ISQL_I}
+            echo "begin"                  >>${ISQL_I}
+            echo "   raiserror 20010 'ERROR ON set triggers off'" >>${ISQL_I}
+            echo "end"                    >>${ISQL_I}
+            echo "go"                     >>${ISQL_I}
+
+            echo "set triggers off"       >>${ISQL_I}
+            echo "if @@error != 0"        >>${ISQL_I}
+            echo "begin"                  >>${ISQL_I}
+            echo "   select syb_quit()"   >>${ISQL_I}
+            echo "end"                    >>${ISQL_I}
+            echo "go"                     >>${ISQL_I}
+
+            echo "print 'set triggers off option has been successfully activated'"       >>${ISQL_I}
+            echo "go"                     >>${ISQL_I}
+         fi
+
+         cat ${ISQL_QRY}       >>${ISQL_I}
+         echo "go"             >>${ISQL_I}
+         echo "exit"           >>${ISQL_I}
+
+		 # Delete Temporary File
+		 DIRNAME_ISQL_QRY=`dirname ${ISQL_QRY}`
+		 if [ ${DIRNAME_ISQL_QRY} = ${DTMP} ]
+		 then
+            /bin/rm ${ISQL_QRY} >/dev/null 2>&1
+		 fi
+      else
+         # Input file does not exist
+         /bin/rm ${ISQL_I} 2>&1
+         LOGWRITE "#ERROR!" "isql input file ${ISQL_QRY} not found"
+         ISQL_QRY=""
+         STEPEND 12
+      fi
+   fi
+
+   if [ "${ISQL_TRIGGERS_OFF}" = "YES" ] && [ "${USE_TRIGGERS_OFF}" != "YES" ]
+   then
+      LOGWRITE "#ERROR!" "set triggers off not allowed by environment file. Set USE_TRIGGERS_OFF variable to YES value"
+      STEPEND 12
+   fi
+
+   if [ "${ISQL_O}" = "" ] || [ -s "${ISQL_O}" ]
+   then
+      ISQL_O=`CFTMP`
+   fi
+
+   if [ "${ISQL_FS}" = "" ]
+   then
+      ISQL_FS='~'
+   fi
+       
+   # execute isql input script file
+   ${SYBASE}/${SYBASE_OCS}/bin/isql -H${NSTEP} -U$USR -S$SRV -i$ISQL_I -o$ISQL_O -Jiso_1 -w99999 -P$PSWD -s$ISQL_FS ${ISQL_SPECIAL_OPT} >/dev/null
+   #isql Error management
+   ISQL_ERR=$?
+
+   #ownership to the group because isql output file is 600
+   if [ -f "${ISQL_O}" ]; then
+      chmod 664 ${ISQL_O}
+   fi
+        
+   #delete input script file
+   /bin/rm ${ISQL_I} 2>&1
+
+   ISQL_NBERR=`grep Msg ${ISQL_O} | grep Level | grep State | wc -l`
+   ISQL_CTLIB_ERR=`grep 'CT-LIBRARY error:'  ${ISQL_O} | wc -l`
+   ISQL_DIVIDEBYZERO=`grep "Divide by zero occurred" ${ISQL_O} | wc -l`
+
+   # Error found
+   if [ "${ISQL_NBERR}" -ne 0 ]     || \
+      [ "${ISQL_ERR}" -ne 0 ]       || \
+      [ "${ISQL_CTLIB_ERR}" -ne 0 ] || \
+      [ "${ISQL_DIVIDEBYZERO}" -ne 0 ]
+   then
+      if [ "${ISQL_ERR}" -eq 0 ]
+      then
+         ISQL_ERR=12
+      fi
+
+      # .ano file storage
+      mv ${ISQL_O} ${DFILT}/${NSTEP}_${IB}_ISQL.ano
+      export PRGANO=${NSTEP}_${IB}_ISQL.ano
+
+   # No error
+   else
+      # Get number of rows affected       
+      NBROWS=`tail -2 $ISQL_O | grep -i "(0 rows affected" | wc -l`
+ 
+      #Test if 0 row affected
+      if [ s{NBROWS} = 1 ]
+      then
+         if [ "${ISQL_NOWARNING}" != "YES" ]; then
+            /bin/rm -f ${ISQL_O} 2>&1
+            /bin/rm -f  ${ISQL_FRES} 2>&1
+            echo "no information found for Query: ${ISQL_QRY}"
+            ISQL_ERR=9
+         else
+            >${ISQL_FRES}
+         fi
+      else
+         # Get Information
+         if [ "${ISQL_HEAD}" != "YES" ]; then
+			D_HEAD="1d;"
+         fi
+
+         sed -r "{/^$/d;/row(s)* affected/d;/return status/d;s/^${ISQL_FS}//;s/${ISQL_FS}$//}" ${ISQL_O} | sed -r "{${D_HEAD}2d}" \
+         >${ISQL_FRES}
+         /bin/rm -f  ${ISQL_O} 2>&1
+
+         if [ "${ISQL_NOWARNING}" = "YES" ]; then
+            STEP_NOECHO=YES
+            ISQL_NOWARNING=""
+         fi
+      fi 
+   fi
+
+   ISQL_QRY="" 
+   ISQL_TRIGGERS_OFF="NO"
+   STEPEND ${ISQL_ERR}
+   # End of ISQL_RSLT
+fi
+ISQL_SPECIAL_OPT=""
+
+return 0
+}

@@ -1,0 +1,44 @@
+#----------------------------------------------------------------------------
+# FUNCTION: JOBEND
+# no input parameter:
+# Subject: This function reports end of job execution
+# call   : JOBEND
+#   
+#----------------------------------------------------------------------------
+JOBEND () {
+#set -x
+
+# Delete volatile files
+/bin/rm ${DTMP}/${NJOB}_*_${IB}_TBB_*.tmp > /dev/null 2>&1
+
+if [ "$JOB_NOECHO" != "YES" ]
+then
+   ECHO_LOG '#-------------------------------------------------------------------------' 
+   ECHO_LOG "# End of job:  $NJOB   Date:  "`date +"%Y/%m/%d %H:%M:%S"` 
+   ECHO_LOG '#-------------------------------------------------------------------------' 
+fi
+JOB_NOECHO=""
+if [ "${RMF}" = "YES" ] && [ "${LAUNCHER}" != "DAEMON" ]
+then
+  END_DATE1=`date +"%d/%m/%Y %H:%M"`
+  END_DATE2=`date +"%Y%m%d%H%M%S"`
+  LAPS_RMF ${JDATE_YYYYMMDDHHMMSS} ${END_DATE2}
+
+  STATUS=SUCCESS
+  if [ "${WARNING}" = "YES" ]
+  then
+    STATUS="${STATUS}-WARNING"
+  fi
+
+  # Update FRMF for the job (end date, status, duration)
+  awk -F\; 'BEGIN {OFS=";"} { if ($3~NJOB && $7~"INRUN") { $5=DATE; gsub("INRUN",STATUS,$7);$6=LAPS} ;print}'  DATE="${END_DATE1}" NJOB="${NJOB}" LAPS="${LAPS_RMF_O}" STATUS="${STATUS}" ${FRMF} > ${FRMF}.tmp
+ /bin/mv ${FRMF}.tmp ${FRMF}
+fi
+
+# Signal Trap management
+trap EXCEPTION 0
+exit 0
+}
+
+
+ 

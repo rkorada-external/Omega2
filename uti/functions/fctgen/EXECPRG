@@ -1,0 +1,108 @@
+#----------------------------------------------------------------------------
+# FUNCTION: EXECPRG
+# 2 parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# PRG:  Program to Execute
+# PRG_DEBUGGER: Optional name of debugger
+# Subject: Generic Function To execute Programm
+# M.NAJI 29/10/2018 add function GEN_DEBUG to trace file and optionally create debug package
+#----------------------------------------------------------------------------
+EXECPRG()
+{
+#set -x
+# Begin program 
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+        STEP_PRG=EXECPRG
+	STEPSTART
+
+        [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+	[ "${USE_TRIGGERS_OFF}" != "" ] && USE_TRIGGERS_OFF=`echo $USE_TRIGGERS_OFF | tr 'a-z' 'A-Z'`
+	[ "${PRG_TRIGGERS_OFF}" != "" ] && PRG_TRIGGERS_OFF=`echo $PRG_TRIGGERS_OFF | tr 'a-z' 'A-Z'`
+
+
+   # ===  IN CASE OF MULTI-DATASERVER CONNEXION  ===
+   # === INITIALIZE USER/PWD NECESSARY FOR LOGIN ===
+   # ===============================================
+   #
+   # Loop Server variables of the C Program
+   for i in 1 2 3 #4 5 6 7 8 9
+   do
+      PRG_SRV=$(eval echo '$'${PRG}'_SRV'$i 2>/dev/null)
+      [ -z "${PRG_SRV}"  ] && continue
+
+      for j in 1 2 3 #4 5 6 7 8 9
+      do
+        [ $j -eq 1 ]  && j=""
+        SERVERNAME=$(eval echo '$SRV'$j 2>/dev/null)
+        if [ -n "${SERVERNAME}" ] && [ "${SERVERNAME}"  = "${PRG_SRV}" ]
+        then
+           export ${PRG}_USR${i}=$(eval echo '$USR'$j)
+           export ${PRG}_PSWD${i}=$(eval echo '$PSWD'$j)
+        fi
+      done
+   done
+
+   echo "# Start of ${PRG}.exe Execution "
+ 
+   export ${PRG}_ANO=${DFILT}/${NSTEP}_${IB}_${PRG}.ano
+   export ${PRG}_LOG=${DFILT}/${NSTEP}_${IB}_${PRG}.log
+
+   export PRGANO=${NSTEP}_${IB}_${PRG}.ano
+   export PRGLOG=${NSTEP}_${IB}_${PRG}.log
+
+   if [ "${PRG_TRIGGERS_OFF}" = "YES" ] && [ "${USE_TRIGGERS_OFF}" != "YES" ]
+   then
+      LOGWRITE "#ERROR!" "set triggers off not allowed by environment file. Set USE_TRIGGERS_OFF variable to YES value"
+      STEPEND 12
+   fi
+
+   ${TIMEX} ${PRG_DEBUGGER} ${DEXE}/${PRG}.exe 
+   EXEC_PRG=$?
+   PRG_TRIGGERS_OFF="NO"
+   PRG_DEBUG=$(eval echo '$'${PRG}'_DEBUG' 2>/dev/null)
+   if [ "${PRG_DEBUG}" = "YES" ] 
+   then
+		GEN_DEBUG
+   fi
+   # End program 
+   STEPEND ${EXEC_PRG}
+   PRG_PRM=$(eval echo '$'${PRG}'_PRM' 2>/dev/null)
+   if [ "${PRG_PRM}" != "" ]
+   then
+	cp ${PRG_PRM} ${DFILT}/${NSTEP}_${IB}_${PRG}.prm
+   fi
+fi
+return 0
+}
+
+GEN_DEBUG()
+{
+	#set -x
+
+	PRG_LOG=$(eval echo '$'${PRG}_LOG 2>/dev/null)
+	PRG_DEB=${PRG_LOG}.deb.sh
+	PRG_DEB_ZIP=${PRG_LOG}.zip
+	PRG_FIL_LST=${PRG_LOG}.lst
+	#echo ${PRG_LOG}
+
+	grep toDebug ${PRG_LOG} | cut -d';' -f3 > ${PRG_DEB}
+	grep toDebug ${PRG_LOG} | cut -d';' -f2 > ${PRG_FIL_LST}
+
+
+
+	echo  "" >> ${PRG_DEB}
+	echo "export " ${PRG}_LOG=${PRG}.log >> ${PRG_DEB}
+	echo "export " ${PRG}_ANO=${PRG}.ano >> ${PRG_DEB}
+	echo '$DEXE'/${PRG}.exe >> ${PRG_DEB}
+	echo '#gdb $DEXE'/${PRG}.exe >> ${PRG_DEB}
+
+
+	files="${PRG_DEB} "
+	while read line
+	do
+		files=`echo $files " " $line `
+	done <  ${PRG_FIL_LST}
+	zip $PRG_DEB_ZIP $files
+} 

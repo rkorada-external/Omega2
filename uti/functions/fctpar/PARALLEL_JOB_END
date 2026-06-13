@@ -1,0 +1,48 @@
+#----------------------------------------------------------------------------
+# FUNCTION: PARALLEL_END
+#
+#
+# Subject: Parallelization Inititialisation
+#----------------------------------------------------------------------------
+
+PARALLEL_JOB_END () {
+#set -x
+PARALLEL_ERR=0
+
+for pid in `awk '{print $2}' ${DFILT}/${NCHAIN}_${IB}_PARALLEL.log`
+do
+  # wait for end of execution
+  wait $pid
+  pid_ERR=$?
+
+  # get log file
+  logfile=`awk '{ if ( $2 == pid ) print $1 } ' pid=$pid ${DFILT}/${NCHAIN}_${IB}_PARALLEL.log`
+  cat $logfile | tee -a ${FLOG}
+
+  # report return code != 0
+  if [ $pid_ERR -ne 0 -a $pid_ERR -ne 127 ]
+  then
+    echo "   ---> WARNING: PID $pid FINISHED WITH ERROR STATUS <> 0 ($pid_ERR) " | tee -a ${FLOG}
+  fi
+
+  # report abnormal end of step
+  if grep "ERROR: Sjob" $logfile | grep "has failed with return Code" >/dev/null
+  then
+    echo "   ---> WARNING: ERROR FOUND IN LOG FILE $logfile"
+    PARALLEL_ERR=1
+  fi
+
+  /bin/rm $logfile
+
+done
+
+
+rm ${DFILT}/${NCHAIN}_${IB}_PARALLEL.log
+
+echo '   ---> END CONCURRENT JOBS EXECUTION' | tee -a ${FLOG}
+NSTEP=${NCHAIN}_${IB}_PARALLEL
+STEPEND $PARALLEL_ERR
+echo '' | tee -a ${FLOG}
+
+}
+

@@ -1,0 +1,307 @@
+#!/bin/ksh
+#------------------------------------------------------------------------------------------------------------------------------------------------------------
+# FUNCTION: DBLOGEND
+# Authors   : Laurent Planche
+# Creation  : 12/01/2016
+#------------------------------------------------------------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Subject            : Generic Function to update log into Netezza tables at the end of a job, step, procedure
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Options            :  -d : database name to log to (DELIVERY_${ENVIRONNEMENT} by default)
+#                       -t : table name prefix to be used (followed by the level given) (by default JOB_LOG)
+#                   	-l : Log level (mandatory) (LEV1, LEV2, LEV3 to write logs into *_LEV1, *_LEV2 or *_LEV3 tables)
+#                       -j : job name (by default $NJOB will be used)
+#                       -s : step name (by default $NSTEP will be used)
+#                       -p : proc step name (by default $NPROC will be used)
+#                       -r : return code
+#                       -m : error message
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Change Log:
+# 12/01/2016: Creation :spot:30171
+#[003] 16/11/2016 R. Cassis :spot:31493 Au STEPEND, le code retour est 1 et plus -1
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+#set -x
+# JOB_REF=$JDATE_YYYYMMDDHHMMSS
+
+usage() { 
+cat << EOF
+Usage:
+DBLOGEND -d LOG_SCHEMA -t LOG_TABLE_PREFIX -l LOG_LEVEL -j JOB_NAME -s STEP_NAME -p PROC_NAME -r RETURN_CODE -m ERROR_MESSAGE
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+#                       -d : schema name to log to (DELIVERY_${ENVIRONNEMENT} by default)
+#                       -t : table name prefix to be used (followed by the level given) (by default JOB_LOG)
+#                   	-l : Log level (mandatory) (LEV1, LEV2, LEV3 to write logs into *_LEV1, *_LEV2 or *_LEV3 tables)
+#                       -j : job name (by default $NJOB will be used)
+#                       -s : step name (by default $NSTEP will be used)
+#                       -p : proc step name (by default $NPROC will be used)
+#                       -r : return code (mandatory)
+#                       -m : error message
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+EOF
+STEPEND 1
+exit 1
+}
+
+# Perform dbsql generated command (See DBLOG_TREAT_PARAMS)
+DBLOGEND3()
+{
+OPTIND=1
+DBLOG_DBNAME=BLUDB
+
+if [ -z "${NSTEP}" ] 
+then
+    NSTEP="DBLOG_AUTONOMOUS_CALL"
+    IB=`hostname``date +%Y%m%d%H%M%S%N`
+fi
+
+typeset DBLOG_OUTLOG=$DDBFILT/${NSTEP}_${IB}_DBLOGEND.log
+typeset DBLOG_COMMAND="dbsql "
+touch ${DBLOG_OUTLOG}
+
+
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then 
+    ADT="${NSTEP}"
+    STEP_PRG=DBLOGEND
+    export PRGLOG=`basename ${DBLOG_OUTLOG}`
+    #STEPSTART
+
+	while getopts "d:t:l:j:s:p:r:m:" o; do
+		case "${o}" in
+			d)
+			DBLOG_SCHEMA=${OPTARG}
+			;;
+			t)
+			DBLOG_TABLE=${OPTARG}
+			;;
+			l)
+			DBLOG_LOG_LEVEL=${OPTARG}
+			;;
+			j)
+			DBLOG_JOB_NAME=${OPTARG}
+			;;
+			s)	
+			DBLOG_STEP_NAME=${OPTARG}
+			;;	
+			p)
+			DBLOG_PROC_NAME=${OPTARG}
+			;;
+			r)
+			DBLOG_RETURN_CODE=${OPTARG}
+			;;
+			m)
+			DBLOG_ERROR_MESSAGE=${OPTARG}
+			;;
+			* | -h)
+			usage
+			;;
+		esac
+	done
+	shift $((OPTIND-1))
+
+	DBLOGEND_TREAT_PARAMS
+	echo "[GENERATED COMMAND]       : $DBLOG_COMMAND" >> $DBLOG_OUTLOG
+
+
+	#eval ${DBLOG_COMMAND}  >> $DBLOG_OUTLOG 
+	DBLOG_RETURN_CODE=$?
+
+	if [ $DBLOG_RETURN_CODE -ne 0 ]
+	then
+		STEPEND ${DBLOG_RETURN_CODE}
+	#else
+	#	echo "# Log file:  ${DBLOG_OUTLOG}"
+	fi
+
+fi
+
+DBLOG_SCHEMA=''
+DBLOG_TABLE=''
+DBLOG_JOB_NAME=''
+DBLOG_JOB_REF=''
+DBLOG_STEP_NAME=''
+DBLOG_PROC_NAME=''
+
+#STEPEND 0
+return 0
+}
+
+
+
+#Generated final dblog command from input options
+DBLOGEND_TREAT_PARAMS()
+{
+
+# Check mandatory arguments : log level
+
+if [ -z "${DBLOG_LOG_LEVEL}" ] 
+then
+	echo "Missing mandatory parameters -l"
+	usage
+	STEPEND 1
+fi
+
+# Check lov level values (LEV1, LEV2 or LEV3 only)
+case ${DBLOG_LOG_LEVEL} in
+    LEV1) echo "Log level 1 selected" >> ${DBLOG_OUTLOG}
+	;;
+	LEV2) echo "Log level 2 selected" >> ${DBLOG_OUTLOG}
+	;;
+	LEV3) echo "Log level 3 selected" >> ${DBLOG_OUTLOG}
+	;;
+	*) echo "Invalid value for level parameter -l"
+	usage
+	STEPEND 1
+	;;
+esac
+
+# Check mandatory argument : return code
+if [ -z "${DBLOG_RETURN_CODE}" ] 
+then
+    echo "Missing mandatory parameters -r"
+    usage
+    STEPEND 1
+fi
+
+# Set default database name if needed
+if [ -z ${DBLOG_SCHEMA} ] 
+then
+    DBLOG_SCHEMA="DELIVERY_"${ENVIRONNEMENT}
+    echo "Default schema used: $DBLOG_SCHEMA" >> ${DBLOG_OUTLOG}
+else
+    echo "Schema used: $DBLOG_SCHEMA" >> ${DBLOG_OUTLOG}
+fi
+
+# Set default table name if needed
+if [ -z ${DBLOG_TABLE} ] 
+then
+    DBLOG_TABLE="JOB_LOG_"${DBLOG_LOG_LEVEL}
+    echo "Default table used: $DBLOG_TABLE" >> ${DBLOG_OUTLOG}
+else
+    DBLOG_TABLE='${DBLOG_TABLE}_${DBLOG_LOG_LEVEL}'
+    echo "Table used: $DBLOG_TABLE" >> ${DBLOG_OUTLOG}
+fi
+
+# Update command to include database and table names
+#DBLOG_COMMAND=${DBLOG_COMMAND}"-d ${DBLOG_DBNAME} -schema ${DBLOG_SCHEMA} -A -t -r  -c \" update ${DBLOG_TABLE} set "
+
+# Update command to include database and table names
+case ${DBLOG_LOG_LEVEL} in
+    LEV1)
+	DBLOG_COMMAND=${DBLOG_COMMAND}"-d ${DBLOG_DBNAME} -schema ${DBLOG_SCHEMA} -A -t -r -nps  -c \" insert into ${DBLOG_TABLE}  "	
+	;;
+	LEV2) 
+	DBLOG_COMMAND=${DBLOG_COMMAND}"-d ${DBLOG_DBNAME} -schema ${DBLOG_SCHEMA} -A -t -r -nps -c \" insert into ${DBLOG_TABLE}  "	
+	;;
+	LEV3)
+	DBLOG_COMMAND=${DBLOG_COMMAND}"-d ${DBLOG_DBNAME} -schema ${DBLOG_SCHEMA} -A -t -r -nps -c \" insert into ${DBLOG_TABLE}  "	
+	;;
+esac
+
+# Check job name  and set the default one if needed
+if [ -z ${DBLOG_JOB_NAME} ] 
+then
+    DBLOG_JOB_NAME=${NJOB}
+	
+	if [ -z ${DBLOG_JOB_NAME} ]
+	then
+		echo "Missing mandatory parameters -j"
+	    usage
+	    STEPEND 1
+	else	
+	    echo "Default job name used: $DBLOG_JOB_NAME" >> ${DBLOG_OUTLOG}
+	fi
+else
+	echo "Job name used: $DBLOG_JOB_NAME" >> ${DBLOG_OUTLOG}
+fi
+
+# Retrieve JOB REF based on the batch timestamp
+DBLOG_JOB_REF=${JDATE_YYYYMMDDHHMMSS}
+
+# Check step name if needed (for log level 2 only)
+if [[ -z ${NSTEP} && -z "${DBLOG_STEP_NAME}" && "${DBLOG_LOG_LEVEL}" != "LEV1" ]]
+then
+    echo "Missing mandatory parameters -s"
+    usage
+    STEPEND 1
+fi
+
+# Set default step name if needed
+if [ -z ${DBLOG_STEP_NAME} ]
+then
+    DBLOG_STEP_NAME=${NSTEP}
+	echo "Default step name used: $DBLOG_STEP_NAME" >> ${DBLOG_OUTLOG}
+else
+	echo "Step name used: $DBLOG_STEP_NAME" >> ${DBLOG_OUTLOG}
+fi
+
+# Check Proc name if needed (for log level 3 only)
+if [[ -z ${NPROC} && -z ${DBLOG_PROC_NAME} && "${DBLOG_LOG_LEVEL}" = "LEV3" ]]
+then
+    echo "Missing mandatory parameters -p"
+	usage
+	STEPEND 1
+fi
+
+# Set default proc name if needed
+if [ -z ${DBLOG_PROC_NAME}  ] 
+then
+    DBLOG_PROC_NAME=${NPROC}
+	echo "Default step name used: $DBLOG_PROC_NAME" >> ${DBLOG_OUTLOG}
+else
+	echo "Step name used: $DBLOG_PROC_NAME" >> ${DBLOG_OUTLOG}
+fi
+
+# Set End status based on return code
+case ${DBLOG_RETURN_CODE} in
+    0)DBLOG_END_STATUS="OK"
+    ;;
+    *)DBLOG_END_STATUS="KO"
+    ;;
+esac
+
+# Construct final insert command bases on the log level selected
+	
+	T_START="`echo ${DBLOG_JOB_REF:0:4}`-`echo ${DBLOG_JOB_REF:4:2}`-`echo ${DBLOG_JOB_REF:6:2}` `echo ${DBLOG_JOB_REF:8:2}`:`echo ${DBLOG_JOB_REF:10:2}`:`echo ${DBLOG_JOB_REF:12:2}`"
+	T_END=`date +'%Y-%m-%d %H:%M:%S'`
+	
+case ${DBLOG_LOG_LEVEL} in
+    LEV1) 
+	#DBLOG_CHECK=`dbsql -d ${DBLOG_DBNAME} -A -t -r  -c "select count(*) from ${DBLOG_TABLE} where JOB_NAME='${DBLOG_JOB_NAME}' and JOB_REF=TO_TIMESTAMP('${DBLOG_JOB_REF}','YYYYMMDDHHMISS')"`
+	#DBLOG_COMMAND=${DBLOG_COMMAND}" JOB_END=current_timestamp, JOB_DURATION = current_timestamp - JOB_START, JOB_END_STATUS='${DBLOG_END_STATUS}',JOB_RETURN_CODE=${DBLOG_RETURN_CODE}, JOB_ERROR_MESSAGE='${DBLOG_ERROR_MESSAGE}' where JOB_NAME='${DBLOG_JOB_NAME}' and JOB_REF = TO_TIMESTAMP('${DBLOG_JOB_REF}','YYYYMMDDHHMISS');\""
+	#DBLOG_COMMAND=${DBLOG_COMMAND}" (JOB_NAME,JOB_REF,JOB_START,JOB_END) values ('${DBLOG_JOB_NAME}',TO_TIMESTAMP('${DBLOG_JOB_REF}','YYYYMMDDHHMISS'),'9999-12-31',current_timestamp);\""
+	echo "${DBLOG_JOB_NAME}~${T_START}~${T_START}~${T_END}~~${DBLOG_END_STATUS}~${DBLOG_RETURN_CODE}~${DBLOG_ERROR_MESSAGE}" >> ${DLOG}/${NJOB}_JOB_LOG_LEV1.dat
+	;;
+	LEV2) 
+	#DBLOG_CHECK=`dbsql -d ${DBLOG_DBNAME} -A -t -r  -c "select count(*) from ${DBLOG_TABLE} where JOB_NAME='${DBLOG_JOB_NAME}' and JOB_REF=TO_TIMESTAMP('${DBLOG_JOB_REF}','YYYYMMDDHHMISS') and STEP_NAME='${DBLOG_STEP_NAME}'"`
+	#DBLOG_COMMAND=${DBLOG_COMMAND}" STEP_END=current_timestamp, STEP_DURATION = current_timestamp - STEP_START, STEP_END_STATUS='${DBLOG_END_STATUS}',STEP_RETURN_CODE=${DBLOG_RETURN_CODE}, STEP_ERROR_MESSAGE='${DBLOG_ERROR_MESSAGE}' where JOB_NAME='${DBLOG_JOB_NAME}' and JOB_REF = TO_TIMESTAMP('${DBLOG_JOB_REF}','YYYYMMDDHHMISS') and STEP_NAME='${DBLOG_STEP_NAME}';\""
+	#DBLOG_COMMAND=${DBLOG_COMMAND}" (JOB_NAME,JOB_REF,STEP_NAME,STEP_START,STEP_END) values ('${DBLOG_JOB_NAME}',TO_TIMESTAMP('${DBLOG_JOB_REF}','YYYYMMDDHHMISS'),'${DBLOG_STEP_NAME}','9999-12-31',current_timestamp) ;\""
+	echo "${DBLOG_JOB_NAME}~${T_START}~${DBLOG_STEP_NAME}~${T_START}~${T_END}~~${DBLOG_END_STATUS}~${DBLOG_RETURN_CODE}~${DBLOG_ERROR_MESSAGE}">> ${DLOG}/${NJOB}_JOB_LOG_LEV2.dat
+	;;
+	LEV3) 
+	#DBLOG_CHECK=`dbsql -d ${DBLOG_DBNAME} -A -t -r  -c "select count(*) from ${DBLOG_TABLE} where JOB_NAME='${DBLOG_JOB_NAME}' and JOB_REF=TO_TIMESTAMP('${DBLOG_JOB_REF}','YYYYMMDDHHMISS') and STEP_NAME='${DBLOG_STEP_NAME}' and PROC_STEP_NAME='${DBLOG_PROC_NAME}'"`
+	#DBLOG_COMMAND=${DBLOG_COMMAND}" PROC_STEP_END=current_timestamp, PROC_STEP_DURATION = current_timestamp - PROC_STEP_START, PROC_STEP_END_STATUS='${DBLOG_END_STATUS}',PROC_STEP_RETURN_CODE=${DBLOG_RETURN_CODE}, PROC_STEP_ERROR_MESSAGE='${DBLOG_ERROR_MESSAGE}' where JOB_NAME='${DBLOG_JOB_NAME}' and JOB_REF = TO_TIMESTAMP('${DBLOG_JOB_REF}','YYYYMMDDHHMISS') and STEP_NAME='${DBLOG_STEP_NAME}' and PROC_STEP_NAME='${DBLOG_PROC_NAME}';\""
+	#DBLOG_COMMAND=${DBLOG_COMMAND}" (JOB_NAME,JOB_REF,STEP_NAME,PROC_STEP_NAME,PROC_STEP_START,PROC_STEP_END) values ('${DBLOG_JOB_NAME}',TO_TIMESTAMP('${DBLOG_JOB_REF}','YYYYMMDDHHMISS'),'${DBLOG_STEP_NAME}','${DBLOG_PROC_NAME}','9999-12-31',current_timestamp) ;\""
+	echo "${DBLOG_JOB_NAME}~`echo ${DBLOG_JOB_REF:0:4}`-`echo ${DBLOG_JOB_REF:4:2}`-`echo ${DBLOG_JOB_REF:6:2}` `echo ${DBLOG_JOB_REF:8:2}`:`echo ${DBLOG_JOB_REF:10:2}`:`echo ${DBLOG_JOB_REF:12:2}`~${DBLOG_STEP_NAME}~${DBLOG_PROC_NAME}~9999-12-31~`date +'%Y-%m-%d %H:%M:%S'`" >> ${DLOG}/${NJOB}_JOB_LOG_LEV3.dat
+	;;
+esac
+
+# Check if the log record has been found in the log table  
+#if [ "${DBLOG_CHECK}" = "0" ]
+#then
+#    echo "Starting log record not found in ${DBLOG_TABLE} for JOB_NAME='${DBLOG_JOB_NAME}' and JOB_REF='${DBLOG_JOB_REF}'"
+#	echo "Starting log record not found in ${DBLOG_TABLE} for JOB_NAME='${DBLOG_JOB_NAME}' and JOB_REF='${DBLOG_JOB_REF}' " >> ${DBLOG_OUTLOG}
+#	usage
+#	STEPEND 1
+#fi
+
+# Check for duplicate STEP name
+#if [ ${DBLOG_CHECK} -gt 1 ]
+#then
+#    echo "Duplicate Step Name found in ${DBLOG_TABLE} for JOB_NAME='${DBLOG_JOB_NAME}' and JOB_REF='${DBLOG_JOB_REF}'"
+#	echo "Duplicate Step Name found in ${DBLOG_TABLE} for JOB_NAME='${DBLOG_JOB_NAME}' and JOB_REF='${DBLOG_JOB_REF}' " >> ${DBLOG_OUTLOG}
+#	usage
+#	STEPEND 1
+#fi
+}

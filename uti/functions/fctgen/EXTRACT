@@ -1,0 +1,248 @@
+#! /bin/ksh
+#===============================================================================
+#application name               : Extraction data from database
+#source name                    : EXTRACT
+#revision                       : Revision:   0.1  
+#extraction date                : 07/08/2019
+#author                         : Lagha Belaid
+#specifications reference       :
+#                               :
+#-------------------------------------------------------------------------------
+#description : Extract table data to compare them
+#
+#parameters :
+#
+# PATH_ : path to queries files directory
+#
+#-------------------------------------------------------------------------------
+#modifications chronology  :
+#
+#===============================================================================
+
+# call generic functions
+. ${DUTI}/fctpar.cmd
+
+LS="#========================================================================="
+EXTRACT () {
+# Import functions
+FUNCTIONS=$(ls ${DUTI}/functions/fctgen/ 2>/dev/null | grep -v 'EXTRACT\|APPEND_LOG\|DomainesProtege' 2>/dev/null)
+for fun in ${FUNCTIONS}; do
+  . "${DUTI}/functions/fctgen/${fun}" 2>/dev/null
+done
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]; then
+ADT="${NSTEP}"
+STEP_PRG=EXTRACT
+STEPSTART 
+EXTR_ERR=0
+
+# Init variable
+CRE_D=$(GETV ${FPARM} CRE_D)
+#TODAY=`date +"%Y%m%d"`
+PATH_=${EXTR_PATH}
+QLSTF=${EXTR_QLSTF}
+CLODAT_D=${EXTR_CLODAT_D}
+FPARM=${EXTR_PARM}
+PMXJ=${EXTR_PMXJ}
+QEXT=${EXTR_QEXT}
+PNSTEP=${NSTEP}
+if [ "${PATH_}" = "" ]; then
+  echo "#ERROR! Query file not found" 
+  echo "#ERROR! EXTRACT failed" 
+  EXTR_ERR=-1
+fi
+
+if [ "${EXTR_CLODAT_D}" = "" ]; then 
+  CLODAT_D=$(GETV ${FPARM} CLODAT_D)
+fi
+
+if [ "${PMXJ}" = "" ]; then 
+  PMXJ=5
+fi
+
+if [ "${QEXT}" = "" ]; then
+  QEXT="qry"
+fi
+echo "# Max number of parallel extraction : ${PMXJ}"
+
+PGRP=01 
+#NSTEP=${NJOB}_00
+#-------------------------------------------------------------------------------
+ENVN=`echo ${SRV} | cut -d _ -f 1`
+BASE_NAME=`basename ${PATH_}`
+DIR_NAME=`dirname ${PATH_}`
+if [ -d ${PATH_} ]; then
+   DIRECTORY=${DIR_NAME}/${BASE_NAME}
+   BASE_NAME=""
+else
+   DIRECTORY=${DIR_NAME}
+fi
+
+# on prend en compte que les fichiers qui ont comme sufixe = _EXFP et extention = ${QEXT} 
+#----------------------------------------------------------------------------------------
+if [ "${QLSTF}" != "" ] && [ -f ${QLSTF} ]; then 
+  while read -r line; do
+    line=$(echo "${line}" | grep "_EXFP.${QEXT}" 2>/dev/null)
+    if [ "${line}" != "" ] && [ -f ${DIRECTORY}/${line} ]; then 
+      LIST=(${LIST[@]} ${DIRECTORY}/${line})
+    fi
+  done < ${QLSTF}
+else
+  LIST=($(ls ${DIRECTORY}/*_EXFP.${QEXT} 2>/dev/null))
+fi
+if [ ${#LIST[@]} -eq 0 ]; then
+  echo "#ERROR! Query files : not found"
+fi
+
+let "j=0"
+for file in ${LIST[@]} ; do
+  EXT=`print ${file} | awk -F'.' '{print $NF}'`
+  if [ -f ${file} ] && [ ${EXT} == "${QEXT}" ]; then
+    FNAME=${file}
+    NBQRY=$(GETV ${FNAME} NBQRY)
+    FCONF=$(GETV ${FNAME} FCONF)
+    BNAME=$(basename ${file} | cut -d . -f 1 | sed 's/_/-/g' )
+    if [[ ${FCONF} =~ ^/ ]]; then
+      CONFIG_FILE=${FCONF}
+    else
+      CONFIG_FILE=${DIRECTORY}/${FCONF}
+    fi
+
+    for i in `seq 1 ${NBQRY}` ; do 
+      #NSTEP="${NJOB}_`printf "%02d" ${i}`"
+      #---------------------------------------
+      EXTRT=$(GETV       ${FNAME} EXTRT ${i})
+      SRVT_V=$(GETV      ${FNAME} SRVT  ${i})
+      BASE_V=$(GETV      ${FNAME} BASE  ${i})
+      TABLE_V=$(GETV     ${FNAME} TABLE ${i})
+      QRY_V=$(GETV       ${FNAME} QRY   ${i})
+
+      SRVT=$(GETV        ${CONFIG_FILE} ${SRVT_V})
+      GETV_rtn=$?
+      if [ GETV_rtn -ne 0 ] || [ "${SRVT}" = "" ]; then SRVT=${SRVT_V}; fi
+
+      BASE=$(GETV        ${CONFIG_FILE} ${BASE_V})
+      GETV_rtn=$?
+      if [ GETV_rtn -ne 0 ] || [ "${BASE}" = "" ]; then BASE=${BASE_V}; fi
+
+      TABLE=$(GETV       ${CONFIG_FILE} ${TABLE_V})
+      GETV_rtn=$?
+      if [ ${GETV_rtn} -ne 0 ] || [ "${TABLE}" = "" ]; then TABLE=${TABLE_V}; fi
+
+      QRY=$(printf "${QRY_V}" | sed -r "{s/TABLE/${TABLE}/g}")
+      
+      # check if we have a variable in query and replace by variable value
+      #-------------------------------------------------------------------
+      # get list of variables
+      #----------------------
+      QVARS=("$(echo "${QRY}" | sed 's/ /\n/g; s/\$/\n$/g' | sed -n '/\${.*}\|\$.*/p' | sed 's/[{}"]//g' | sed "s/'//g" | cut -d"$" -f2 | awk 'ORS=" " {print $0}')")
+
+      # Check for value of variables
+      #-----------------------------
+      for V in ${QVARS[@]}; do 
+         QVVALUES=$(GETV ${FNAME} ${V} ${i})
+         if [ -f ${CONFIG_FILE} ]; then
+           if [ "${QVVALUES}" = "" ]; then
+             QVVALUES=$(GETV ${CONFIG_FILE}  ${V})
+         
+           # On verifie si la valeur de QVVALUES ne contient pas a son tour des variable si oui on les remplace par leurs valeurs
+           #---------------------------------------------------------------------------------------------------------------------
+           else
+             QVARS_2=("$(echo "${QVVALUES}" | sed 's/ /\n/g; s/\$/\n$/g' | sed -n '/\${.*}\|\$.*/p' | sed 's/[{}"]//g' | sed "s/'//g" | cut -d"$" -f2 | awk 'ORS=" " {print $0}')")
+             for V2 in ${QVARS_2[@]}; do
+               QVV2=$(GETV ${CONFIG_FILE}  ${V2})
+               if [ "${QVV2}" != "" ]; then 
+                 QVVALUES=$(echo "${QVVALUES}" | sed "s/\${${V2}}\|\$${V2}/${QVV2}/g")
+               fi
+             done
+             QVV2=$(GETV ${CONFIG_FILE}  ${QVVALUES})
+             if [ "${QVV2}" != "" ]; then 
+               QVVALUES=${QVV2}
+             fi
+           fi
+         fi
+         if [ "${QVVALUES}" = "" ]; then
+            QVVALUES=$(GETV ${FPARM}  ${V})
+
+         # On verifie si la valeur de QVVALUES ne contient pas a son tour des variable si oui on les remplace par leurs valeurs
+         #---------------------------------------------------------------------------------------------------------------------
+         else
+            QVARS_2=("$(echo "${QVVALUES}" | sed 's/ /\n/g; s/\$/\n$/g' | sed -n '/\${.*}\|\$.*/p' | sed 's/[{}"]//g' | sed "s/'//g" | cut -d"$" -f2 | awk 'ORS=" " {print $0}')")
+            for V2 in ${QVARS_2[@]}; do
+               QVV2=$(GETV ${FPARM}  ${V2})
+               QVVALUES=$(echo "${QVVALUES}" | sed "s/\${${V2}}\|\$${V2}/${QVV2}/g")
+            done
+         fi
+         QRY=$(echo "${QRY}" | sed "s/\${${V}}\|\$${V}/${QVVALUES}/g")
+      done
+
+      # Pour eviter les erreurs ISQL on retire les ligne commentaire SQL (-- commentaire SQL)
+      #--------------------------------------------------------------------------------------
+      QRY=$(echo "${QRY}" | sed "s/--.*$//g")
+
+      # Preparation des params pour l'execution parallel des job
+      #---------------------------------------------------------
+      T[${j}]=(
+             LABEL="Extraction of data from ${TABLE}; TYPE = '${EXTRT}'"
+             BASE="${BASE}"
+             QRY="${QRY}"
+             FRES="${DREXTR}/${PNSTEP}_${ENVN}_${SRVT}_${TABLE}_${BNAME}_${i}-`echo ${EXTRT} | sed 's/_/-/g;s/ *//g'`_${CLODAT_D}_${CRE_D}.csv"
+             SRVT="${SRVT}"
+             FSRCQ="${FNAME}"
+             TABLE="${TABLE}"
+             EXTRT="${EXTRT}"
+             QRYN="${i}"
+            )
+      let 'j++'
+      if  [ ${j} -eq ${PMXJ} ] || [[ ${file} = ${LIST[-1]}  &&  ${i} -eq ${NBQRY} ]]; then
+        PARALLEL_INIT ${j}
+        EXTR_ERR=$?
+        for x in {0..$((j - 1))}; do  
+          # Execute query whith ISQL_RSLT
+          #------------------------------
+          if [ ${T[${x}].SRVT} != ${SRV_TYPE_DEFAULT} ]; then
+            case "${T[${x}].SRVT}" in
+              INF)
+                SWITCH_SRV ${SRV_2}
+                SRV_TYPE_DEFAULT=INF
+                ;;
+              PRD)
+                SWITCH_SRV ${SRV}
+                SRV_TYPE_DEFAULT=PRD
+                ;;
+            esac
+          fi
+          echo "${LS}"
+          echo "# FSRCQ .....: ${T[${x}].FSRCQ}"
+          echo "# QRYN ......: ${T[${x}].QRYN}"
+          echo "# EXTRT .....: ${T[${x}].EXTRT}"
+#          echo "# SRVT ......: ${T[${x}].SRVT}"
+#          echo "# TABLE .....: ${T[${x}].TABEL}"
+#          echo "# BASE ......: ${T[${x}].BASE}"
+#          echo "# RSLT ......: ${T[${x}].FRES}"
+#          echo "${LS}"
+          NSTEP=${PNSTEP}_`printf "%03d" ${PGRP}`_${x}
+          LIBEL="${T[${x}].LABEL}"
+          ISQL_BASE="${T[${x}].BASE}"
+          ISQL_QRY="${T[${x}].QRY}"
+          ISQL_FRES="${T[${x}].FRES}"
+          ISQL_FS=";"
+          ISQL_HEAD="YES"
+          PARALLEL ISQL_RSLT
+          EXTR_ERR=$?
+        done
+        PARALLEL_END
+        EXTR_ERR=$?
+        let 'PGRP++'
+        let 'j=0'
+      fi
+    done
+  fi
+done
+NSTEP=${PNSTEP}
+STEPEND ${EXTR_ERR}
+fi
+return 0
+}
+# END Of Function
+#----------------------------------------------------------------------------

@@ -1,0 +1,5 @@
+char;c_ssd;1
+char;sz_cur;4
+short;s_uwy;1
+double;d_quot;1
+;;1

@@ -1,0 +1,17 @@
+#----------------------------------------------------------------------------
+# FUNCTION: EXCEPTION_INIT
+# no input parameter:
+# Subject: This function stops job execution
+#  This function is called in job EXCEPTION function 
+#
+# call : EXCEPTION_INIT
+#----------------------------------------------------------------------------
+EXCEPTION_INIT () {
+#set -x
+
+   echo '#-------------------------------------------------------------------------' 
+   echo '# Starting exception processing ...'
+   EXCEPTION_PROCESS="ON"
+   NSTEP="${NJOB}_EXCEPTION"
+}
+

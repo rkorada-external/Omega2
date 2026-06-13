@@ -1,0 +1,34 @@
+#----------------------------------------------------------------------------
+# FUNCTION: CFTMP
+# No parameter
+# Subject: Generic Function to create temporary file
+# call sample: FILE=`CFTMP`
+#----------------------------------------------------------------------------
+CFTMP () {
+#set -x
+
+   # Determine if temporary files are already
+   NBCFTMP=`ls ${DTMP}/${NSTEP}_${IB}_*.tmp 2>/dev/null | wc -l`
+   if [ "$NBCFTMP" -eq 0 ]
+   then
+        CFTMP_O=${DTMP}/${NSTEP}_${IB}_TBB_001.tmp
+   else
+	# get the last file 
+        LASTFILE=`ls ${DTMP}/${NSTEP}_${IB}_TBB_*.tmp | tail -1`
+       
+
+	# get the index associated to the temporary file 
+        CFTMPCNT=`basename $LASTFILE | cut -d"." -f1 | awk '{print substr($0,length($0)-2)}'`
+
+
+        # Define temporary filename
+        let CFTMPCNT=${CFTMPCNT}+1
+        CFTMPCNT=`printf "%03d" ${CFTMPCNT}`
+        CFTMP_O=${DTMP}/${NSTEP}_${IB}_TBB_${CFTMPCNT}.tmp
+   fi
+
+   # Tempory file creation
+   touch ${CFTMP_O}
+   echo ${CFTMP_O}
+}
+

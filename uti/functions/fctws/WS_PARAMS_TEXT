@@ -1,0 +1,35 @@
+#----------------------------------------------------------------------------
+# FUNCTION: WS_PARAMS_TEXT
+#
+# Input parameters:
+# <stdin> Text to write to WS_PARAMS
+#
+# Subject: Function similar to INPUT_TEXT, but directly write data from the
+# standard input to a temporary file which is assigned to WS_PARAMS.
+# WS_PARAMS is overwritten by this function.
+# If a line is commented by an initial '#' character, it is ignored.
+# If the word 'exit' is found on a line by itself, subsequent lines will be
+# ignored. Otherwise, the input stream is read entirely.
+#
+# Typical usage:
+#	WS_PARAMS_TEXT <<EOF
+#	PARAM1	${VALUE1}
+#	PARAM2	${VALUE2}
+#   # This comment will be ignored
+#	PARAM3	${VALUE3}
+#   exit
+#	# Everything after 'exit' is ignored
+#	PARAM4	${VALUE4}
+#	EOF
+#----------------------------------------------------------------------------
+WS_PARAMS_TEXT() {
+	temp_file=$(CFTMP)
+	cat /dev/null > ${temp_file}
+	grep -v '^#' | while read line; do
+		if [ "$line" = "exit" ]; then
+			break
+		fi
+		echo $line >> ${temp_file}
+	done
+	WS_PARAMS=${temp_file}
+}

@@ -1,0 +1,81 @@
+#----------------------------------------------------------------------------
+# FUNCTION: PKUNZIP
+#
+# The following parameters must be previously defined:
+# 4 parameters must be previously defined:
+#    ZIP_IDIR : Directory from input (source) files
+#    ZIP_ODIR : Directory from output (target) files for pkzip only
+#    ZIP_I : Name of the input file
+#    ZIP_OPT  : Option
+#
+# Subject: This function uses PKUNZIP program to uncompress files
+# to a target directory
+# [001] -=Dch=-  10/04/2014 remplacement de pkzipc par unzip  
+#----------------------------------------------------------------------------
+PKUNZIP()
+{
+#set -x
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+   STEP_PRG=PKUNZIP
+   STEPSTART
+
+   [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+   ZIP_LOG=${DFILT}/${NSTEP}_${IB}_ZIP.log
+
+   if [ "${ZIP_OPT}" = "" ]
+   then
+      # New pkzip option
+      #ZIP_OPT="-extract -overwrite=all -dir=none"
+	  #[001] -=Dch=-  "-jo" : junk path and overwrite all
+	  ZIP_OPT="-jo " 
+   fi
+
+   # cd sur le directory local
+   cd ${ZIP_ODIR}
+   	
+
+   # ---    MAKE ZIP FILE   ---
+   # --------------------------
+   # --------------------------
+   #
+ 
+  #pkzipc ${ZIP_OPT} ${ZIP_IDIR}/${ZIP_I} 1> ${ZIP_LOG} 2>&1
+  unzip ${ZIP_OPT} ${ZIP_IDIR}/${ZIP_I} 1> ${ZIP_LOG} 2>&1
+
+      ZIP_ERR=$?
+      ZIP_NBERR=`grep bad ${ZIP_LOG} | wc -l`
+      
+      if  [ "${ZIP_NBERR}" -ne 0 ]
+      then
+               ZIP_ERR=1
+      else
+	    ZIP_NBERR=`grep error ${ZIP_LOG} | wc -l`
+      	    if [ "${ZIP_NBERR}" -ne 0 ]
+      	    then
+      	        ZIP_ERR=2
+      	    else
+      	        ZIP_NBERR=`grep Usage ${ZIP_LOG} | wc -l`
+      	        if [ "${ZIP_NBERR}" -ne 0 ]
+      	        then
+      	             ZIP_ERR=3
+      	        fi
+      	    fi
+      fi
+
+      if [ "${ZIP_ERR}" -eq 0 ]
+      then
+      	 /bin/rm -f ${ZIP_LOG}
+      fi
+
+   cd -
+   # --- END OF ZIP COMMAND ---
+
+   ZIP_OPT=""
+   STEPEND ${ZIP_ERR} 
+fi
+}
+
+  

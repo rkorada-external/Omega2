@@ -1,0 +1,12 @@
+struct=$1
+h=$2
+fl=$3
+maxLine=$4
+
+
+echo
+echo "displayBinaryFile.sh " $struct $h $fl $maxLine $struct
+
+displayBinaryFile.py $h $struct  $struct $maxLine > desc.txt 
+displayBinaryFile.exe desc.txt  $fl   $struct $maxLine
+

@@ -1,0 +1,9 @@
+ID;Work Item Type;Title;Assigned To;State;Tags;Iteration Path;;;;
+6436;Research of retro contracts using program number of Program;Dev Validated;Bug;LAGEDER Benedikt (EXTERNAL);Omega2 - Retrocession\Development;Omega2 - Retrocession\4I Sprint\Sprint 4I3;"GUI; PRD HF; Retro Contract";True;False;Production Hot Fix
+7489;PRPS - Segment Rule - Adapt for Prop Retro Segmentation Mode;Dev Validated;User Story;BRETHOUS Simon (EXTERNAL);Omega2 - Retrocession\Development;Omega2 - Retrocession\4I Sprint\Sprint 4I2;"GUI; MVP; PRD HF; Retro Plan; Segmentation";True;False;Production Hot Fix
+8153;Retro Contract Duplication on ledger 22-02;Dev Validated;Bug;LAGEDER Benedikt (EXTERNAL);Omega2 - Retrocession\Development;Omega2 - Retrocession\4I Sprint\Sprint 4I2;"PRD HF; Retro Contract";False;True;Production Hot Fix
+8168;PRPS - Segmentaton Simulation - Adapt Segmentation Simulation to Prop Retro Segmentation;Dev Validated;User Story;BRETHOUS Simon (EXTERNAL);Omega2 - Retrocession;Omega2 - Retrocession\4I Sprint\Sprint 4I2;"FUTURE_SPRINT; PRD HF";True;True;Production Hot Fix
+8282;Sort icons don't work anymore on Manage account results lists;Dev Validated;Bug;LAGEDER Benedikt (EXTERNAL);Omega2 - Retrocession\Development;Omega2 - Retrocession\4I Sprint\Sprint 4I2;"GUI; PRD HF; Retro Accounting";True;False;Production Hot Fix
+8320;"Regression crash on Transversal Menu ""View contract"" option";Dev Validated;Bug;ABDOULAMIDE Riyadh (EXTERNAL);Omega2 - Retrocession\Development;Omega2 - Retrocession\4I Sprint\Sprint 4I2;"GUI; PRD HF; Retro Contract";True;False;Production Hot Fix
+7843;EBS Unwind for SII AoC - TL generation;Dev Validated;User Story;DEGONZAGUE Florian (EXTERNAL);Omega2-Finance;Omega2-Finance\4I2;VNB;True;True;Release
+7846;EBS inception- VNB - TL;Dev Validated;User Story;DEGONZAGUE Florian (EXTERNAL);Omega2-Finance;Omega2-Finance\4I2;VNB;True;True;Release

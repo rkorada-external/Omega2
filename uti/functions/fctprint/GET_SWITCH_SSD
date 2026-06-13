@@ -1,0 +1,71 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_SWITCH_SSD
+#
+# 2 input parameter:
+# $1 SSD_CF 
+# Output parameter:
+# FLIST_SSD List of switches
+#
+# Subject: Technical function that allows switching the printer identification 
+# from specific ssd.
+# The information contained in FLIST_SSD are subsidiary, production site,
+# geographic site, valid subsidiary (0 or 1) and printer and comes from 
+# TPRINTB table
+# 
+# Modification 1 - 26/09/2013 - JBG : Verify if subsidiary is valid with
+# BATCHUSER_SD from BATCHNIGHT table
+#----------------------------------------------------------------------------
+GET_SWITCH_SSD () {
+#set -x
+
+# Get printer list by ssd/esb
+LIBEL="SWITCH TO PRINTER INFO"
+ISQL_BASE="BREF"
+ISQL_O=${DFILT}/${NSTEP}_${IB}_GET_SWITCH_SSD_01.tmp
+ISQL_QRY=`CFTMP`
+
+# Extract information from the query
+# -----------
+#INPUT_TEXT $ISQL_QRY <<EOF
+#select T1.SSD_CF, T1.PRDSIT_CF, T1.GEOSIT_CF, T1.PRT_CF, "~" + T2.SSD_LS +"~"
+#from BREF..TPRINTB T1, BREF..TSUBSID T2
+#where T1.CRTVAL_LS='ESB_CF'
+#and T1.SSD_CF=T2.SSD_CF
+#and T1.SSD_CF IN ($1)
+#and T1.CRTTYP_CT =99
+#exit
+#EOF
+
+# Modification 1
+# Extract information from the query
+# -----------
+INPUT_TEXT $ISQL_QRY <<EOF
+select T1.SSD_CF, T1.PRDSIT_CF, T1.GEOSIT_CF, T1.PRT_CF,
+case
+	when B.BATCHUSER_CF is null
+	then 0
+	else 1
+end, "~" + T2.SSD_LS +"~"
+from BREF..TPRINTB T1, BREF..TSUBSID T2, BREF..TBATCHNIGHT B
+where T1.CRTVAL_LS='ESB_CF'
+and T1.SSD_CF=T2.SSD_CF
+and T1.SSD_CF IN ($1)
+and T1.CRTTYP_CT =99
+and T2.PRDSIT_CF *= B.PRDSIT_CF 
+AND RTRIM(T2.PRDSIT_CF) != null
+AND B.BATCHUSER_CF = suser_name()
+exit
+EOF
+
+STEP_NOECHO="YES"
+ISQL_FRES=${DFILT}/${NSTEP}_${IB}_GET_SWITCH_SSD_02.tmp
+ISQL_RES
+
+/bin/rm -f  ${ISQL_O} 2>&1
+
+# Output filename
+FLIST_SSD=${ISQL_FRES}
+
+}
+
+

@@ -1,0 +1,117 @@
+#----------------------------------------------------------------------------
+# FUNCTION: ISQL_INFO
+#
+# The following parameters must be previously defined:
+# 3 parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# NSTEP:      Number of STEP
+# ISQB_BASE:  Database
+# ISQL_QRY:   Sql query
+# ISQL_FRES:  File getting the information
+#
+# Subject: Generic Function ISQL_INFO
+#
+# The funcion extracts the result line into ISQL_FRES. Is considered that
+# only one result line must be found
+# Get number of rows affected
+#
+# Last Modified: H. Guiheux May 2000
+# Modifications to make the function compatible with Open-Client 11.1.1
+#
+#----------------------------------------------------------------------------
+
+ISQL_INFO () {
+#set -x
+
+# Only one row must be affected
+# The last read line of the output file
+# contains the number of affected rows
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+
+   STEP_PRG=ISQL_INFO
+   STEPSTART
+
+   [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+   if [ "${STEP_NOECHO}" = "YES" ]
+   then
+      ISQL_NOWARNING="YES"
+   fi
+
+# HG MODIF 2004/11/06
+   ISQL_QRY_SAVE=$ISQL_QRY
+   set `echo ${ISQL_QRY_SAVE}`
+   if [ "$#" -gt 1 ]
+   then # Query
+      ISQL_QRY_SCRIPT=$ISQL_QRY_SAVE
+   else # File
+      ISQL_QRY_SCRIPT=`cat $ISQL_QRY_SAVE`
+   fi
+
+   STEP_NOECHO=YES
+   ISQL
+
+   # Get number of rows affected
+   # Modif HG le 26.10.98
+   #NBROWS=`tail -1 $ISQL_O | grep -i "0 rows affected" | wc -l`
+   # Modif HG le 22.5.2000
+   # Prise en compte de l'open client 11.1.1 
+   # qui peut renvoyer un return status dans le fichier de sortie
+   NBROWS=`tail -2 $ISQL_O | grep -i "0 rows affected" | wc -l`
+   #Test if 0 row affected
+   if [ ${NBROWS} = 1 ]
+   then
+      /bin/rm -f  ${ISQL_O} 2>&1
+      /bin/rm -f  ${ISQL_FRES} 2>&1
+
+      # HG MODIF 2004/11/06
+      echo "no information found for Query: $ISQL_QRY_SCRIPT"
+      STEPEND 9
+   fi
+
+   # Modif HG le 26.10.98
+   #NBROWS=`tail -1 $ISQL_O | grep -i "1 row affected" | wc -l`
+   # Modif HG le 22.5.2000
+   # Prise en compte de l'open client 11.1.1 
+   # qui peut renvoyer un return status dans le fichier de sortie
+   NBROWS=`tail -2 $ISQL_O | grep -i "1 row affected" | wc -l`
+   if [ ${NBROWS} != 1 ]
+   then
+      /bin/rm -f  ${ISQL_O} 2>&1
+      /bin/rm -f  ${ISQL_FRES} 2>&1
+
+      # HG MODIF 2004/11/06
+      echo "more than 1 information found for Query: $ISQL_QRY_SCRIPT"
+      STEPEND 9
+   fi
+
+   # Get Information
+   # by reading the third line
+
+   #sed -n -e 3p $ISQL_O >${ISQL_FRES}
+   # Modif HG le 22.5.2000
+   # Prise en compte de l'open client 11.1.1 
+   # qui peut renvoyer un return status dans le fichier de sortie
+
+   sed -n -e '3,$p' $ISQL_O  | \
+	grep -v "row affected" | \
+	grep -v "rows affected" | \
+	grep -v "return status" | \
+        awk '{if (NF!=0) print $0'} \
+	 >${ISQL_FRES}
+
+   /bin/rm -f  ${ISQL_O} 2>&1
+
+   if [ "${ISQL_NOWARNING}" = "YES" ]
+   then
+      STEP_NOECHO=YES
+      ISQL_NOWARNING=""
+   fi
+   STEPEND 0
+fi
+return 0
+}
+
+

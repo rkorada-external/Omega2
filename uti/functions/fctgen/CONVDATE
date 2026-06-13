@@ -1,0 +1,18 @@
+#----------------------------------------------------------------------------
+# FUNCTION: CONVDATE
+#
+# 1 parameter: Date with AAAA-MM-DD
+#
+# Subject: convert Date from AAAA-MM-DD to AAAAMMDD format
+#
+#----------------------------------------------------------------------------
+CONVDATE ()
+{
+if [ "$1" = "" ]
+then echo NULL
+else
+   echo ${1} | cut -c1-4,6-7,9-10
+fi
+}
+
+

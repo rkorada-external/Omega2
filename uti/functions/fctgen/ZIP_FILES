@@ -1,0 +1,55 @@
+ZIP_FILES()
+{
+    #set -x
+    for  row in `cat ${ZIP_FILES_IN}`
+    do 
+        #ls $row
+        echo `ls  $(eval echo $row) 2>/dev/null `   >> ${DFILT}/${NSTEP}_${IB}_PERFILRULE.dat
+    done
+
+    ZIP_SCRIPT=${DFILT}/${NCHAIN}_${IB}_ZIP_SCRIPT.dat
+    echo  '#set -x' >> $ZIP_SCRIPT
+    echo '. ${DUTI}/fctgen.cmd' >> $ZIP_SCRIPT
+    echo '# Job Initialisation' >> $ZIP_SCRIPT
+    echo 'JOBINIT' >> $ZIP_SCRIPT
+    echo 
+    BOUCLE=0
+    for  row in `cat ${DFILT}/${NSTEP}_${IB}_PERFILRULE.dat`
+    do 
+        let BOUCLE=BOUCLE+1
+        SSTEP=$(printf "%03d" $BOUCLE)
+        file=`basename $row`
+        dest=`echo $file| sed s"/^${ENV_PREFIX}_/${ENV_PREFIX}_${ZIP_FILES_PREFIX}/" ` 
+        echo  "$row ==> $DARCH/$dest.zip"
+
+        
+        echo  'NSTEP=${NJOB}_20'_${SSTEP} >> $ZIP_SCRIPT
+        echo  '# Sauvegarde ZIP! du Fichier '$row >> $ZIP_SCRIPT 
+        echo  '#----------------------------------------------------------------------------' >> $ZIP_SCRIPT
+        echo  'LIBEL="Sauvegarde ZIP! du Fichier "'$row >> $ZIP_SCRIPT
+        echo  "ZIP_ODIR=${ZIP_FILES_ODIR}" >> $ZIP_SCRIPT
+        echo  "ZIP_I=$row" >> $ZIP_SCRIPT
+        echo  "ZIP_O=${dest}.zip" >> $ZIP_SCRIPT
+        echo  "ZIP_OPT='${ZIP_FILES_OPT}'" >> $ZIP_SCRIPT
+        echo  "ZIP_MODE='${ZIP_FILES_MODE}'" >> $ZIP_SCRIPT
+        echo  'ZIP' >> $ZIP_SCRIPT
+        echo "" >> $ZIP_SCRIPT
+
+        
+        echo  'NSTEP=${NJOB}_20'_${SSTEP}a  >> $ZIP_SCRIPT
+        echo  '#----------------------------------------------------------------------------' >> $ZIP_SCRIPT
+        echo  '#file deletion'  >> $ZIP_SCRIPT
+        echo  'LIBEL="file deletion"' >> $ZIP_SCRIPT
+        echo  "RMFIL $row" >> $ZIP_SCRIPT
+        echo "" >> $ZIP_SCRIPT
+
+
+    done
+
+    echo "" >> $ZIP_SCRIPT
+    echo 'JOBEND' >> $ZIP_SCRIPT
+
+    chmod +x $ZIP_SCRIPT
+    
+}
+

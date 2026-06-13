@@ -1,0 +1,134 @@
+#----------------------------------------------------------------------------
+# FUNCTION: CHAININIT
+# 2 input parameters:
+# - Chain Script File
+# - Initialisation File
+#
+# Subject: This function defines the chain name, launches environment file
+#  and defines instance variables
+#
+#----------------------------------------------------------------------------
+#[001] 11/02/2021 JYP : Spira 84654: microAOC: make possible // runs by chain
+
+CHAININIT() {
+#set -x
+
+#modif SR
+if [ -z "$DEFAULT_SQL_LOGIN" ]
+then
+	export DEFAULT_SQL_LOGIN=""
+fi
+
+# Define the Chain name from command file NCHAIN
+
+# Get chain name
+if [ "${LAUNCHER}" != "DAEMON" ]
+then 
+  NCHAIN=`basename $1 | cut -d"." -f1` 
+  export NCHAIN
+  export CHAINSTOP_ON_JOBABORT="YES"
+  export CHAINSTOP_ON_CNXABORT="YES"
+fi
+
+# Call initialisation procedure
+# to launch environment file
+# Existence test of the parameter that allows to set the execution with default environnement file
+
+if [ $# -lt 2 ]
+then
+        echo "!!!! The environmental file must be precised "
+        exit 12
+fi
+
+FENVNT=$2
+if [ "${FENVNT}" = "=" ]
+then
+        FENVNT="$NCHAIN.env"
+fi
+
+
+directory=`dirname ${FENVNT}`
+if [ "$directory" = "." ]
+then
+    if [ "$DENV" = "" ]
+    then
+    CHAINE_ENV=${FENVNT}
+    else
+    CHAINE_ENV=${DENV}/${FENVNT}
+    fi
+else
+    CHAINE_ENV=${FENVNT}
+fi
+
+# Test Existence initialisation file
+if test ! -f ${CHAINE_ENV}
+        then  echo "  environmental file "$CHAINE_ENV" unknown"
+        exit 12
+fi
+
+# execute initialisation file
+. ${CHAINE_ENV}
+
+# Get prefix chain (2 letters)
+PCH=`echo ${NCHAIN} | awk '{print substr($0,0,2)}'`
+export PCH
+
+# Defines Instance variables
+if [ "${LAUNCHER}" != "SYBADMIN" ]
+then
+   INSTANCEINIT
+else
+   INSTANCEINIT $*
+fi
+
+# Report start of chain
+if [ "${LAUNCHER}" = "DAEMON" ]
+then
+   CHAINLOGWRITEHEADER
+else
+   CHAINLOGWRITEHEADER  2>&1 | ${TEE}
+fi
+
+
+
+
+if [ "${PCH}" != "MO" ]
+then
+  if [ `echo ${PCH} | awk ' {print match($0,"._")}' ` != 1 ]
+  then
+   echo "${IB};${NCHAIN}:NULL;99" >> ${DABORT}/${FRSTN}
+   echo "# !!!! No Chain name prefix is defined. Process is stopped." | ${TEE}
+   MAX_RETURN_CODE=13
+   CHAINEND
+  fi
+fi
+
+
+
+if [ "${SRV}" != "" ]
+then
+GET_SQL_LOGIN_PSWD $SRV
+if [ $?  -ne 0 ]
+then
+   echo "${IB};${NCHAIN}:NULL;99" >> ${DABORT}/${FRSTN}
+   MAX_RETURN_CODE=14
+   CHAINEND
+fi
+fi
+if [ "${ORA}" != "" ] && type GET_ORA_LOGIN_PSWD >/dev/null 2>&1
+then
+    GET_ORA_LOGIN_PSWD $ORA
+    if [ $?  -ne 0 ]
+    then
+       echo "${IB};${NCHAIN}:NULL;99" >> ${DABORT}/${FRSTN}
+       MAX_RETURN_CODE=14
+       CHAINEND
+    fi
+fi
+
+if [ "${IB}" = "" ] || [ "${JOBRST}" = "" ] || [ "${RP}" = "" ]
+then
+   CHAINSTOP
+fi
+}
+

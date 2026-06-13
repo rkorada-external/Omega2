@@ -1,0 +1,20 @@
+#----------------------------------------------------------------------------
+# FUNCTION: WS_STOP_BATCH
+#
+# Input parameters:
+# $1	Identifier of the batch to stop.
+#
+# Subject: Technical function that stops a running batch.
+#----------------------------------------------------------------------------
+WS_STOP_BATCH() {
+	# Check mandatory parameters
+	if [ -z "${1}" ]; then
+		echo "# Missing required parameter BATCH_ID at \$1"
+		return 99
+	fi
+	BATCH_ID=$1
+	echo "# Stop batch ${BATCH_ID}"
+	_DO_WS_CALL ${BATCH_SRV_HOSTNAME:-localhost} ${BATCH_SRV_PORT:-8080} ${BATCH_SRV_APPLI:-omega2-batch-web} batch stop ${BATCH_ID} 0
+	rc=$?
+	return $rc
+}

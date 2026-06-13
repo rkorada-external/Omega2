@@ -1,0 +1,20 @@
+#----------------------------------------------------------------------------
+# FUNCTION: APPEND_LOG
+# One input parameter: File to append to log
+#----------------------------------------------------------------------------
+APPEND_LOG () {
+      case ${JOB_LOG_OUTPUT} in
+        "STANDARD")
+			cat ${@}
+			;;
+        "TEE")
+			cat ${@} 2>&1 | ${TEE}
+			;;
+        "DLOG")
+			cat ${@} >> ${FLOG}
+			;;
+        *)
+			cat ${@}
+			;;
+	esac
+}

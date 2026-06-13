@@ -1,0 +1,81 @@
+#----------------------------------------------------------------------------
+# FUNCTION: CHECK_TFR
+#
+# The following parameters must be previously defined:
+# 3 parameters 
+#       NSTEP            = step identifier
+#       CHECK_TFR_I      = pool directories list
+#       CHECK_TFR_0      = list of delete command to be execute on distant sites
+#       CHECK_TFR_CHAIN  = extraction chain name
+#
+# Subject: This function checks size of unzipped data files 
+#	   with the corresponding ftx files 
+#	   It generates for each pool directory a file containing the list of
+#	   zipfiles to delete for the function DEL_ZIP.
+#	   Used in TEFJ0011.cmd
+#
+#----------------------------------------------------------------------------
+CHECK_TFR () {
+#set -x
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then 
+  ADT="${NSTEP}"
+  STEP_PRG=CHECK_TFR
+  STEPSTART
+  
+  if [ ! -s ${CHECK_TFR_I} ]
+  then
+    echo "# No Zip file to process"
+    STEPEND 0
+    return 0  # Go out of the step
+  fi 
+ 
+  if [ -z "${CHECK_TFR_CHAIN}" ]
+  then
+    echo "# !!! The CHECK_TFR_CHAIN variable must be initialized"
+    STEPEND 1
+  fi
+  
+  for DIR in `cat ${CHECK_TFR_I}`
+  do
+# HG MODIF: 2000/09/28
+# To handle order by number but not by date
+#   for FFTX in `ls -rt ${DTRANSFER}/${DIR}/from/${CHECK_TFR_CHAIN}_*.ftx`
+    for FFTX in `ls  ${DTRANSFER}/${DIR}/from/${CHECK_TFR_CHAIN}_*.ftx`
+    do
+      # Get extraction number from file name
+      NUM=`basename ${FFTX} | awk '{print substr($0,length(ST)+1)}' ST=${CHECK_TFR_CHAIN} | awk -F_ '{print $2}' | cut -d"." -f1`
+      # Prepare delete file for DEL_ZIP function
+      echo "${DIR};delete ${CHECK_TFR_CHAIN}_${NUM}.zip" >> ${CHECK_TFR_O}
+     
+      for LINE in `cat ${FFTX}`
+      do
+	FDAT=`echo ${LINE} | cut -d":" -f1`
+        if [ ! -f ${DTRANSFER}/${DIR}/from/${FDAT} ]
+        then
+          echo "# File ${FDAT} not found" 
+          STEPEND 1
+        fi
+        FSIZE=`echo ${LINE} | cut -d":" -f2`
+        SIZE=`ls -l "${DTRANSFER}/${DIR}/from/${FDAT}" | awk '{print $5}'`
+   
+        if [ ${SIZE} != ${FSIZE} ]
+        then
+	  echo "# Error in testing data file size ${FDAT}"
+          STEPEND 1
+        fi
+      done
+
+      /bin/mv ${DTRANSFER}/${DIR}/from/${CHECK_TFR_CHAIN}_${NUM}.zip ${DTRANSFER}/${DIR}/fromsave/${SVG}_${CHECK_TFR_CHAIN}_${NUM}.zip 2>&1
+      /bin/rm -f ${FFTX} 2>&1 
+
+    done
+  done  
+fi
+STEPEND 0
+}
+
+
+
+

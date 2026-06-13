@@ -1,0 +1,86 @@
+#----------------------------------------------------------------------------
+# FUNCTION: BCPINMULTI
+# The following parameters must be previously defined:
+#
+# NSTEP  : STEP Identifier
+#
+# BCP_I:    Path and name of Input File
+# BCP_TABLE: Name of table to fill up
+# BCP_SPECIAL_OPT: Special options which are not defined by default
+# BCPIN_SPECIAL_OPT_CHAIN: Special options which are defined for the chain
+#			 in the environmnent file
+#
+# Subject: Generic Function of bcpmulti in
+# The separator field is ~
+#----------------------------------------------------------------------------
+BCPINMULTI()
+{
+#set -x
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+        STEP_PRG=BCPINMULTI
+        STEPSTART
+
+        [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+	BASENAME_BCP_I=`basename ${BCP_I}`
+	DIRNAME_BCP_I=`dirname ${BCP_I}`
+
+        BCP_ANO=${DFILT}/${NSTEP}_${IB}_BCPIN.ano
+        BCP_LOG=${DFILT}/${NSTEP}_${IB}_BCPIN.log
+
+        export PRGANO=${NSTEP}_${IB}_BCPIN.ano
+        export PRGLOG=${NSTEP}_${IB}_BCPIN.log
+      
+        # Test if file is empty
+        if test -s ${BCP_I}
+        then
+	        if [ -z "${BCP_FS}" ]
+      		then
+                  BCP_FS="\~"
+       		fi
+	        if [ -z "${BCP_RS}" ]
+      		then
+       		  BCP_RS='\\\\n'
+       		fi
+
+                # .1 extension management with bcpmulti
+                mv ${BCP_I} ${BCP_I}.1
+
+                # execute bcpmulti program
+	        ${BCPPDIR}/bcpmulti ${BCP_TABLE} in ${BASENAME_BCP_I} -U${USR} -S${SRV} -c from ${DIRNAME_BCP_I} -Jiso_1 -P${PSWD} -t"${BCP_FS}" -r"${BCP_RS}" -d0 -m0 -e${BCP_ANO} ${BCP_SPECIAL_OPT} ${BCPIN_SPECIAL_OPT_CHAIN} >${BCP_LOG} 2>${BCP_ANO}
+
+                # Return Code Management
+                BCP_ERR=$?
+                BCP_SPECIAL_OPT=""
+		BCP_FS=""
+		BCP_RS=""
+
+                if [ "${BCP_ERR}" -eq 0 ]
+                then
+                       tail -2 ${BCP_LOG} | head -1
+                       /bin/rm -f ${BCP_LOG} 2>&1
+                fi
+
+                mv ${BCP_I}.1 ${BCP_I}
+                echo "# " `grep 'rows copied.' ${BCP_LOG}`
+                STEPEND ${BCP_ERR}      
+        else
+                echo "# !!! Empty file file for bcp in :("`basename ${BCP_I}`")"
+	        STEPEND 0
+                BCP_SPECIAL_OPT=""
+		BCP_FS=""
+		BCP_RS=""
+                STEPEND 0
+                return 2
+        fi
+
+        # End of BCPINMULTI
+fi
+
+BCP_SPECIAL_OPT=""
+BCP_FS=""
+BCP_RS=""
+return 0
+}
+

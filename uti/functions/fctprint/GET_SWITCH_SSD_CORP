@@ -1,0 +1,52 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_SWITCH_SSD_CORP
+#
+# $1 SSD_CF 
+# Output parameter:
+# FLIST_SSD List of switches
+#
+# Subject: Technical function that allows switching the printer identification 
+# from specific ssd.
+# The information contained in FLIST_SSD are subsidiary, production site,
+#  geographic site and printer and comes from TPRINTB table
+# MODIFICATION 1 - JBG - 03/09/2013 - DATA SELECTION BASED ON SSD CF/SITE ID
+#----------------------------------------------------------------------------
+GET_SWITCH_SSD_CORP () {
+#set -x
+
+# Get printer list by ssd/esb
+LIBEL="LIST OF SSD"
+ISQL_BASE="BREF"
+ISQL_O=${DFILT}/${NSTEP}_${IB}_GET_SWITCH_SSD_01.tmp
+ISQL_QRY=`CFTMP`
+
+# Extract information from the query
+# -----------
+# MODIFICATION 1
+INPUT_TEXT $ISQL_QRY <<EOF
+select T1.SSD_CF, T1.PRDSIT_CF,
+case
+	when B.BATCHUSER_CF is null
+	then 0
+	else 1
+end, "~" + T1.SSD_LS +"~"
+from BREF..TSUBSID T1, BREF..TBATCHNIGHT B
+where T1.SSD_CF IN ($1)
+and T1.PRDSIT_CF *= B.PRDSIT_CF 
+AND RTRIM(T1.PRDSIT_CF) != null
+AND B.BATCHUSER_CF = suser_name()
+exit
+EOF
+
+STEP_NOECHO="YES"
+ISQL_FRES=${DFILT}/${NSTEP}_${IB}_GET_SWITCH_SSD_02.tmp
+ISQL_RES
+
+/bin/rm -f  ${ISQL_O} 2>&1
+
+# Output filename
+FLIST_SSD=${ISQL_FRES}
+
+}
+
+

@@ -1,0 +1,71 @@
+#----------------------------------------------------------------------------
+# FUNCTION: BCPOUT 
+# The following parameters must be previously defined:
+#
+# NSTEP  : STEP Identifier
+#
+# BCP_O:    Path and name of Output File
+# BCP_TABLE: Name of table to fill up
+# BCP_SPECIAL_OPT: Special options which are not defined by default
+#
+# Subject: Generic Function of standard bcpout
+# The separator field is ~
+#----------------------------------------------------------------------------
+BCPOUT()
+{
+#set -x
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+        STEP_PRG=BCPOUT
+        STEPSTART 
+
+        [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+	if [ -z "${BCP_FS}" ]
+        then
+          # May 2000: H. Guiheux
+          # Modification for bcp 11.1.1 compatibilty
+          #BCP_FS="\~"
+          BCP_FS="~"
+	fi
+	if [ -z "${BCP_RS}" ]
+        then
+          BCP_RS="\\n"
+	fi 
+
+        [ -z "${BCP_SPECIAL_OPT}" ] && BCP_SPECIAL_OPT="-c -t${BCP_FS} -r${BCP_RS}" 
+
+        # define ANO filename
+        BCP_LOG=${DFILT}/${NSTEP}_${IB}_BCPOUT.log
+        BCP_ANO=${DFILT}/${NSTEP}_${IB}_BCPOUT.ano
+
+        export PRGANO=${NSTEP}_${IB}_BCPOUT.ano
+        export PRGLOG=${NSTEP}_${IB}_BCPOUT.log
+
+        # execute bcp program
+        ${SYBASE}/${SYBASE_OCS}/bin/bcp ${BCP_TABLE} out ${BCP_O} -U${USR} -S${SRV} -e${BCP_ANO} -Jiso_1 -P${PSWD} ${BCP_SPECIAL_OPT} >${BCP_LOG}
+
+        # Return Code Management
+        BCP_ERR=$?
+        BCP_SPECIAL_OPT=""
+	BCP_FS=""
+	BCP_RS=""
+
+        if [ "${BCP_ERR}" -eq 0 ]
+        then
+              tail -2 ${BCP_LOG} | head -1
+              /bin/rm -f ${BCP_LOG} 2>&1
+        fi
+
+        STEPEND ${BCP_ERR}
+
+        # End of BCPOUT
+        
+fi
+
+BCP_SPECIAL_OPT=""
+BCP_FS=""
+BCP_RS=""
+return 0
+}
+

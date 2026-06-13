@@ -1,0 +1,49 @@
+#----------------------------------------------------------------------------
+# FUNCTION:			TRUNCATE_TABLE
+#
+# The following parameters must be previously defined:
+#
+# NSTEP:			  STEP Identifier
+# TRUNCATE_PARTITION: PARTITION TABLE (YES/NO)
+# TRUNCATE_TABLENAME: NAME OF THE TABLE TO TRUNCATE
+#
+# Subject:			Generic Function of truncate table
+# Creation:			September 4, 2013 : JBG (CAPG)
+#
+# Modifications
+# [01] Florent 01/08/2014 :spot:27252 we do not use the unix user for the partition name but the Sybase user !
+#----------------------------------------------------------------------------
+#set -x
+TRUNCATE_TABLE()
+{
+	LIBEL="Truncate table"
+	if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+	then
+		ADT="${NSTEP}"
+		STEP_PRG=TRUNCATE_TABLE
+		STEPSTART 
+
+		[ "${FCT_DEBUG}" = "YES" ] && set -x
+		
+		STEPSTART_FORCE YES
+		STEP_NOECHO=YES
+		ISQL_O=${DFILT}/${NSTEP}_${IB}_SQL_O1.log
+		ISQL_BASE=`echo ${TRUNCATE_TABLENAME} | cut -f1 -d"."`
+		ISQL_TABL=`echo ${TRUNCATE_TABLENAME} | cut -f3 -d"."`
+		
+		if [ "${TRUNCATE_PARTITION}" = "YES" ]
+		then
+			echo $ISQL_TABL | grep -qv ^T
+			[[ $? -ne 0 ]] && ISQL_PART=`echo ${ISQL_TABL} | sed 's/.\{1\}/P/'` || ISQL_PART=`echo ${ISQL_TABL} | sed 's/^/P/'`
+			ISQL_PART="${ISQL_PART}_$(echo ${USR} | tr 'a-z' 'A-Z')"
+			ISQL_QRY="truncate table ${TRUNCATE_TABLENAME} partition ${ISQL_PART}"
+		else
+			ISQL_QRY="truncate table ${TRUNCATE_TABLENAME}"
+		fi		
+		ISQL		
+		STEPSTART_FORCE NO
+	fi
+	TRUNCATE_PARTITION=""
+	TRUNCATE_TABLENAME=""
+}	
+

@@ -1,0 +1,62 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_PRTNOVELL_INFO 
+#
+# 3 input parameters:
+# $1   :  PRDSIT_CF
+# $2   :  GEOSIT_CF
+# $3   :  PRT_CF
+#
+# Output parameters:
+#	NOVQUEUE_CF: Novell Printer name (eg. \\Fr_Serv3\Omega1)
+#	EXESRV_CF: Novell Server to enable Printing connexion
+#	LOGEXE_CF: Novell Login to enable Printing connexion
+#	PASEXE_CF: Novell password to enable Printing connexion
+#
+# Subject: Technical Function for Daemon VB (from TPRINTER)
+# to enable connexion to the Novell printer. This information is needed
+# to build the .dae file
+#----------------------------------------------------------------------------
+#
+GET_PRTNOVELL_INFO () {
+#set -x
+
+# Extract the information from the query
+# --------------------------------------
+LIBEL="GET_PRTID_SSDESB"
+ISQL_BASE="BREF"
+ISQL_O=${DFILT}/${NSTEP}_${IB}_GET_PRTNOVELL_INFO_01.dat
+ISQL_QRY=`CFTMP`
+
+INPUT_TEXT ${ISQL_QRY} <<EOF
+SELECT 
+	NOVQUEUE_CF,
+	EXESRV_CF,
+	LOGEXE_CF,
+	PASEXE_CF
+FROM BREF..TPRINTER
+WHERE
+PRDSIT_CF='${1}' AND
+GEOSIT_CF='${2}' AND
+PRT_CF='${3}'
+exit
+EOF
+
+ISQL_FRES=${DFILT}/${NSTEP}_${IB}_GET_PRTNOVELL_INFO_02.dat
+LIB_ERR="ERROR ON GET_PRTNOVELL_INFO: $1 $2 $3"
+
+STEP_NOECHO="YES"
+ISQL_INFO
+
+# Get the values from the result line
+NOVQUEUE_CF=`cat ${ISQL_FRES} | awk ' {print $1}'`
+EXESRV_CF=`cat ${ISQL_FRES} | awk ' {print $2}'`
+LOGEXE_CF=`cat ${ISQL_FRES} | awk ' {print $3}'`
+PASEXE_CF=`cat ${ISQL_FRES} | awk ' {print $4}'`
+
+/bin/rm -f  ${ISQL_O} 2>&1
+/bin/rm -f  ${ISQL_FRES} 2>&1 
+LIB_ERR=""
+
+}
+
+

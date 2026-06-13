@@ -1,0 +1,107 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SCP
+#
+#   External Variables
+#       SCP_SITE
+#       SCP_WAY (PUT coming GET / MPUT / MGET)
+#       SCP_FILE : file to transfer. if * found into name, generic action is done
+#       
+#   Optional variables
+#	SCP_MODE       : transfer mode (default value ascii)
+#
+#   Internal variables
+#	SCP_DELAY      : Waiting Delay before each retry
+#	SCP_NBRETRY    : Number of times the function tries to connect
+#	SCP_IP         : IP Address of the target host
+#	SCP_USR        : User of the target host
+#	SCP_RDIR       : Remote directory (Host)
+#	SCP_LDIR       : Local directory
+#	SCP_O          : Output file after transfer
+#
+# Subject: This function encapsulates SCP program output command to delete a file
+#
+#historique des modifications :
+#[001] 02/06/2015 Alain Spinosa :spot:28843 Mise en oeuvre, adaptation de la fonction au login sans pwd et a la gestion multi-fichiers
+#----------------------------------------------------------------------------
+SCP ()
+{
+   # First check
+   # The USER must be ubeu,ubas,uam, or ubgl
+   # Only these users are authorized to run scp to target servers
+  
+   [[ ! "$(id -un)" =~ ub(gl|as|am|eu) ]] && { echo "Only ubeu,ubam,ubas or ubgl can run SCP command"
+					       echo "Other users are not authorized"
+					       STEPEND 1
+					     } 
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+
+ then ADT="${NSTEP}"
+
+#   if [ "${SCP_WAY}" != "PUT" -a "${SCP_WAY}" != "MGET" -a "${SCP_WAY}" != "MDEL" -a "${SCP_WAY}" != "MDEL2" -a "${SCP_WAY}" != "TEST" ]
+   if [ "${SCP_WAY}" != "PUT" ]
+   then
+     echo "# \${SCP_WAY} not setted"
+     STEPEND 1
+   fi
+
+   STEP_PRG=SCP_${SCP_WAY}
+   STEPSTART 
+
+   # File ${DREMLOGIN}/.remlogin format
+   #
+   # $1 ;$2;  $3; $4
+   #site;IP; USR;PWD;site directory
+   # PWD = NOT_USED to use ssh_keys
+   # $1 ;$2;  $3; $4
+   #remote_site;remote_IP_host;remote_scp_USR;remote_site_target_directory
+   
+# Temporary file initialization
+   FTMP=`CFTMP`
+  
+   # Get paramaters in .remlogin file for connexion
+   
+    if [ ! -f ${DREMLOGIN}/.remlogin ]
+    then
+      echo "# ${DREMLOGIN}/.remlogin doesn't exist"
+      exit
+      STEPEND 1
+    fi
+
+# SCP_FILE can be only one file or several files from a filter
+# A FOR loop could process both cases 
+
+for SCP_INPUT_FILE in $SCP_FILE
+do
+    awk -F\; 'SITE==$1 {print}' SITE=${SCP_SITE} ${DREMLOGIN}/.remlogin > ${FTMP}
+
+    if [ -s ${FTMP} ]  # If site information is found
+    then
+      # Get parameters for SCP
+      SCP_DELAY=2
+      SCP_NBRETRY=1
+
+      SCP_LDIR=`dirname "${SCP_INPUT_FILE}"`
+      SCP_I=`basename "${SCP_INPUT_FILE}"`
+      SCP_IP=`cut -d";" -f2 ${FTMP}`
+      SCP_USR=`cut -d";" -f3 ${FTMP}`
+      SCP_RDIR=`cut -d";" -f4 ${FTMP}`
+      STEP_NOECHO="YES"
+
+      if [ "${SCP_WAY}"  = "PUT" ] 
+      then
+          SCP_O=`basename "${SCP_INPUT_FILE}"`
+      fi
+
+# Call scp with put or get
+      SCP_${SCP_WAY}
+      if [ $? != 0 ]
+      then
+         echo "#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+         echo "# SCP Server is not responding  on ${SCP_SITE}..."
+         STEPEND 1
+      fi
+    fi
+STEPEND 0
+done
+fi
+}

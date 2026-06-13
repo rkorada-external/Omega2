@@ -1,0 +1,37 @@
+#----------------------------------------------------------------------------
+# FUNCTION: TEST_TFR_FILES
+#
+# The following parameters must be previously defined:
+# 3 parameters 
+#       NSTEP          = step identifier
+#       TEST_TFR_EXT   = extension of files to search
+#       TEST_TFR_LDIR  = local directory
+#
+# Subject: This function is used to test if there is files to transfer
+#
+#----------------------------------------------------------------------------
+TEST_TFR_FILES () {
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then 
+  ADT="${NSTEP}"
+  STEP_PRG=TEST_TFR_FILES
+  STEPSTART
+
+  ls ${TEST_TFR_LDIR}/*${TEST_TFR_EXT}  > /dev/null 2>&1
+  if [ $? != 0 ]
+  then
+    # If no file was found 
+    echo "# NO FILES *${TEST_TFR_EXT} IN DIRECTORY ${TEST_TFR_LDIR}" 
+    STEPEND 1
+  else
+    STEPEND 0
+  fi
+fi
+}
+
+
+
+

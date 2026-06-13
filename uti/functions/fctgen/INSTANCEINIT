@@ -1,0 +1,132 @@
+#----------------------------------------------------------------------------
+# FUNCTION: INSTANCEINIT
+# No input parameters:
+# - Chain Script File
+# - Initialisation File
+# Subject: Chain Initialisation
+# Defines instance variables as 
+#          DATE_YYYYMMDD
+#          DATE_YYYYMMDDHHMMSS
+#          JR  : machine name + date
+#          IB  : Identity batch
+#          RP  : Restart Point (STEP)
+#          ADT : Current Step Execution
+#          FLOG: log file
+# Used at Chain Initialisation or at asynchronous process start
+#
+# 
+#   
+#----------------------------------------------------------------------------
+#[001] 11/02/2021 JYP : Spira 84654: microAOC: make possible // runs by chain
+
+INSTANCEINIT () {
+#set -x
+
+# Global Date variables
+export JOB_LOG_OUTPUT=""
+export DATE_YYYYMMDDHHMMSS=`date +"%Y%m%d%H%M%S"`
+export DATE_DDMMYYHHMM=`date +"%d/%m/%Y %H:%M"`
+export DATE_YYYYMMDD=`echo ${DATE_YYYYMMDDHHMMSS} | awk '{print substr($1,1,8)}'`
+export SVG=svg_${DATE_YYYYMMDDHHMMSS}
+
+# Variable used to genererate logfile
+export JR=${HOSTNAME}"_"${DATE_YYYYMMDDHHMMSS}
+if [ "${LAUNCHER}" != "SYBADMIN" ]
+then
+   export FLOG=${DLOG}/${NCHAIN}_${JR}_$$.log
+else
+   if [ "$#" -ge 4 ]
+   then
+      CMDNAME=`basename $3 .cmd`
+      shift 4
+      #Version Log en V2: export FLOG=${DLOG}/${NCHAIN}
+      export FLOG=${DLOG}/
+      for arg in $*
+      do
+          FLOG=${FLOG}${arg}_
+      done
+      #Version Log en V2: export FLOG=${FLOG}_${JR}.log
+      #Version Log avec NCHAIN: export FLOG=${FLOG}${NCHAIN}.log
+      export FLOG=${FLOG}${CMDNAME}.log
+   else
+      export FLOG=${DLOG}/${NCHAIN}_${JR}_$$.log
+   fi
+   # Reinitialisation of log files if LAUNCHER=SYBADMIN
+   echo > ${FLOG}
+fi
+
+export ADT=""
+export TEE=" tee -a ${FLOG}" 
+
+export MAX_RETURN_CODE=0
+
+export FRSTR="${NCHAIN}_${HOSTNAME}.rst"  # old archi : 1 instance, or restart
+export FRSTN="${NCHAIN}_${HOSTNAME}_$$.rst"  # new archi : N instances
+export RST_ID=$$ # save parent process when parallel job
+
+# Chain restart Management
+if test -s ${DRST}/${FRSTR}
+then
+# .rst file filled on Step failure
+#  format file
+#  --> IB RestartJob RestartStep Return Code
+# Get informations only from the first line to initialize correctly
+# the following variables even if the restart is in a LOOP job
+
+        if [ "${DABORT}" != "${DRST}" ]
+        then
+	   mv ${DRST}/${FRSTR} ${DABORT}/${FRSTR} 
+        fi
+
+	export IB=`head -1 ${DABORT}/${FRSTR} | cut -d";" -f1`
+	export JOBRST=`head -1 ${DABORT}/${FRSTR}  | cut -d";" -f2`
+	export RP=`head -1 ${DABORT}/${FRSTR} | cut -d";" -f3`
+        export RST_ID=`head -1 ${DABORT}/${FRSTR} | cut -d";" -f1 | cut -d_ -f3 `
+	echo "Restart point at " ${RP} " with chain identifier : " ${IB} | ${TEE}
+	/bin/mv ${DABORT}/${FRSTR} ${DABORT}/${NCHAIN}_${IB}.rst >/dev/null 2>&1
+else
+# Variable used to genererate unique identifier
+	export IB=${JR}_$$
+        export JOBRST=""
+	RP=""
+
+        if test -s ${DABORT}/${FRSTR} 
+        then
+          mv ${DABORT}/${FRSTR}  ${DABORT}/${NCHAIN}_${HOSTNAME}_${DATE_YYYYMMDDHHMMSS}_prev_$$.rst 
+        fi
+fi
+
+if [ "${RMF}" = "YES" ] && [ "${LAUNCHER}" != "DAEMON" ] 
+then
+  # Create chain report file
+  export FRMF="${DRMF}/RMF_${DATE_YYYYMMDDHHMMSS}_$$_${NCHAIN}_END_LAP_INRUN"
+  printf "%-30s;%-10s;%-20s;%-14s;%-14s;%-5s;%-7s\n" "${IB}" "${NCHAIN}" "/${LOGNAME}" "${DATE_DDMMYYHHMM}" "/" "/" "INRUN" >> ${FRMF}
+fi
+
+
+export NJOB=""
+export NSUBJOB=""
+export NSTEP=""
+
+
+if [ "${BASE_TEC}" = "" ]
+then
+   export BASE_TEC="BTEC"
+fi
+
+export SORT_NOINFILE=""
+export SORT_RMINFILE=""
+export STEPEND_DISPLAY_ANO=""
+export BCP_FS=""
+export SORT_FS=""
+export BCP_RS=""
+export BCP_TRUNCATE=""
+export BCP_RMINFILE=""
+export WARNING=""
+export JOB_LOG_OUTPUT=""
+export PRN_TYPE="STARJET"
+
+}
+
+
+

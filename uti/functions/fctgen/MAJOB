@@ -1,0 +1,48 @@
+#----------------------------------------------------------------------------
+# FUNCTION: MAJOB
+# Purpose: This function is used to set the status to 10-Completed with abnormailities.
+# Input parameters
+#   $1 : Job Identifier
+#   $2 : User
+#   $3 : Launch Date and Time.
+#
+#----------------------------------------------------------------------------
+#set -x
+MAJOB()
+{
+#LIBEL="MAJOB - Mark the job as completed abnormally."
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then
+    ADT="${NSTEP}"
+    STEP_PRG=MAJOB
+    STEPSTART 
+	
+    echo "# Parameter 1 (I_JOB)) = $1"
+    echo "# Parameter 2 (I_JOB_USER) = $2"
+    echo "# Parameter 3 (T_JOB_LNCH) = $3"
+   
+    # Not sure what value to return
+    if [ -z $1 ] || [ -z $2 ] || [ -z $3 ]; then
+       echo '#'
+       echo '#========================================================================='
+       echo "# Input Parameters passed is incomplete."
+       echo '#========================================================================='
+       STEPEND 99
+       return 99
+    fi
+    
+    export I_JOB=$1
+    export I_JOB_USER=$2        
+    export T_JOB_LNCH=$3
+
+    [ "${FCT_DEBUG}" = "YES" ] && set -x
+    
+    LIBEL="UPDATE btec_TTASKQUEUE.V_OUT_FILE_PATH_2 = '10-Closed with abnormalities'"
+    ISQL_BASE="BTEC"
+    ISQL_QRY="exec sp_upd_tkq_6 '${I_JOB}','${I_JOB_USER}','${T_JOB_LNCH}'"
+    ISQL_O=${DFILT}/${NSTEP}_${IB}_ISQL_UPDATE_TTASKQUEUE.log 
+    ISQL
+
+fi
+}   
+

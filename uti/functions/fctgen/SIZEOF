@@ -1,0 +1,12 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SIZEOF
+# 1 input parameter:
+#   - pathname/filename 
+# Subject: This function determines the file size (bytes)
+# call: SIZEOF <file>
+#   
+#----------------------------------------------------------------------------
+SIZEOF () {
+echo `ls -l $1 | awk '{print $5}'`
+}
+

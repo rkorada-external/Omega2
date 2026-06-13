@@ -1,0 +1,39 @@
+#----------------------------------------------------------------------------
+# FUNCTION: BCPLOAD
+#
+# The following parameters must be previously defined:
+# 3 parameters
+#          NSTEP
+#          BCP_BASE : data base which has been treated
+#          BCP_DIR  : directory of files to load
+#          BCP_ROWSEP : row separator
+#          BCP_FIESEP : field separator
+#
+# Subject: This function is used to load by bcp data files
+#
+#----------------------------------------------------------------------------
+BCPLOAD () {
+#set -x
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then
+  ADT="${NSTEP}"
+  STEP_PRG=BCPLOAD
+  STEPSTART
+
+  [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+  for FBCP in `ls ${BCP_DIR}/${BCP_FILE_PREFIX}*.dat`
+  do
+   BCP_I=${FBCP}
+   BCP_TABLE=${BCP_BASE}..`basename ${FBCP} .dat | awk '{$0=substr($0,length(ST));print substr($0,index($0,"_")+1)}' ST=${BCP_FILE_PREFIX}`
+   echo "#\n# ------------- BCP IN OF ${BCP_TABLE}"
+   STEP_NOECHO=YES
+   BCP_RS="${BCP_ROWSEP}"
+   BCP_FS="${BCP_FIESEP}"
+   BCPIN
+   /bin/rm -f ${FBCP} > /dev/null 2>&1
+  done
+  STEPEND 0
+fi
+}
+

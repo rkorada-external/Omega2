@@ -1,0 +1,7 @@
+char;DETTRS_CF;9
+char;CTRSCOD_CF;9
+unsigned char;TRSTYP_CT
+char;RETTRSCOD_CF;9
+unsigned char;RET_B
+unsigned char;COMP_B
+;;1

@@ -1,0 +1,48 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_SITES
+#
+# Subject:This function is used to create a file including the list of sites
+# GET_ZIP, GET_FILES_LOOP_JOB_POOL use it
+#----------------------------------------------------------------------------
+GET_SITES () {
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+echo "GET_SITES..........................."
+if [ -z $1 ]
+then
+  echo "# !!! One function parameter is not set."
+  echo "# !!! The list of sites (all or s1|s2|..) must be precised"
+  STEPEND 1
+fi
+
+GET_SITES_O=${DFILT}/${NSTEP}_${IB}_GETSITES_O.dat
+/bin/rm -f ${GET_SITES_O} >/dev/null 2>&1
+
+echo "GET_SITES_O...........................${GET_SITES_O}"
+
+if [ $1 = "all" ] # get list of sites from bref..tftpb
+then
+echo "all..........................."
+STEP_NOECHO=YES
+ISQL_BASE="BREF"
+ISQL_O=${DFILT}/${NSTEP}_${IB}_TFTPB_O.dat
+ISQL_QRY=`CFTMP`
+INPUT_TEXT ${ISQL_QRY} << EOF
+begin tran
+select distinct(repname_cf) from BREF..TFTPB A, BREF..TBATCHNIGHT B
+WHERE A.PRDSIT_CF = B.PRDSIT_CF
+AND   B.BATCHUSER_CF = UPPER(suser_name())
+commit tran
+exit
+EOF
+ISQL_FRES=${GET_SITES_O}
+ISQL_RES
+STEP_NOECHO=NO
+
+else  # write s1|s2|... in a file
+ echo "not all..........................."
+ echo $1 | awk -F\| '{ for (i=1;i<=NF;i++) print $i }' > ${GET_SITES_O}
+ cat ${GET_SITES_O}
+fi
+
+}

@@ -1,0 +1,314 @@
+#!/bin/ksh
+#------------------------------------------------------------------------------------------------------------------------------------------------------------
+# FUNCTION: NZLOAD
+# Authors   : Nour Miloua, Vincent Gautier, Roger Cassis, Laurent Planche
+# Creation  : 15/10/2015
+#------------------------------------------------------------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Subject            : Generic Function to load data to Netezza Server
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Default options : -ctrlChars  : accept control chars in char/varchar fields (must escape NUL, CR and LF)
+#                   -crInString : accept unescaped CR in char/varchar fields (LF becomes only end of row)
+#                   -fillRecord
+#                   -bf <filename>           bad/rejected rows (overwrite if file already exists) to $DNZFILT location
+#                   -outputDir <dir>         location for output files (log and bad rows) to $DNZFILT
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Change Log:
+# 21/11/2015: Creation :spot:30171
+# 15/01/2016: Add NZLOG calls
+#[003] 16/11/2016 R. Cassis :spot:31493 Au STEPEND, le code retour est 1 et plus -1
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+#set -x
+usage() { 
+cat << EOF
+Usage:
+nz load -d NZLOAD_BASE -s NZLOAD_SCHEMA  -t *NZLOAD_TABLE -i *NZLOAD_I -r NZLOAD_PRE_TRUNCATE -e NZLOAD_SPECIAL_OPT -F NZLOAD_FS -R NZLOAD_RS  
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# NSTEP                 : STEP Identifier (Mandatory) defined from caller shell script or set by default to NLOAD_AUTONOMOUS_MODE
+# -d NZLOAD_BASE        : Target Database (optional) -db
+# -s *NZLOAD_SCHEMA      : Name of schema to fill up (optional) - nzload option:  -schema
+# -t *NZLOAD_TABLE      : Name of table to fill up (mandatory) - nzload option: -t
+# -i *NZLOAD_I          : Path and name of Input File (mandatory) - nzload option: df
+# -r NZLOAD_PRE_TRUNCATE    : Truncate the table before Loading (YES/NO) Default = NO (optional)     
+# -e NZLOAD_SPECIAL_OPT : Special options which are not defined by default extra parameters (optional)  
+# -F NZLOAD_FS          : Field delimiter default ~ (optional) - nzload option: -delim
+# -R NZLOAD_RS          : Record delimiter default \n (optional) - nzload option: -recDelim
+# -m NZLOAD_MAXERRORS    : Maximum allowed error for nzload command  - nzload option: -maxErrors
+# -M NZLOAD_MODE        : if set to ODS or DWH, NZLOAD function will fetch active ODS/DWH from DELIVERY_${} database, to set NZSQL_DBNAME
+# -c NZLOAD_ENCODING    : encoding of the source file (optional). If populated, a nzconvert will be performed to change the file encoding
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Default options :     -ctrlChars  : accept control chars in char/varchar fields (must escape NUL, CR and LF)
+#                       -crInString : accept unescaped CR in char/varchar fields (LF becomes only end of row)
+#                       -fillRecord
+#                       -bf <filename>           bad/rejected rows (overwrite if file already exists) to $DNZFILT location
+#                       -outputDir <dir>         location for output files (log and bad rows) to $DNZFILT
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+EOF
+STEPEND 1
+exit -1
+}
+
+# Perform nzload generated command (See NZLOAD_TREAT_PARAMS)
+NZLOAD3()
+{
+OPTIND=1
+
+# Default NSTEP when none defined
+if [ -z "${NSTEP}" ] 
+then
+    NSTEP="NZLOAD_AUTONOMOUS_CALL"
+    IB=`hostname``date +%Y%m%d%H%M%S%N`
+fi
+
+# Default program name when none defined
+if [ -z "${PGM}" ]
+then
+    PGM=`basename $0 | cut -f1 -d'.'`
+fi
+
+typeset NZLOAD_OUTLOG=$DNZFILT/${NSTEP}_${IB}_NZLOAD.log
+typeset NZLOAD_OUTNZLOADLOG=$DNZFILT/${NSTEP}_${IB}_nzload.log
+typeset NZLOAD_OUTNZLOADBADLOG=$DNZFILT/${NSTEP}_${IB}_nzload.bad
+typeset NZLOAD_COMMAND="nzload "
+touch ${NZLOAD_OUTLOG}
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then 
+    ADT="${NSTEP}"
+    STEP_PRG=NZLOAD
+    export PRGLOG=`basename ${NZLOAD_OUTLOG}`
+    STEPSTART
+
+    while getopts "rd:s:t:i:r:e:F:R:M:m:c:" o; do
+        case "${o}" in
+        d)
+        NZLOAD_DBNAME=${OPTARG}
+        ;;
+        s)
+        NZLOAD_SCHEMA=${OPTARG}
+        ;;
+        t)
+        NZLOAD_TABLE=${OPTARG}
+        ;;
+        i)
+        NZLOAD_INPUT_DATAFILE=${OPTARG}
+        ;;
+        r)
+        NZLOAD_PRE_TRUNCATE='O'
+        ;;
+        e)    
+        NZLOAD_EXTRA_PARAMS=${OPTARG}
+        ;;    
+        F)
+        NZLOAD_FIELD_SEPARATOR=${OPTARG}
+        ;;
+        R)
+        NZLOAD_RECORD_SEPARATOR=${OPTARG}
+        ;;
+        M)
+        NZLOAD_MODE=${OPTARG}
+        ;;
+        m)
+        NZLOAD_MAXERRORS=${OPTARG} 
+        ;;
+        c)
+        NZLOAD_ENCODING=${OPTARG} 
+        ;;
+        * | -h)
+        usage
+        ;;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    NZLOGINIT3 -l LEV2 -j ${PGM}
+    NZLOAD_TREAT_PARAMS
+    echo "[GENERATED COMMAND]       : $NZLOAD_COMMAND" >> $NZLOAD_OUTLOG
+    echo "[INPUT DATA FILE]         : $NZLOAD_INPUT_DATAFILE" >> $NZLOAD_OUTLOG
+    echo "[nzload LOG FILE]         : $NZLOAD_OUTNZLOADLOG" >> $NZLOAD_OUTLOG
+    echo "[nzload bad FILE]         : $NZLOAD_OUTNZLOADBADLOG" >> $NZLOAD_OUTLOG
+    echo "[NZLOAD LOG FILE]         : $NZLOAD_OUTLOG" >> $NZLOAD_OUTLOG
+
+    # Drop the _LOG table if it exists
+    NZLOAD_TABLE_LOG=${NZLOAD_TABLE}"_LOG"
+    NZLOAD_LOG_TABLE_EXISTS=`nzsql -d ${NZLOAD_DBNAME} -schema ${NZLOAD_SCHEMA} -q -F "~" -t -A -c "SELECT TABLENAME FROM _v_table WHERE DATABASE='${NZLOAD_DBNAME}' AND SCHEMA='${NZLOAD_SCHEMA}' AND TABLENAME='${NZLOAD_TABLE_LOG}';"`
+    if [ "${NZLOAD_LOG_TABLE_EXISTS}" ]
+    then
+        nzsql -d ${NZLOAD_DBNAME} -schema ${NZLOAD_SCHEMA} -q -F "~" -t -A -c "DROP TABLE ${NZLOAD_SCHEMA}.${NZLOAD_TABLE_LOG};"
+    fi
+
+    # Drop the _BAD table if it exists
+    NZLOAD_TABLE_BAD=${NZLOAD_TABLE}"_BAD"
+    NZLOAD_BAD_TABLE_EXISTS=`nzsql -d ${NZLOAD_DBNAME} -schema ${NZLOAD_SCHEMA} -q -F "~" -t -A -c "SELECT TABLENAME FROM _v_table WHERE DATABASE='${NZLOAD_DBNAME}' AND SCHEMA='${NZLOAD_SCHEMA}' AND TABLENAME='${NZLOAD_TABLE_BAD}';"`
+    if [ "${NZLOAD_BAD_TABLE_EXISTS}" ]
+    then
+        nzsql -d ${NZLOAD_DBNAME} -schema ${NZLOAD_SCHEMA} -q -F "~" -t -A -c "DROP TABLE ${NZLOAD_SCHEMA}.${NZLOAD_TABLE_BAD};"
+    fi
+
+    eval ${NZLOAD_COMMAND}  >> $NZLOAD_OUTLOG 
+    NZLOAD_RETURN_CODE=$?
+
+    # Retrieve number of records read, bad and loaded from the NZLOAD log file
+    NB_RECORD_READ=`grep "number of records read:" ${NZLOAD_OUTNZLOADLOG} | cut -f12 -d' '`
+    NB_RECORD_BAD=`grep "number of bad records:" ${NZLOAD_OUTNZLOADLOG} | cut -f13 -d' '`
+    NB_RECORD_LOAD=`grep "number of records loaded:" ${NZLOAD_OUTNZLOADLOG} | cut -f10 -d' '`
+    	
+    # Retrieve error logs lines from the nzload log file if bad records found 
+    # and load it into a _log table and load the bad file into a _bad table
+    if [[ ${NB_RECORD_BAD} != 0 ]]
+    then
+
+        # Retrieve error logs lines from the nzload log
+        tail -n +28 ${NZLOAD_OUTNZLOADLOG} > ${NZLOAD_OUTNZLOADLOG}.tmp
+        LOG_COUNT=`wc -l ${NZLOAD_OUTNZLOADLOG}.tmp | cut -f1 -d' '`
+        let x=${LOG_COUNT}-15
+        typeset NZLOAD_LOG_NB_RESULT=`printf "%.0f\n" $x`
+        head -n ${NZLOAD_LOG_NB_RESULT} ${NZLOAD_OUTNZLOADLOG}.tmp | tail -n +5 > ${NZLOAD_OUTNZLOADLOG}.tmp2
+
+        # Load log file into _LOG table
+        nzsql -d ${NZLOAD_DBNAME} -schema ${NZLOAD_SCHEMA} -q -F "~" -t -A -c "CREATE TABLE ${NZLOAD_SCHEMA}.${NZLOAD_TABLE_LOG} (ERROR CHARACTER VARYING(4000)) DISTRIBUTE ON RANDOM;"
+        nzload -db ${NZLOAD_DBNAME} -schema ${NZLOAD_SCHEMA} -t ${NZLOAD_TABLE_LOG} -df "${NZLOAD_OUTNZLOADLOG}.tmp2" -delim '|'
+
+        # Load bad file into _BAD table
+        nzsql -d ${NZLOAD_DBNAME} -schema ${NZLOAD_SCHEMA} -q -F "~" -t -A -c "CREATE TABLE ${NZLOAD_SCHEMA}.${NZLOAD_TABLE_BAD} (SOURCE_RECORD CHARACTER VARYING(64000)) DISTRIBUTE ON RANDOM;"
+        nzload -db ${NZLOAD_DBNAME} -schema ${NZLOAD_SCHEMA} -t ${NZLOAD_TABLE_BAD} -df "${NZLOAD_OUTNZLOADBADLOG}"  -delim '|' -truncString -ctrlChars -crInString -fillRecord
+        
+    fi
+
+    if [ $NZLOAD_RETURN_CODE -ne 0 ]
+    then
+        export PRGANO=${NZLOAD_OUTNZLOADBADLOG}
+        echo "# Log file:  ${NZSQL_OUTLOG}"
+        echo "# Ano file:  ${NZSQL_OUTNZSQLLOG}"
+        NZLOGEND3 -l LEV2 -j ${PGM} -r ${NZLOAD_RETURN_CODE} -m "Error when loading file "${NZLOAD_INPUT_DATAFILE}
+        STEPEND ${NZLOAD_RETURN_CODE}
+    else
+        echo "# Log file:  ${NZLOAD_OUTLOG}"
+        echo "File "$NZLOAD_INPUT_DATAFILE" loaded into table "${NZLOAD_DBNAME}"."${NZLOAD_SCHEMA}"."${NZLOAD_TABLE}
+        echo "Number of rows in the input file:"${NB_RECORD_READ}
+        echo "Number of rows in the bad file:  "${NB_RECORD_BAD}
+        echo "Number of rows loaded:           "${NB_RECORD_LOAD}
+		echo "`echo ${NSTEP:2:8}`~${HOST_PRDSIT}~`date +'%Y-%m-%d %H:%M:%S'`~${NZLOAD_SCHEMA}~${NZLOAD_TABLE}~${NB_RECORD_LOAD}">> ${DLOG}/${NJOB}_JOB_LOG_LEV4.dat
+        # Remove temporary file
+        if [ -f ${NZLOAD_INPUT_DATAFILE}.encoded ]
+        then
+            rm ${NZLOAD_INPUT_DATAFILE}.encoded
+        fi
+    
+        NZLOGEND3 -l LEV2 -j ${PGM} -r 0 -m "File "$NZLOAD_INPUT_DATAFILE" ("${NB_RECORD_READ}" rows) loaded (ok="${NB_RECORD_LOAD}",bad="${NB_RECORD_BAD}") into table "${NZLOAD_DBNAME}"."${NZLOAD_SCHEMA}"."${NZLOAD_TABLE}
+    fi
+
+fi
+
+NZLOAD_DBNAME=''
+NZLOAD_SCHEMA=''
+NZLOAD_TABLE=''
+NZLOAD_TABLE_LOG=''
+NZLOAD_TABLE_BAD=''
+NZLOAD_INPUT_DATAFILE=''
+NZLOAD_PRE_TRUNCATE=''
+NZLOAD_EXTRA_PARAMS=''
+NZLOAD_FIELD_SEPARATOR=''
+NZLOAD_RECORD_SEPARATOR=''
+NZLOAD_MAXERRORS=''
+NZLOAD_MODE=''
+STEPEND 0
+return 0
+}
+
+#Generated final nzload command from input options
+NZLOAD_TREAT_PARAMS()
+{
+
+if [ -z "${NZLOAD_TABLE}" -o -z "${NZLOAD_INPUT_DATAFILE}" -o -z "${NZLOAD_SCHEMA}" ] 
+then
+    echo "Missing mandatory parameters -z"
+    NZLOGEND3 -l LEV2 -j ${PGM} -r 1 -m "Missing mandatory parameters -z"
+    usage
+    STEPEND 1
+fi
+
+# If populated perform an encoding conversion in the source file before loading
+if [ "${NZLOAD_ENCODING}" ]
+then
+    echo "Performing encoding conversion"
+    nzconvert -f ${NZLOAD_ENCODING} -t UTF-8 -df \"${NZLOAD_INPUT_DATAFILE}\" -of \"${NZLOAD_INPUT_DATAFILE}.encoded\"
+    echo "File encoding converted:"${NZLOAD_INPUT_DATAFILE}".encoded"
+    NZLOAD_COMMAND=${NZLOAD_COMMAND}" -t ${NZLOAD_TABLE} -df \"${NZLOAD_INPUT_DATAFILE}.encoded\""
+else
+    NZLOAD_COMMAND=${NZLOAD_COMMAND}" -t ${NZLOAD_TABLE} -df \"${NZLOAD_INPUT_DATAFILE}\""
+fi
+
+if [ -z ${NZLOAD_MODE} ] 
+then
+    echo "No NZLOAD MODE (-M) set, checking for NZLOAD_DBNAME (-d) parameter" >> ${NZLOAD_OUTLOG}
+    if [ -z "${NZLOAD_DBNAME}" ]
+    then
+        echo "No NZLOAD_DBNAME (-d) set, using Default database $NZ_DATABASE"  >> ${NZLOAD_OUTLOG}
+        NZLOAD_DBNAME=$NZ_DATABASE
+    else
+        echo "Netezza database parameter overrided: $NZLOAD_DBNAME" >> ${NZLOAD_OUTLOG}
+    fi
+else
+    echo "[NZLOAD_MODE]:     ${NZLOAD_MODE}" >> ${NZLOAD_OUTLOG}
+    NZLOAD_DBNAME=`$DUTI/functions/fctnz/NZGETACTIVEDB.cmd -M ${NZLOAD_MODE}`
+fi
+NZLOAD_COMMAND=${NZLOAD_COMMAND}" -db ${NZLOAD_DBNAME}"
+
+
+if [ -z "${NZLOAD_SCHEMA}" ] 
+then
+    echo "Using ${NZLOAD_DBNAME} database default schema" >> ${NZLOAD_OUTLOG}
+else
+    echo "${NZLOAD_DBNAME} Database schema used: " ${NZLOAD_SCHEMA}  >> ${NZLOAD_OUTLOG}
+    NZLOAD_COMMAND=${NZLOAD_COMMAND}" -schema ${NZLOAD_SCHEMA}"
+fi
+
+if [ -z "${NZLOAD_MAXERRORS}" ] 
+then
+    echo "Using Default maximum number of errors"  >> ${NZLOAD_OUTLOG}
+    NZLOAD_RECORDSZ=`nzsql -d ${NZLOAD_DBNAME} -schema ${NZLOAD_SCHEMA} -A -t -r  -c "select sum(ATTCOLLENG) from _V_RELATION_COLUMN where SCHEMA = '${NZLOAD_SCHEMA}' and NAME = '${NZLOAD_TABLE}'"`
+    NZLOAD_FILESZ=`du ${NZLOAD_INPUT_DATAFILE} | cut -f1`
+    let x=${NZLOAD_FILESZ}/${NZLOAD_RECORDSZ}*0.1
+    typeset nzload_maxerrors=`printf "%.0f\n" $x`
+    NZLOAD_MAXERRORS=${nzload_maxerrors}
+else
+    echo "Setting maximium errors to : ${NZLOAD_MAXERRORS}" >> ${NZLOAD_OUTLOG}
+fi
+NZLOAD_COMMAND=${NZLOAD_COMMAND}" -maxErrors ${NZLOAD_MAXERRORS}"
+
+
+if [ -z "${NZLOAD_NEWLINE_CHAR}" ] ; then
+    echo "Using Default newline separator"  >> ${NZLOAD_OUTLOG}
+else
+    echo "Default field separator overided to : ${NZLOAD_NEWLINE_CHAR}" >> ${NZLOAD_OUTLOG}
+    NZLOAD_COMMAND=${NZLOAD_COMMAND}" -recDelim \"${NZLOAD_NEWLINE_CHAR}\""
+fi
+
+if [ -z "${NZLOAD_FIELD_SEPARATOR}" ] ; then
+    echo "Using Default field separator ~"  >> ${NZLOAD_OUTLOG}
+    NZLOAD_FIELD_SEPARATOR="~"
+else
+    echo "Default field separator overided to : ${NZLOAD_FIELD_SEPARATOR}" >> ${NZLOAD_OUTLOG}
+fi
+NZLOAD_COMMAND=${NZLOAD_COMMAND}" -delim \"${NZLOAD_FIELD_SEPARATOR}\""
+
+if [ -z ${NZLOAD_PRE_TRUNCATE} ]
+then
+    echo "target table wont be truncated"  >> ${NZLOAD_OUTLOG}
+else
+    echo "Truncating target table: " >> ${NZLOAD_OUTLOG}    
+    NZLOAD_TMPFILE=`mktemp -t NZLOAD.XXXXXXXXXX`
+    nzsql -d ${NZLOAD_DBNAME} -q -c "TRUNCATE TABLE ${NZLOAD_SCHEMA}.${NZLOAD_TABLE}" -o ${NZLOAD_TMPFILE} -F "~" -t -A
+    NZLOAD_TMP_CALL_RC=$?
+    if [ ${NZLOAD_TMP_CALL_RC} -ne 0 ]
+    then
+        echo "Error during target table TRUNCATE"
+        NZLOGEND3 -l LEV2 -j ${PGM} -r 1 -m "Error during target table TRUNCATE"
+        STEPEND ${NZLOAD_TMP_CALL_RC}
+    fi 
+fi
+
+NZLOAD_COMMAND=${NZLOAD_COMMAND}" -fillRecord -ctrlChars -crInString -nullValue '' -outputDir "${DNZFILT}/" -lf ${NZLOAD_OUTNZLOADLOG}  -bf ${NZLOAD_OUTNZLOADBADLOG}  ${NZLOAD_EXTRA_PARAMS}"
+
+}

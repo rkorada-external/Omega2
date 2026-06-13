@@ -1,0 +1,36 @@
+#----------------------------------------------------------------------------
+# FUNCTION: MD5
+# The following parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# MD5_I :  Input File to Sign
+# MD5_O: Signature   file
+# Subject: Generic Function for md5sum 
+#
+#----------------------------------------------------------------------------
+MD5 ()
+{
+#set -x
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then
+        STEP_PRG=MD5
+        STEPSTART 
+
+        [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+	echo "# start of  md5sum"
+
+        export MD5_ANO=${DFILT}/${NSTEP}_${IB}_MD5.ano
+
+	    digest -a md5 ${MD5_I}> ${MD5_O} 2>${MD5_ANO}
+
+        MD5_ERR=$?
+        if [ ${MD5_ERR} -eq 0 ] && [ ! -s ${MD5_O} ]
+        then
+           echo "# INFO: The input file file is empty !"
+        fi
+
+        STEPEND ${MD5_ERR}
+fi
+return 0
+}
+

@@ -1,0 +1,136 @@
+#----------------------------------------------------------------------------
+# FUNCTION: LOOP_JOB
+#
+# parameters :
+# The complete command line of the job including LIST on the 
+#  first two parameters
+#
+# Subject: Generic Function that loops on job execution from a string list 
+#  with comma separator
+# 
+# if one job fails, the chain is not stopped. The following jobs must be
+# launched.
+#----------------------------------------------------------------------------
+LOOP_JOB() {
+#set -x
+
+[ -z $2 ] && exit 0
+
+JOB_CMD=$1
+FLIST=$2
+JOBNAME=${NJOB}
+
+if test -s ${DABORT}/${NCHAIN}_${HOSTNAME}.rst && [ "${CHAINSTOP_ON_JOBABORT}" = "YES" ]
+then
+   exit 0
+fi
+
+export CHAINSTOP_ON_JOBABORT="NO"
+
+if [ -s ${DABORT}/${NCHAIN}_${IB}.rst ]  # Restart Mode ?
+then
+  # Is it the current job to restart ?
+  if [ `grep ${NJOB} ${DABORT}/${NCHAIN}_${IB}.rst | wc -l` -eq 0 ]
+  then
+    exit 0
+  else
+    LOOPRST="YES"
+    /bin/mv ${DABORT}/${NCHAIN}_${IB}.rst ${DABORT}/${NCHAIN}_${HOSTNAME}_${DATE_YYYYMMDDHHMMSS}.rst
+  fi
+fi
+
+
+# Loop to make the command
+while [ $#  -gt 1 ]
+do
+   shift 1
+	JOB_CMD="${JOB_CMD} $1"
+done
+
+
+NSTEP=${NJOB}_LOOP_JOB
+INTERN_ERROR=${NSTEP}_05
+
+# If the error was on this step, the job must be launched normaly
+if [ "${LOOPRST}" = "YES" ] && [ "${RP}" = "${NSTEP}" ]
+then
+  LOOPRST=""
+fi
+
+
+set `echo ${FLIST}  | sed 's/,/ /g'`
+
+LOOP_COUNT=0
+
+# Loop for all subsidiaries/establishments
+while [ $#  -ge 1 ]
+do
+
+      ONE_VALUE=$1
+      let LOOP_COUNT=LOOP_COUNT+1 
+
+
+      # Substitute LIST to the right values
+      AWK_CMD=`CFTMP`
+      echo "echo $JOB_CMD | awk '{\$""2=\"${ONE_VALUE}\"; print \$""0}' " >${AWK_CMD}
+
+      JOB_CMD=`. ${AWK_CMD}`
+
+      /bin/rm -f ${AWK_CMD} 2>&1
+
+
+      # Cancel Function Execution Forcing
+      # Step execution Rules are respected
+      STEPSTART_FORCE NO
+
+      # Launch the JOB
+      # --------------
+      # Execute the JOB
+      NJOB=`printf "%s_%s" ${JOBNAME} ${ONE_VALUE}`
+      if [ "${LOOPRST}" = "YES" ]
+      then
+        # Launch the job for each line in the rst file
+        grep ${NJOB} ${DABORT}/${NCHAIN}_${HOSTNAME}_${DATE_YYYYMMDDHHMMSS}.rst > ${DABORT}/${NCHAIN}_${IB}.rst
+        if [ -s ${DABORT}/${NCHAIN}_${IB}.rst ]
+        then
+	  DOMAIN=`echo ${NJOB} | awk '{ print substr($0, 1, 2)}'	`
+	  if [ "${DOMAIN}" = "MO" ]
+          then
+             JOBRST=${NJOB}
+          else
+             JOBRST=${NCHAIN}_${NJOB}
+          fi
+          RP=`cat ${DABORT}/${NCHAIN}_${IB}.rst | cut -d";" -f3`
+        else
+          /bin/rm -f ${DABORT}/${NCHAIN}_${IB}.rst > /dev/null 2>&1
+          continue
+        fi
+      fi    
+      echo "#"
+      echo '#*************************************************************************'
+      echo "# LOOP_JOB Executes job  ${JOBNAME}"
+      echo "#   1st parameter: ${ONE_VALUE}"
+      echo "#   Job occurence: ${NCHAIN}_${NJOB}"
+      echo '#*************************************************************************'
+      echo "#"
+
+      JOB_LIBEL="LOOP_JOB: Job for banalized parameter: ${ONE_VALUE}"
+      $JOB_CMD ${JOB_SSD_CMD}
+
+      shift 1
+done
+
+INTERN_ERROR=""
+export CHAINSTOP_ON_JOBABORT="YES"
+
+/bin/rm -f ${FLIST_SSD} 2>&1
+
+echo "#"
+echo '#*************************************************************************'
+echo "# End of LOOP_JOB for job ${JOBNAME}"
+echo '#*************************************************************************'
+echo "#"
+
+}
+
+

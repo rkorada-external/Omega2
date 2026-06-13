@@ -1,0 +1,127 @@
+#!/bin/ksh
+#---------------------------------------------------------------
+# Fichier :   DES
+# Log     :   
+# Auteur  :   T Dauby
+# Date    :   27/05/2010
+# Modif   :   
+# Desc    :   encrypt or decrypt file using DES
+# Usage   :  
+# DES_IN   : Input file. The file will be searched in $DPROTECT
+# DES_OUT  : Output file. The file will be searched in $DPROTECT
+# DES_MODE : Two modes. ENCRYPT to encrypt and DECRYPT to decrypt
+# DES_KEY  : The logical name of the key
+
+# RUN_DES, sub function used to execute des
+# The parameters are the same as DES, but PRGANO and PRGLOG must also be defined
+# [002] -=Dch=-  25/04/2014 Modification de l'executable des-linux
+
+RUN_DES() {
+
+    [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+    DES_BIN="des-linux"
+
+
+    # Check parameters
+
+    if [ -z "${DES_IN}" ]
+    then
+        LOGWRITE '# ERROR: DES_IN variable must be set'
+        return  99
+    fi 
+
+    if [ -z "${DES_OUT}" ]
+    then
+        LOGWRITE '# ERROR: DES_OUT variable must be set'
+        return  99
+    fi 
+
+    if [ -z "${DES_KEY}" ]
+    then
+        LOGWRITE '# ERROR: DES_KEY variable must be set'
+        return  99
+    fi 
+
+    if ! [ "${DES_MODE}" == "ENCRYPT" -o "${DES_MODE}" == "DECRYPT" ]
+    then
+        LOGWRITE '# ERROR: DES_MODE must be set to ENCRYPT or DECRYPT'
+        return  99
+    fi 
+
+    if [ -z "${PRGLOG}" -o -z  "${PRGANO}" ]
+    then
+        LOGWRITE '# ERROR: PRGLOG or PRGANO variables  must be set before running RUN_DES'
+        return  99
+    fi 
+
+    # safety checks, no dir in DES_IN and DES_OUT
+    if [ "${DES_IN}" != "`basename "${DES_IN}"`" ]
+    then
+        LOGWRITE '# ERROR: DES_IN must not contain directory'
+        return 5
+    fi
+
+    # safety checks, no dir in DES_IN and DES_OUT
+    if [ "${DES_OUT}" != "`basename "${DES_OUT}"`" ]
+    then
+        LOGWRITE '# ERROR: DES_OUT must not contain directory'
+        return 5
+    fi
+
+    # Check if the input file exists
+    if [ ! -f "${DPROTECT}/${DES_IN}" ]
+    then
+        LOGWRITE '# ERROR: Input file does not exists'
+        return 4
+    fi
+
+
+    # remove debug
+    set +x
+
+    # Get the key
+    key=`grep "^${DES_KEY};" "${DPROTECT}/.keys" | cut -d ';' -f2`
+
+    # decrypt
+    if [ "${DES_MODE}" == "ENCRYPT" ]
+    then
+        ${DES_BIN} -E -u -k "${key}" "${DPROTECT}/${DES_IN}" "${DPROTECT}/${DES_OUT}"
+    else
+        ${DES_BIN} -D -u -k "${key}" "${DPROTECT}/${DES_IN}" "${DPROTECT}/${DES_OUT}"
+    fi
+    RC=$?
+
+    # put debug back on
+    [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+    # Check return status
+    if [ "${RC}" -ne 0 ]
+    then
+        LOGWRITE "# ERROR: return code != 0 (${RC})"
+        mv "${DFILT}/${PRGLOG}" "${DFILT}/${PRGANO}"
+    fi
+
+    unset DES_BIN DES_IN DES_OUT DES_KEY DES_MODE key
+    return "${RC}"
+}
+
+# DES function
+DES()
+{
+    [ "${FCT_DEBUG}" = "YES" ] && set -x
+    if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+    then
+        ADT="${NSTEP}"
+        STEP_PRG=DES
+        STEPSTART
+
+        export PRGANO=${NSTEP}_${IB}_DES.ano
+        export PRGLOG=${NSTEP}_${IB}_DES.log
+
+        [ "${FCT_DEBUG}" = "YES" ] && set -x
+        RUN_DES
+        STEPEND $?
+   fi
+}
+

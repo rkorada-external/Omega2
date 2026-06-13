@@ -1,0 +1,42 @@
+#----------------------------------------------------------------------------
+# FUNCTION: PARALLEL_MANAGE_ACTIVE_PROCESS
+#
+#
+# Subject: Parallelization Inititialisation
+#----------------------------------------------------------------------------
+
+PARALLEL_MANAGE_ACTIVE_PROCESS () {
+# set -x
+
+PARALLEL_WAITING="ON"
+
+until [ "${PARALLEL_WAITING}" = "OFF" ]
+do
+   # Update running processes table 
+   PARALLEL_CLEAN_TAB_PROCESS
+
+   # Determines how many processes are still running
+   i=0
+   PARALLEL_CUR_NB_PROCESSUS_ONLINE=0
+
+   until [ $i -ge ${PARALLEL_MAX_NB_PROCESSUS_ONLINE} ]
+   do
+      PARALLEL_CUR_PROCESSUS_ONLINE=${PARALLEL_TAB_PROCESSUS_ONLINE[$i]}
+
+      if [ ${PARALLEL_CUR_PROCESSUS_ONLINE} -ne 0 ]
+      then
+         let PARALLEL_CUR_NB_PROCESSUS_ONLINE=${PARALLEL_CUR_NB_PROCESSUS_ONLINE}+1
+      fi
+      let i=$i+1
+   done
+
+   if [ ${PARALLEL_CUR_NB_PROCESSUS_ONLINE} -lt ${PARALLEL_MAX_NB_PROCESSUS_ONLINE} ]
+   then
+      PARALLEL_WAITING="OFF"
+   else
+      sleep 2
+   fi
+
+done
+}
+

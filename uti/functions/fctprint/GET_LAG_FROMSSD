@@ -1,0 +1,60 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_LAG_FROMSSD
+#
+# 1 input parameter:
+# $1 SSD_CF 
+# Output parameter:
+# LAG_CF 
+#
+# Subject: Technical function to get language code from ssd
+# The query extracts SSDOMLAG_CF from the table TSUBSID 
+#----------------------------------------------------------------------------
+GET_LAG_FROMSSD () {
+#set -x
+
+# It forces function execution
+# considered as a step, even if the restart step is not reached
+STEPSTART_FORCE YES
+ISQL_MODE_PREV=${ISQL_MODE}
+ISQL_MODE=""
+
+# Get printer list by ssd/esb
+LIBEL="GET LAG_CF FROM SSD_CF"
+ISQL_BASE="BREF"
+ISQL_O=${DFILT}/${NSTEP}_${IB}_GET_LAG_FROMSSD_01.tmp
+ISQL_QRY=`CFTMP`
+
+# Extract information from the query
+INPUT_TEXT $ISQL_QRY <<EOF
+select T1.SSDOMGLAG_CF
+from BREF..TSUBSID T1 
+where SSD_CF=$1
+exit
+EOF
+
+STEP_NOECHO="YES"
+ISQL_FRES=${DFILT}/${NSTEP}_${IB}_GET_LAG_FROMSSD_02.tmp
+LIB_ERR="ERROR ON GET_LAG_FROMSSD: $1"
+ISQL_INFO
+
+# Only french and english are possible as final lang. code
+LAG_CF=`cat ${ISQL_FRES} | sed -e '1,$s/\ //g`
+case ${LAG_CF} in
+        F|S|I) LAG_CF='F'
+       break;;
+	*) LAG_CF='E'
+       break;;
+esac 
+
+
+# Cancel Function Execution Forcing
+# Step execution Rules are respected
+STEPSTART_FORCE NO
+ISQL_MODE=${ISQL_MODE_PREV}
+
+/bin/rm -f  ${ISQL_O} 2>&1
+/bin/rm -f  ${ISQL_FRES} 2>&1 
+LIB_ERR=""
+}
+
+

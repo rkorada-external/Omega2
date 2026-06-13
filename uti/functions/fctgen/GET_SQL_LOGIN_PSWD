@@ -1,0 +1,29 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_SQL_LOGIN_PSWD
+# $1:  ServerName
+# Subject: Get Sybase Login/Password
+#----------------------------------------------------------------------------
+GET_SQL_LOGIN_PSWD () {
+
+FIND_SQL_LOGIN_PSWD $1 
+
+if [ "${SQL_LOGIN_PWD}" = "" ]
+then
+   USR=NULL
+   PSWD=NULL
+   echo '#'
+   echo '#'
+   echo '#========================================================================='
+   echo "# Sybase Login for Sql Server $1 not found"
+   echo '#========================================================================='
+
+   return 99
+else
+   export USR=`echo ${SQL_LOGIN_PWD} | cut -d":" -f1`
+#   export PSWD=`echo ${SQL_LOGIN_PWD} | cut -d":" -f2`
+   export PSWD=$(DECRYPT_PASSWD $(echo ${SQL_LOGIN_PWD} | cut -d":" -f2)) 
+   return 0
+fi
+
+}
+ 

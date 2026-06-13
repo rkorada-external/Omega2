@@ -1,0 +1,12 @@
+char;RETCTR_NF;10 
+short;RTY_NF ;1
+int;PLC_NT ;1
+unsigned char;RETSEC_NF 
+unsigned char;SSD_CF 
+char;CTR_NF;10 
+short;UWY_NF ;1
+unsigned char;UW_NT 
+unsigned char;SEC_NF 
+unsigned char;END_NT 
+int;CLISSD_NF ;1
+unsigned char;RTOSSD_CF 

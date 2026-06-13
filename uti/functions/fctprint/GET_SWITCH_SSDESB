@@ -1,0 +1,131 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_SWITCH_SSDESB 
+#
+# 2 input parameter:
+# $1 SSD_CF 
+# $2 ESB_CF
+# Output parameter:
+# FLIST_SSDESB List of switches
+#
+# Subject: Technical function that allows switching the printer identification 
+# from specific ssd/esb
+# The information contained in FLIST_SSD are subsidiary, production site,
+#  geographic site and printer and comes from TPRINTB and TESB table.
+# TESB allows to link a default printer to a esb not found in TPRINTB. 
+#
+# Modification 1 - 26/09/2013 - JBG : Verify if subsidiary is valid with
+# BATCHUSER_SD from BATCHNIGHT table
+#----------------------------------------------------------------------------
+GET_SWITCH_SSDESB () {
+#set -x
+
+# Get printer list by ssd/esb
+STEP_NOECHO="YES"
+LIBEL="SWITCH TO PRINTER INFO"
+ISQL_BASE="BREF"
+ISQL_O=${DFILT}/${NSTEP}_${IB}_SSDESB_O1.tmp
+ISQL_QRY=`CFTMP`
+STEP_NOECHO="YES"
+ISQL_FRES=${DFILT}/${NSTEP}_${IB}_SSDESB_O2.tmp
+
+if [ "$2" != "99" ]
+then
+
+# Modification 1
+# Extract information from the query
+INPUT_TEXT $ISQL_QRY <<EOF
+select T1.SSD_CF, T1.CRTTYP_CT, T1.PRDSIT_CF, T1.GEOSIT_CF, T1.PRT_CF,
+case
+	when B.BATCHUSER_CF is null
+	then 0
+	else 1
+end, "~" + T2.SSD_LS +"~" + rtrim(T3.ESB_LS) +"~"
+from BREF..TPRINTB T1, BREF..TSUBSID T2, BREF..TESB T3, BREF..TBATCHNIGHT B
+where CRTVAL_LS='ESB_CF'
+and T1.SSD_CF=T2.SSD_CF
+and T1.SSD_CF=T3.SSD_CF
+and T1.SSD_CF IN ($1)
+and CRTTYP_CT =$2
+and T2.PRDSIT_CF *= B.PRDSIT_CF 
+AND B.BATCHUSER_CF = suser_name()
+and T3.ESB_CF=$2
+union
+select T1.SSD_CF, T3.ESB_CF, T1.PRDSIT_CF, T1.GEOSIT_CF, T1.PRT_CF,
+case
+	when B.BATCHUSER_CF is null
+	then 0
+	else 1
+end, "~" + T2.SSD_LS +"~" + rtrim(T3.ESB_LS) +"~"
+from BREF..TPRINTB T1 , BREF..TSUBSID T2, BREF..TESB T3, BREF..TBATCHNIGHT B
+where CRTVAL_LS='ESB_CF'
+and T1.SSD_CF IN ($1)
+and T3.ESB_CF=$2
+and CRTTYP_CT =99
+and T1.SSD_CF=T2.SSD_CF
+and T1.SSD_CF=T3.SSD_CF
+and T2.PRDSIT_CF *= B.PRDSIT_CF 
+AND B.BATCHUSER_CF = suser_name()
+and not exists (
+        select 1
+        from BREF..TPRINTB T4
+        where
+                T3.SSD_CF=T4.SSD_CF and
+                T3.ESB_CF=T4.CRTTYP_CT
+                )
+order by 1,2
+exit
+EOF
+ISQL_INFO
+
+else
+
+INPUT_TEXT $ISQL_QRY <<EOF
+select T1.SSD_CF, T3.ESB_CF, T1.PRDSIT_CF, T1.GEOSIT_CF, T1.PRT_CF,
+case
+	when B.BATCHUSER_CF is null
+	then 0
+	else 1
+end, "~" + T2.SSD_LS +"~" + rtrim(T3.ESB_LS) +"~"
+from BREF..TPRINTB T1 , BREF..TSUBSID T2, BREF..TESB T3, BREF..TBATCHNIGHT B
+where CRTVAL_LS='ESB_CF'
+and T1.SSD_CF=T3.SSD_CF
+and T1.SSD_CF=T2.SSD_CF
+and T1.SSD_CF IN ($1)
+and CRTTYP_CT=T3.ESB_CF
+and T2.PRDSIT_CF *= B.PRDSIT_CF 
+AND B.BATCHUSER_CF = suser_name()
+union
+select T1.SSD_CF, T3.ESB_CF, T1.PRDSIT_CF, T1.GEOSIT_CF, T1.PRT_CF,
+case
+	when B.BATCHUSER_CF is null
+	then 0
+	else 1
+end, "~" + T2.SSD_LS +"~" + rtrim(T3.ESB_LS) +"~"
+from BREF..TPRINTB T1 , BREF..TSUBSID T2, BREF..TESB T3, BREF..TBATCHNIGHT B
+where CRTVAL_LS='ESB_CF'
+and T1.SSD_CF=T3.SSD_CF
+and T1.SSD_CF=T2.SSD_CF
+and T1.SSD_CF IN ($1)
+and CRTTYP_CT=99
+and T2.PRDSIT_CF *= B.PRDSIT_CF 
+AND B.BATCHUSER_CF = suser_name()
+and not exists (   
+        select 1
+        from BREF..TPRINTB T4
+        where
+         T3.SSD_CF=T4.SSD_CF and
+         T3.ESB_CF=T4.CRTTYP_CT)
+order by 1, 2
+exit
+EOF
+ISQL_RES
+
+fi
+
+/bin/rm -f  ${ISQL_O} 2>&1
+
+# Output filename
+FLIST_SSDESB=${ISQL_FRES}
+
+}
+

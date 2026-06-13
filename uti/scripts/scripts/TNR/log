@@ -1,0 +1,9 @@
+dcvdevob bcpscor      1.4        06/08 15:27:10 10 00000000 (UAT_TPO2) Serveur Message number: 5701, Severity 10,State 2, Line 0 Changed database context to 'BREF'.
+
+dcvdevob bcpscor      1.4        06/08 15:27:10 10 00000000 (UAT_TPO2) Server 'UAT_TPO2'
+dcvdevob bcpscor      1.4        06/08 15:27:10 10 00000000 (UAT_TPO2) Serveur Message number: 5701, Severity 10,State 1, Line 1 Changed database context to 'master'.
+
+dcvdevob bcpscor      1.4        06/08 15:27:10 10 00000000 (UAT_TPO2) Server 'UAT_TPO2'
+dcvdevob bcpscor      1.4        06/08 15:27:10 0 00000000 (UAT_TPO2) Debut de bcp out de la requete 'select  * from BEST..TI17PERMFIL  where IDF_CT = 'ESFD2220_POSE' order by IO '.
+dcvdevob bcpscor      1.4        06/08 15:27:10 0 00000000 (UAT_TPO2)  128 lignes copiees. 
+dcvdevob bcpscor      1.4        06/08 15:27:10 0 00000000 (UAT_TPO2) Commande executee avec succes.

@@ -1,0 +1,15 @@
+#----------------------------------------------------------------------------
+# FUNCTION: CHAINSTOP
+# no input parameter:
+# Subject: This function stops chain because Initialisation problem
+# call : CHAINSTOP
+#   
+#----------------------------------------------------------------------------
+CHAINSTOP () {
+if test -s ${DABORT}/${NCHAIN}_${HOSTNAME}.rst 
+then
+	echo "# ERROR: Cannot initialize $NCHAIN Chain"
+	exit 12
+fi
+}
+

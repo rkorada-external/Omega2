@@ -1,0 +1,40 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GETPRM
+# 1 input parameter:
+# - Parameter file
+#
+# Subject: Get parameters from chain parameter file
+#
+# Format of a parameter file
+# "#" can be used as a comment line (the whole line)
+# A parameter consists of two field: a description field and its value
+#
+#
+# Sample of a parameter file
+# SSD_CF 1
+# ESB_CF 2
+# The function being used as follows: set `GETPRM $FRMP`
+# the values of the parameters will be in $1, $2, ...
+# In our example, $1=1 and $2=2
+#
+#
+#----------------------------------------------------------------------------
+GETPRM () {
+#set -x
+echo "# The Chain parameters are: " >>${FLOG}
+awk '{if (substr($1,1, 1) !="#" && length($0)>0) printf ("# %s\t--> %s\n", $1, $2) }' $1 >>${FLOG}
+echo "#----------------------------------------------------------------------------" >>${FLOG}
+echo "#" >>${FLOG}
+
+GETPRM_ARGV=`awk '{if (substr($1,1, 1) !="#" && length($0)>0) {$1="";list=list" "$0}} END {print list}' $1`
+
+if [ "${GETPRM_ARGV}" = "" ]
+then
+   echo NULL
+else
+   echo ${GETPRM_ARGV}
+fi
+
+}
+
+

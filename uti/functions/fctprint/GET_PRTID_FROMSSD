@@ -1,0 +1,43 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_PRTID_FROMSSD
+#
+# input parameter:
+# $1: SSD_CF
+# Output parameter:
+# SSD_CF    : Subsidiary
+# PRDSIT_CF : Production site
+# GEOSIT_CF : Geographic site
+# PRT_CF    : Printer code
+# PRTID     : Printer identifier
+#
+# Subject: Generic function that identifies Printer Id from Subsidiary
+# calls GET_SWITCH_SSD function
+#----------------------------------------------------------------------------
+GET_PRTID_FROMSSD () {
+#  set -x
+
+# It forces function execution
+# considered as a step, even if the restart step is not reached
+STEPSTART_FORCE YES
+
+# Read the ssd switch from TPRINTB table
+#----------------------------------------------------------------------------
+GET_SWITCH_SSD $1
+set `cat ${FLIST_SSD}`
+
+# export thes values for PRN function use
+export SSD_CF=$1
+export PRDSIT_CF=$2
+export GEOSIT_CF=$3
+export PRT_CF=$4
+export PRTID=${PRDSIT_CF}';'${GEOSIT_CF}';'${PRT_CF}
+
+# Cancel Function Execution Forcing
+# Step execution Rules are respected
+STEPSTART_FORCE NO
+
+/bin/rm -f  ${FLIST_SSD} 2>&1
+ 
+} 
+
+

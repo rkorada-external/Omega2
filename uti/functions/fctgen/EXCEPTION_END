@@ -1,0 +1,17 @@
+#----------------------------------------------------------------------------
+# FUNCTION: EXCEPTION_END
+# no input parameter:
+# Subject: This function stops job execution
+#  This function is called in job EXCEPTION function 
+#   
+# call : EXCEPTION_END
+#----------------------------------------------------------------------------
+EXCEPTION_END () {
+#set -x
+
+   echo '# Exception processing after end of job is done'
+   echo "# Date : " `date +"%Y/%m/%d %H:%M:%S"`
+   echo '#-------------------------------------------------------------------------' 
+}
+
+

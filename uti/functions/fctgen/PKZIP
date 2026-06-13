@@ -1,0 +1,69 @@
+#----------------------------------------------------------------------------
+# FUNCTION: PKZIP
+#
+# The following parameters must be previously defined:
+# 4 parameters must be previously defined:
+#    ZIP_ODIR : Directory from output (target) files
+#    ZIP_I : Name of the input file(s) with path
+#    ZIP_O : Name of the output file(s)
+#    ZIP_OPT  : Option
+#
+# Subject: This function uses PKZIP program to compress files
+# to a target directory
+#[001] 09/04/2014 R. Cassis :spot:25427 - livraison ancienne version
+#[002] 10/04/2014 -=Dch=-  :spot:25427 - Suppression du chemin complet dans l'archive zip 
+#----------------------------------------------------------------------------
+
+PKZIP()
+{
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+   STEP_PRG=PKZIP
+   STEPSTART
+
+   [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+   ZIP_LOG=${DFILT}/${NSTEP}_${IB}_ZIP.log
+	
+   # ---    MAKE ZIP FILE   ---
+   # --------------------------
+   # --------------------------
+   #
+ #  pkzipc -dir=none -add ${ZIP_ODIR}/${ZIP_O} ${ZIP_I} 1> ${ZIP_LOG} 2>&1
+  zip -j ${ZIP_ODIR}/${ZIP_O} ${ZIP_I} 1> ${ZIP_LOG} 2>&1
+
+      ZIP_ERR=$?
+      ZIP_NBERR=`grep bad ${ZIP_LOG} | wc -l`
+      
+      
+      if  [ "${ZIP_NBERR}" -ne 0 ]
+      then
+               ZIP_ERR=1
+      else
+	    ZIP_NBERR=`grep error ${ZIP_LOG} | wc -l`
+      	    if [ "${ZIP_NBERR}" -ne 0 ]
+      	    then
+      	        ZIP_ERR=2
+      	    else
+      	        ZIP_NBERR=`grep Usage ${ZIP_LOG} | wc -l`
+      	        if [ "${ZIP_NBERR}" -ne 0 ]
+      	        then
+      	             ZIP_ERR=3
+      	        fi
+      	    fi
+      fi
+
+      if [ "${ZIP_ERR}" -eq 0 ]
+      then
+      	 /bin/rm -f ${ZIP_LOG}
+      fi
+
+   # --- END OF ZIP COMMAND ---
+
+   ZIP_OPT=""
+   STEPEND ${ZIP_ERR} 
+fi
+}
+
+
+

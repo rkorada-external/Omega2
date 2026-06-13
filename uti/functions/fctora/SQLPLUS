@@ -1,0 +1,214 @@
+#!/bin/ksh
+#---------------------------------------------------------------
+# Fichier :   SQLPLUS
+# Log     :   
+# Auteur  :   G.Defendini
+# Date    :   22.10.2009
+# Modif   :   
+# But     :    run sql query on oracle 
+# Usage   :  
+#SQLPLUS_SCHEMA: Target schema
+#SQLPLUS_QRY: Query to execute
+#SQLPLUS_I: File to execute. SQLPLUS_QRY and SQLPLUS_I are mutually exclusive.
+#SQLPLUS_O: Output file (optional)
+#SQLPLUS_SPOOL: Spool to SQLPLUS_O (optional)
+
+# Run SQL, sub function used bu SQLPLUS and SQLPLUS.
+# The parameters are the same as SQLPLUS, but PRGANO and PRGLOG must also be defined
+RUN_SQL() {
+
+    # Set date format
+    if [ -z "$NLS_DATE_FORMAT" ]
+    then
+        export NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS'
+    fi
+
+    [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+    SQLPLUS_BIN="${ORACLE_HOME}/bin/sqlplus -L -s /nolog"
+    TMPSQL=`CFTMP`
+
+    if [ -z "${SQLPLUS_SCHEMA}" ]
+    then
+        echo '# ERROR: SQLPLUS_SCHEMA variable must be set'
+        return  99
+    fi 
+
+    if [ -z "${SQLPLUS_QRY}" -a -z  "${SQLPLUS_I}" ]
+    then
+        echo '# ERROR: SQLPLUS_QRY or SQLPLUS_I variables  must be set'
+        return  99
+    fi 
+
+    if [ -z "${PRGLOG}" -o -z  "${PRGANO}" ]
+    then
+        echo '# ERROR: PRGLOG or PRGANO variables  must be set before running RUN_SQL'
+        return  99
+    fi 
+
+    if [ -n "${SQLPLUS_QRY}" -a -n  "${SQLPLUS_I}" ]
+    then
+        echo '# ERROR: SQLPLUS_QRY and SQLPLUS_I variables are mutually exclusive'
+        return  99
+    fi 
+
+    # Get command via standard output if SQLPLUS_I=-
+    if [ "X${SQLPLUS_I}" = "X-" ] ; then
+        SQLPLUS_I=`CFTMP`
+        SQLPLUS_I_TMP=YES
+        cat >> ${SQLPLUS_I}
+        [ "${FCT_DEBUG}" = "YES" ] && cat ${SQLPLUS_I} >&2
+    else
+        unset SQLPLUS_I_TMP 
+    fi
+
+    # Create output file if none given
+    if [ -z "${SQLPLUS_O}" ]
+    then
+        SQLPLUS_O=`CFTMP`
+        SQLPLUS_O_TMP=YES
+    else
+        unset SQLPLUS_O_TMP 
+    fi
+
+    # Check that SQLPLUS_O is empty
+    if [ -s "${SQLPLUS_O}" ]
+    then
+        echo "# ERROR: ${SQLPLUS_O} is not empty, will no overwrite"
+        return  99
+    fi 
+
+    # Common options
+    SQLPLUS_OPTIONS="
+connect ${ORA_USR}/${ORA_PSWD}@${ORA}
+whenever oserror exit 3
+whenever sqlerror exit 4
+set serveroutput on
+set echo on time on veri off
+set pau off lin 32767 trimsp on tab off define off
+set emb on pages 0 newp none
+alter session set current_schema=${SQLPLUS_SCHEMA};
+alter session set nls_date_format='${NLS_DATE_FORMAT}';
+set feedb on"
+
+    # Debug options, only available if no spool file
+    if [ "${FCT_DEBUG}" = "YES" -z "${SQLPLUS_SPOOL}" ]
+    then
+            SQLPLUS_OPTIONS="${SQLPLUS_OPTIONS}
+set timi on
+set autotrace trace expl stat"
+    echo
+
+    fi
+
+    #to do : modify row seperator
+    #if [ -n "${SQLPLUS_RS}" ]
+    #then
+    #   echo "set  ${SQLPLUS_RS}" >> ${TMPSQL}
+    #fi
+
+    #modify field separator
+    if [ -n "${SQLPLUS_FS}" ]
+    then
+        SQLPLUS_OPTIONS="${SQLPLUS_OPTIONS}
+set colsep ${SQLPLUS_FS}"
+    fi
+
+
+    #spool or not spool
+    if [ "${SQLPLUS_SPOOL}" = "YES" ]
+    then
+        SQLPLUS_OPTIONS=" 
+${SQLPLUS_OPTIONS}
+set term off head off feedb off echo off
+spool ${SQLPLUS_O}"
+        SQLPLUS_CMD_OUTPUT=${DFILT}/${PRGLOG}
+    else
+        SQLPLUS_CMD_OUTPUT=${SQLPLUS_O}
+    fi
+
+    # SQLPLUS_I or SQLPLUS_QRY
+    if [ -n "${SQLPLUS_I}" ] ; then
+        SQL_STR="@${SQLPLUS_I}"
+    else
+        SQL_STR="${SQLPLUS_QRY};"
+    fi
+
+    SQLPLUS_OPTIONS="${SQLPLUS_OPTIONS}
+${SQL_STR}
+exit
+"
+
+    echo "${SQLPLUS_OPTIONS}" >> ${TMPSQL}
+    ${SQLPLUS_BIN} @${TMPSQL} >> ${SQLPLUS_CMD_OUTPUT} 2>&1
+    RC=$?
+
+    # Remove temp files
+    if [ "${FCT_DEBUG}" != "YES" ]
+    then
+        [ -n "${SQLPLUS_I_TMP}" ] && rm ${SQLPLUS_I}
+        rm ${TMPSQL}
+    fi
+
+    # If SQL*Plus exited with a failure status then exit..
+    if [ ${RC} != 0 ]
+    then
+        case "${RC}" in
+            2) ERRMSG="Cannot connect " ;;
+            3) ERRMSG="spool of space-report failed";;
+            4) ERRMSG="query failed" ;;
+            *) ERRMSG="Unknow error (${RC})" ;;
+        esac
+    fi
+
+    # Defined ignored errors if not set in .env file
+    : ${IGNORED_ORA:=XXX}
+    : ${IGNORED_ERR:=0618|0611}
+
+    # Check the status of operation errors or empty file
+    ERR_COUNT=`egrep -v "^SP2-(${IGNORED_ERR})" ${SQLPLUS_CMD_OUTPUT} | grep "^SP2-" | wc -l`
+    ORA_COUNT=`egrep -v "^ORA-(${IGNORED_ORA})" ${SQLPLUS_CMD_OUTPUT} | grep "^ORA-" | wc -l`
+
+    # check for errors
+    if [ "${ERR_COUNT}" -ne 0 -o "${ORA_COUNT}" -ne 0 -o \( ! -s "${SQLPLUS_O}" -a -n "${SQLPLUS_SPOOL}" \) -o ${RC} != 0 ]; then
+
+        if  [ ${RC} != 0 ] 
+        then
+            echo "# ERROR: Return status !=0 (${ERRMSG})"
+        else
+            echo "# ERROR: empty spool file or errors in output file. See ${PRGANO}"
+        fi
+
+        cat ${SQLPLUS_CMD_OUTPUT} >> ${DFILT}/${PRGANO}
+        rm ${SQLPLUS_CMD_OUTPUT}
+        unset SQLPLUS_SCHEMA SQLPLUS_QRY SQLPLUS_I SQLPLUS_SPOOL SQLPLUS_O SQLPLUS_FS SQLPLUS_RS SQLPLUS_CMD_OUTPUT
+        return 5
+    else
+        # Remove outpout file if previously generated
+        [ -z "${FCT_DEBUG}" -a -n "${SQLPLUS_O_TMP}" ] && rm ${SQLPLUS_O}
+    fi
+
+    unset SQLPLUS_SCHEMA SQLPLUS_QRY SQLPLUS_I SQLPLUS_SPOOL SQLPLUS_O SQLPLUS_FS SQLPLUS_RS SQLPLUS_CMD_OUTPUT
+    return 0
+
+}
+
+# SQLPLUS function
+SQLPLUS ()
+{
+    [ "${FCT_DEBUG}" = "YES" ] && set -x
+    if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+    then
+        ADT="${NSTEP}"
+        STEP_PRG=SQLPLUS
+        STEPSTART
+
+        export PRGANO=${NSTEP}_${IB}_SQLPLUS.ano
+        export PRGLOG=${NSTEP}_${IB}_SQLPLUS.log
+
+        [ "${FCT_DEBUG}" = "YES" ] && set -x
+        RUN_SQL
+        STEPEND $?
+   fi
+}
+

@@ -1,0 +1,62 @@
+#----------------------------------------------------------------------------
+# FUNCTION: DEL_ZIP
+#
+# The following parameters must be previously defined:
+# 3 parameters 
+#       NSTEP          = step identifier
+#       DEL_ZIP_I1     = pool directories list
+#       DEL_ZIP_I2     = list of delete command to execute on distant sites
+#
+# Subject: This function is used to delete extraction files 
+#	(ftp) zip files produced on host sites.
+#       It used 
+#----------------------------------------------------------------------------
+DEL_ZIP() {
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then 
+  ADT="${NSTEP}"
+  STEP_PRG=DEL_ZIP
+  STEPSTART
+
+  if [ ! -s ${DEL_ZIP_I1} ]
+  then
+    echo "# No Zip file to process"
+    STEPEND 0
+    return 0  # Go out of the step
+  fi
+
+  # Temporary file initialization
+  FTMP1=`CFTMP`
+  FTMP2=`CFTMP`
+
+  # delete extraction files from each directory
+  for DIR in `cat ${DEL_ZIP_I1}`	
+  do
+      echo "# Delete zip files from ${DIR}"
+
+      # Get list of diles to delete for the corresponding site
+      awk -F\; 'P1==$1 {print $2}' P1=${DIR} ${DEL_ZIP_I2} > ${FTMP2} 
+      
+      # Get FTP parameters 	
+      awk -F\; 'P1==$1 {print}' P1=${DIR} ${DREMLOGIN}/.remlogin > ${FTMP1} 
+      FTP_DELAY=3
+      FTP_NBRETRY=1
+      FTP_LDIR=.
+      FTP_IP=`cut -d";" -f2 ${FTMP1}`
+      FTP_USR=`cut -d";" -f3 ${FTMP1}`
+      FTP_PSWD=`cut -d";" -f4 ${FTMP1}`
+      FTP_RDIR=`cut -d";" -f5 ${FTMP1}`
+      STEPSTART_FORCE YES
+      STEP_NOECHO="YES"
+      FTP_I=${FTMP2}
+      FTP_MDEL
+      STEPSTART_FORCE NO
+  done
+  STEPEND 0
+  /bin/rm -f ${FTMP} 2>/dev/null
+  
+fi
+}

@@ -1,0 +1,9 @@
+#!/bin/ksh
+
+VERSION="4A"
+ENV_SRC="IN2"
+TARGET_RELEASE="01-PROD 4A June 2022 Hotfix"
+DELIVERY_PACKAGE="107 - Production Hot Fix #07"
+FILENAME="OM2.${VERSION}_DELIVERY_PRD_HF_7_MAIN.csv"
+
+${DUTI}/scripts/create_delivery_package.py "${VERSION}" "${ENV_SRC}" "${TARGET_RELEASE}" "${DELIVERY_PACKAGE}" "${FILENAME}"

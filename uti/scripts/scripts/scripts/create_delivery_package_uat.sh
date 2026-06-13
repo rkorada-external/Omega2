@@ -1,0 +1,9 @@
+#!/bin/ksh
+
+VERSION="4B"
+ENV_SRC="ITK"
+TARGET_RELEASE="03,01"
+DELIVERY_PACKAGE="242,106"
+FILENAME="UAT_HF_2"
+
+${DUTI}/scripts/create_delivery_package.py "${VERSION}" "${ENV_SRC}" "${TARGET_RELEASE}" "${DELIVERY_PACKAGE}" "${FILENAME}"

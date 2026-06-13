@@ -1,0 +1,50 @@
+#----------------------------------------------------------------------------
+# FUNCTION: RMFIL
+# 6 parameters must be previously defined:
+# NSTEP:        Number of STEP
+# $1:  Prefix Files to Removes
+# Subject: Generic Remove File Function
+#----------------------------------------------------------------------------
+RMFIL()
+{
+var=$1
+if [[ $var = */temporaire/*.dat ]] && [[ $var != *_TEFJ00* ]] && [[ ${NCHAIN} != ${ENV_PREFIX}_ESIJ0800* ]] && ( [[ ${NCHAIN} = ${ENV_PREFIX}_ES* ]] || [[  ${NCHAIN} = ${ENV_PREFIX}_ST* ]] ) ; then
+	# set -x
+	echo "#  ----------------------------RMFIL disabled"
+	return 0
+fi
+
+
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+        STEP_PRG=RMFIL
+        STEPSTART
+
+   # Analyse Delete request
+   for FIRST_RMFILE in `echo "$1" | sed '1,$s/\*/\~/g'`
+   do
+
+      if [ ! -d "${FIRST_RMFILE}" ]
+      then
+         RM_FILE=`basename "${FIRST_RMFILE}"`
+         if [ "${RM_FILE}" = '~' ]
+         then
+            echo "WARNING RMFIL Too dangerous to delete all files in $1"
+            STEPEND 12
+         fi
+      else
+         echo "WARNING RMFIL Too dangerous to delete all files in $1"
+         STEPEND 12
+      fi
+   done
+
+   # Delete the files
+   /bin/rm -f $1 2>&1 > /dev/null
+   STEPEND $?
+   return 0
+
+fi
+}
+ 
+

@@ -1,0 +1,193 @@
+#----------------------------------------------------------------------------
+# FUNCTION: LOOP_JOB_SSDESB_CORP
+#
+# parameters :
+# The complete command line of the job including ssd/esb on the 
+#  first two parameters
+#
+# Generic Function that loops on job execution
+# 2 cases are processed. Either the job is executed
+#    for all ssd/esb found in TSUBSID, TESB
+#
+# The different steps are as follows:
+# - Extracts list of subsidiarie (TSUBSID, TESB)
+# - Loop on subsidiary/establishment
+#    - execute the job  with the ssd subsituted to the adequate values
+# 
+# if one job fails, the chain is not stopped. The following jobs must be
+# launched.
+#
+# Modifications
+# 1 - 26/09/2013 - JBG : Do not execute the JOB in the loop if subsidiary is not valid for the user (VALID_SD)
+# [02] Florent 01/08/2014 :spot:27252 we do not use the unix user for the partition name but the Sybase user !
+#----------------------------------------------------------------------------
+LOOP_JOB_SSDESB_CORP () {
+#set -x
+
+JOB_CMD=$1
+SSD_CF=$2
+ESB_CF=$3
+JOBNAME=${NJOB}
+
+if test -s ${DABORT}/${NCHAIN}_${HOSTNAME}.rst && [ "${CHAINSTOP_ON_JOBABORT}" = "YES" ]
+then
+   exit 0
+fi
+
+export CHAINSTOP_ON_JOBABORT="NO"
+
+
+if [ -s ${DABORT}/${NCHAIN}_${IB}.rst ]  # Restart Mode ?
+then
+  # Is the current job is to restart  
+  if [ `grep ${NJOB} ${DABORT}/${NCHAIN}_${IB}.rst | wc -l` -eq 0 ]
+  then
+    exit 0
+  else
+    LOOPRST="YES"
+    # Save the restart file
+    /bin/mv ${DABORT}/${NCHAIN}_${IB}.rst ${DABORT}/${NCHAIN}_${HOSTNAME}_${DATE_YYYYMMDDHHMMSS}.rst
+  fi
+fi
+
+
+# It forces function execution 
+# considered as a step, even if the restart step is not reached
+STEPSTART_FORCE YES
+
+# Disable DEBUG ISQL_MODE inside toolbox function
+ISQL_MODE_PREV=${ISQL_MODE}
+ISQL_MODE=""
+
+# Loop to make the command
+while [ $#  -ge 1 ]
+do
+   shift 1
+	JOB_SSDESB_CMD="${JOB_SSDESB_CMD} $1"
+done
+
+
+# 3 possible cases
+#   1) SSD_CF AN ESB_CF are not specified, so execute jobs for all 
+#      SSD_CF/ESB_CF found in the list.
+#   2) SSD_CF is specified but not ESB_CF or
+#      SSD_CF AN ESB_CF are specified, so execute job for that SSD_CF/ESB_CF.
+
+NSTEP=${NJOB}_LOOP_JOB_SSDESB_CORP
+INTERN_ERROR=${NSTEP}_05
+
+# If the error was on this step, the job must be launched noramlly
+if [ "${LOOPRST}" = "YES" ] && [ "${RP}" = "${NSTEP}" ]
+then
+  LOOPRST=""
+fi
+
+# CASE 1
+if [ "$SSD_CF" = "99" ]
+then
+
+   # Read ssd switch list from TPRINTB table
+   #----------------------------------------------------------------------------
+   LIST_SWITCH_SSDESB_CORP
+else
+# CASE 2
+
+   # Read the ssd switch from TPRINTB table
+   #----------------------------------------------------------------------------
+   GET_SWITCH_SSDESB_CORP  ${SSD_CF}
+fi
+
+if [ -n "${FLIST_SSDESB}" ]; then
+        if [ ! -s ${FLIST_SSDESB} ]; then
+                echo "# No information found in TPRINTB"
+                STEPEND 12
+        fi
+fi
+set `cat ${FLIST_SSDESB} | cut -d"~" -f1`
+
+LOOP_COUNT=0
+
+# Loop for all subsidiaries/establishments
+while [ $#  -ge 1 ]
+do
+
+      let LOOP_COUNT=LOOP_COUNT+1 
+
+      # export thes values for PRN function use
+      export SSD_CF=$1
+      export ESB_CF=$2
+	  export PRDSIT_CF=$3
+	  export VALID_SD=$4
+      shift 4
+
+      SSD_LS=`cat ${FLIST_SSDESB} | cut -d"~" -f2 | sed -n -e "${LOOP_COUNT}p"`
+      ESB_LS=`cat ${FLIST_SSDESB} | cut -d"~" -f3 | sed -n -e "${LOOP_COUNT}p"`
+
+      INTERN_ERROR=${NSTEP}_10
+	  # Modification 1
+	  if [ "$VALID_SD" == "0" ]; then
+		 echo "# The subsidiary/ledger ${SSD_CF}/${ESB_CF} of site ${PRDSIT_CF} is not valid for user ${USR}"
+	  else
+		 # Substitute SSD/ESB to the right values
+		 AWK_CMD=`CFTMP`
+		 echo "echo $JOB_SSDESB_CMD | awk '{\$""1=${SSD_CF};\$""2=${ESB_CF}; print \$""0}' " >${AWK_CMD}
+		 JOB_SSDESB_CMD=`. ${AWK_CMD}`
+
+		 /bin/rm -f ${AWK_CMD} 2>&1
+
+		 # Cancel Function Execution Forcing
+		 # Step execution Rules are respected
+		 STEPSTART_FORCE NO
+
+
+		 # Execute the JOB
+		 NJOB=`printf "%s_%02d_%02d" ${JOBNAME} ${SSD_CF} ${ESB_CF}`
+		 if [ "${LOOPRST}" = "YES" ]
+		 then
+			# Launch the job for each line in the rst file
+			grep ${NJOB} ${DABORT}/${NCHAIN}_${HOSTNAME}_${DATE_YYYYMMDDHHMMSS}.rst > ${DABORT}/${NCHAIN}_${IB}.rst
+			if [ -s ${DABORT}/${NCHAIN}_${IB}.rst ]
+			then
+				DOMAIN=`echo ${NJOB} | awk '{ print substr($0, 1, 2)}'	`
+				if [ "${DOMAIN}" = "MO" ]
+				then
+					JOBRST=${NJOB}
+				else
+					JOBRST=${NCHAIN}_${NJOB}
+				fi
+				RP=`cat ${DABORT}/${NCHAIN}_${IB}.rst | cut -d";" -f3`       
+			else
+				/bin/rm -f ${DABORT}/${NCHAIN}_${IB}.rst > /dev/null 2>&1
+				continue
+			fi
+		 fi
+
+		echo "#"
+		echo '#*************************************************************************'
+		echo "# LOOP_JOBSSDESB_CORP Executes job ${JOBNAME}"
+		echo "#   Subsidiary: ${SSD_LS} - code ${SSD_CF}"
+		echo "#   Establishment: ${ESB_LS} - code ${ESB_CF}"
+		echo "#   Job occurence: ${NCHAIN}_${NJOB}"
+		echo '#*************************************************************************'
+		echo "#"
+
+		JOB_LIBEL="LOOP_JOB_SSDESB: Job for SSD_CF:${SSD_CF} ESB_CF:${ESB_CF}"Z
+		${JOB_CMD} ${JOB_SSDESB_CMD}
+	  fi
+done
+
+/bin/rm -f ${FLIST_SSDESB} 2>&1
+INTERN_ERROR=""
+export CHAINSTOP_ON_JOBABORT="YES"
+
+echo "#"
+echo '#*************************************************************************'
+echo "# End of LOOP_JOBSSDESB_CORP for job ${JOBNAME}"
+echo '#*************************************************************************'
+echo "#"
+
+# Disable DEBUG ISQL_MODE inside toolbox function
+ISQL_MODE=${ISQL_MODE_PREV}
+
+}
+

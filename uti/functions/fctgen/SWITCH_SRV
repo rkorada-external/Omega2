@@ -1,0 +1,36 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SWITCH_SRV
+# 6 parameters must be previously defined:
+# NSTEP:        Number of STEP
+# $1:  ServerName
+# $2: Basename (optional)
+# Call SWITCH_SRV
+# Subject: Generic Function to switch server
+#----------------------------------------------------------------------------
+SWITCH_SRV ()
+{
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then 
+   ADT="${NSTEP}"
+fi
+
+   # defines User/pwd of Sql Server
+   export SRV=$1
+   if [ $# -eq 2 ]
+   then
+      export BASE=$2
+   fi
+
+   GET_SQL_LOGIN_PSWD $SRV
+   if [ $?  -ne 0 ]
+   then
+      STEPEND 99
+   else
+      echo '#========================================================================='
+      echo "# Switch to Sql Server $SRV succeeded"
+      echo '#========================================================================='
+   fi
+
+}
+

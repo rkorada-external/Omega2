@@ -1,0 +1,3 @@
+#set -x
+/scor/scoromega/runnable/uti/scripts/deliver3f.py $1 $2 $3  2>&1 | tee -a ${DLOG}/delivery_`date +"%Y%m%d"`.log
+

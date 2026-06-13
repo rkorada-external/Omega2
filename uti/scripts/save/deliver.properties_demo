@@ -1,0 +1,5 @@
+[properties]
+root_delivery="/scor/home/frdev11/TEST_DELIVERY/3F_DELIVERY/"
+listComponentsFile="/scor/home/frdev11/TEST_DELIVERY/OTS_DELIVERY/OM2.3F_DELIVERY_ITK_demo.csv"
+listCtrComponentsFile="/scor/home/frdev11/TEST_DELIVERY/3F_SpiraList.csv"
+branches=http://dcvprdsvn/refsvn/OMEGA-2/branches/TEST_TOOLS_DELIVERY/3F_DEV/omega2-sql/global/

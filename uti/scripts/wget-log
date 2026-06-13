@@ -1,0 +1,71 @@
+
+--2026-05-13 20:47:13--  (try: 7)  https://www.python.org/ftp/python/2.6.9/Python-2.6.9.tgz
+Connecting to www.python.org (www.python.org)|151.101.128.223|:443... connected.
+HTTP request sent, awaiting response... Read error (Connection timed out) in headers.
+Retrying.
+
+--2026-05-13 21:02:20--  (try: 8)  https://www.python.org/ftp/python/2.6.9/Python-2.6.9.tgz
+Connecting to www.python.org (www.python.org)|151.101.128.223|:443... connected.
+HTTP request sent, awaiting response... Read error (Connection timed out) in headers.
+Retrying.
+
+--2026-05-13 21:17:29--  (try: 9)  https://www.python.org/ftp/python/2.6.9/Python-2.6.9.tgz
+Connecting to www.python.org (www.python.org)|151.101.128.223|:443... connected.
+HTTP request sent, awaiting response... Read error (Connection timed out) in headers.
+Retrying.
+
+--2026-05-13 21:32:38--  (try:10)  https://www.python.org/ftp/python/2.6.9/Python-2.6.9.tgz
+Connecting to www.python.org (www.python.org)|151.101.128.223|:443... connected.
+HTTP request sent, awaiting response... Read error (Connection timed out) in headers.
+Retrying.
+
+--2026-05-13 21:47:48--  (try:11)  https://www.python.org/ftp/python/2.6.9/Python-2.6.9.tgz
+Connecting to www.python.org (www.python.org)|151.101.128.223|:443... connected.
+HTTP request sent, awaiting response... Read error (Connection timed out) in headers.
+Retrying.
+
+--2026-05-13 22:02:58--  (try:12)  https://www.python.org/ftp/python/2.6.9/Python-2.6.9.tgz
+Connecting to www.python.org (www.python.org)|151.101.128.223|:443... connected.
+HTTP request sent, awaiting response... Read error (Connection timed out) in headers.
+Retrying.
+
+--2026-05-13 22:18:08--  (try:13)  https://www.python.org/ftp/python/2.6.9/Python-2.6.9.tgz
+Connecting to www.python.org (www.python.org)|151.101.128.223|:443... connected.
+HTTP request sent, awaiting response... Read error (Connection timed out) in headers.
+Retrying.
+
+--2026-05-13 22:33:18--  (try:14)  https://www.python.org/ftp/python/2.6.9/Python-2.6.9.tgz
+Connecting to www.python.org (www.python.org)|151.101.128.223|:443... connected.
+HTTP request sent, awaiting response... Read error (Connection timed out) in headers.
+Retrying.
+
+--2026-05-13 22:48:28--  (try:15)  https://www.python.org/ftp/python/2.6.9/Python-2.6.9.tgz
+Connecting to www.python.org (www.python.org)|151.101.128.223|:443... connected.
+HTTP request sent, awaiting response... Read error (Connection timed out) in headers.
+Retrying.
+
+--2026-05-13 23:03:38--  (try:16)  https://www.python.org/ftp/python/2.6.9/Python-2.6.9.tgz
+Connecting to www.python.org (www.python.org)|151.101.128.223|:443... connected.
+HTTP request sent, awaiting response... Read error (Connection timed out) in headers.
+Retrying.
+
+--2026-05-13 23:18:48--  (try:17)  https://www.python.org/ftp/python/2.6.9/Python-2.6.9.tgz
+Connecting to www.python.org (www.python.org)|151.101.128.223|:443... connected.
+HTTP request sent, awaiting response... Read error (Connection timed out) in headers.
+Retrying.
+
+--2026-05-13 23:33:58--  (try:18)  https://www.python.org/ftp/python/2.6.9/Python-2.6.9.tgz
+Connecting to www.python.org (www.python.org)|151.101.128.223|:443... connected.
+HTTP request sent, awaiting response... Read error (Connection timed out) in headers.
+Retrying.
+
+--2026-05-13 23:49:09--  (try:19)  https://www.python.org/ftp/python/2.6.9/Python-2.6.9.tgz
+Connecting to www.python.org (www.python.org)|151.101.128.223|:443... connected.
+HTTP request sent, awaiting response... Read error (Connection timed out) in headers.
+Retrying.
+
+--2026-05-14 00:04:19--  (try:20)  https://www.python.org/ftp/python/2.6.9/Python-2.6.9.tgz
+Connecting to www.python.org (www.python.org)|151.101.128.223|:443... connected.
+HTTP request sent, awaiting response... Read error (Connection timed out) in headers.
+Giving up.
+

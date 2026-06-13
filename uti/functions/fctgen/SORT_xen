@@ -1,0 +1,198 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SORT
+# The following parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# SORT_I  : Input Data File
+# SORT_Ii : from 2 to 25 input data files
+# SORT_O  : Output Data File
+# SORT_CMD: Command Filei used ofr specific action (/KEYS /FIELDS ...)
+#
+# Subject: Generic Function for Syncsort Use
+# The separator field is ~
+#
+#[01] Update 06/04/2021 M.NAJI:  Add /INFILE '$SORT_I' to get it in log of step 
+#[02] Update 16/07/2021 M.NAJI:  Add "  before and after \"${SORT_FS}\"
+#----------------------------------------------------------------------------
+RESET_SORT()
+{
+     for i in 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
+     do
+       export SORT_I${i}=""
+     done
+
+     for i in 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
+     do
+       export SORT_O${i}=""
+     done
+
+     export SORT_I=""
+     export SORT_O=""
+     export SORT_FS=""
+     export SORT_NOINFILE=""
+     export SORT_RMINFILE=""
+}
+SORT()
+{
+ set -x
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+     STEP_PRG=SORT
+     STEPSTART 
+
+     [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+     # Test Input file existence
+     if test ! -f `echo ${SORT_I} | cut -d" " -f1`
+     then
+        if [ "${SORT_NOINFILE}" = "YES" ]
+        then
+           touch `echo ${SORT_I} | cut -d" " -f1`
+        else
+           SORT_INPUT=`echo ${SORT_I} | cut -d" " -f1`
+           LIB_ERR="Input file SORT_I not found: "`basename ${SORT_INPUT}`
+           STEPEND 9
+        fi
+     fi
+
+     # if SIZE=0 set 1
+     SIZE=`SIZEOF ${SORT_I}`
+     if [ "${SIZE}" -eq 0 ]
+     then 
+        SIZE=1
+     fi
+
+     if [ -z "${SORT_FS}" ]
+     then
+        SORT_FS="~"
+     fi
+
+
+     # if $SORT_O already exists and mode is OVERWRITE remove it 
+     SORT_O_MODE=`echo ${SORT_O} | cut -d" " -f2`
+     SORT_OUTPUT=`echo ${SORT_O} | cut -d" " -f1`
+     if [ "${SORT_OUTPUT}" = "APPEND" -o "${SORT_OUTPUT}" = "OVERWRITE" ]
+     then
+        echo "# ERROR: The Output is undefined ! (SORT_OUTPUT) "
+        STEPEND 9
+     fi
+
+     if test ${SORT_O_MODE} != "APPEND" && test -f ${SORT_OUTPUT}
+     then
+        echo "# INFO: The output file already existed !"
+        /bin/rm -f `echo ${SORT_O} | cut -d" " -f1`
+     fi
+
+     LANG_OLD=${LANG}
+     unset LANG
+
+     LC_COLLATE_OLD=${LC_COLLATE}
+     unset LC_COLLATE
+
+     SORT_CMD_TMP=`CFTMP`
+	 #[01] add  /INFILE $SORT_I  \"${SORT_FS}\" >>${SORT_CMD_TMP}
+     echo /INFILE $SORT_I  "\"${SORT_FS}\"" >>${SORT_CMD_TMP}
+     for i in 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
+     do
+        SORT_INFILE=`eval echo '$'SORT_I${i} | cut -d" " -f1`
+
+        if [ "${SORT_INFILE}" != "" ] && [ -f "${SORT_INFILE}" ]
+        then
+           echo /INFILE `eval echo '$'SORT_I${i}` "\"${SORT_FS}\"" >>${SORT_CMD_TMP}
+        else
+           if [ "${SORT_INFILE}" != "" ] && [ "${SORT_NOINFILE}" != "YES" ]
+           then
+              SORT_INPUT=`eval echo '$'SORT_I${i} | cut -d" " -f1`
+              LIB_ERR="Input file SORT_I${i} not found: "`basename ${SORT_INPUT}`
+              STEPEND 9
+           fi
+        fi
+     done
+
+     if test -s "${SORT_CMD}"
+     then
+        cat ${SORT_CMD}>>${SORT_CMD_TMP}
+     fi
+
+     # Append Output file if not already in command file
+     NBSORT_OUTPUT=`grep OUTFILE ${SORT_CMD_TMP} | wc -l`
+     if [ ${NBSORT_OUTPUT} -eq 0 ]
+     then
+        echo '/OUTFILE' ${SORT_O} >>${SORT_CMD_TMP}
+     fi
+
+     # No ano files because sort command output is always on error 
+     SORT_LOG=${DFILT}/${NSTEP}_${IB}_SORT.log
+
+     export PRGLOG=${NSTEP}_${IB}_SORT.log
+
+     # Executes syncsort program
+	 #[01] remove : /INFILE ${SORT_I} "${SORT_FS}"
+    #${SORTDIR}/syncsort >${SORT_LOG} 2>&1  << endofsorta
+#/INSERT ${SORT_CMD_TMP}
+#/WORKSPACE ${SORT_WDIR}
+#/STATISTICS
+#/DATASIZE ${SIZE} BYTES  
+#endofsort
+
+     echo '/WORKSPACE ${SORT_WDIR}' >>${SORT_CMD_TMP}
+     echo '/STATISTICS ${SORT_O}' >>${SORT_CMD_TMP}
+     export XENSORT_LICENSE=/scor/produits/xensort/bin/xensort_202609.lic
+     /scor/produits/xensort/bin/xensort ${SORT_CMD_TMP}  >${SORT_LOG} 2>&1
+
+
+     SORT_ERR=$?
+
+     LANG=${LANG_OLD}
+     LC_COLLATE=${LC_COLLATE_OLD}
+     touch ${SORT_OUTPUT}
+
+     # Show statistics
+     grep ecord  ${SORT_LOG}
+     echo "#"
+
+     # Delete Temporary File
+     /bin/rm ${SORT_CMD_TMP} >/dev/null 2>&1
+     DIRNAME_SORT_CMD=`dirname ${SORT_CMD}`
+     if [ "${DIRNAME_SORT_CMD}" = "${DTMP}" ]
+     then
+        /bin/rm -f ${SORT_CMD} >/dev/null 2>&1
+     fi
+
+     # REMOVE INPUT FILES AFTER SUCCESSFUL SORT
+     # ----------------------------------------
+     if [ "${SORT_RMINFILE}" = "YES" ] && [ ${SORT_ERR} = 0 ]
+     then
+
+        SORT_INFILE=`eval echo '$'SORT_I | cut -d" " -f1`
+
+        if [ "${SORT_INFILE}" != "" ] && [ -f "${SORT_INFILE}" ]
+        then
+           /bin/rm "${SORT_INFILE}"
+        fi
+
+        # handles until 25 input files
+        for i in 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
+        do
+           SORT_INFILE=`eval echo '$'SORT_I${i} | cut -d" " -f1`
+
+           if [ "${SORT_INFILE}" != "" ] && [ -s "${SORT_INFILE}" ]
+           then
+              /bin/rm "${SORT_INFILE}"
+           fi
+        done
+    fi
+set +x
+
+     # Reset variable values
+     RESET_SORT
+
+    STEPEND ${SORT_ERR}
+    # End SORT
+fi
+
+# Reset variable values
+RESET_SORT
+
+return 0
+}
+

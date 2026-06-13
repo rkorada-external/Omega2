@@ -1,0 +1,9 @@
+dcvdevob bcpscor      1.4        19/08 15:07:50 10 00000000 (CNV_TPO2) Serveur Message number: 5701, Severity 10,State 2, Line 0 Changed database context to 'BREF'.
+
+dcvdevob bcpscor      1.4        19/08 15:07:50 10 00000000 (CNV_TPO2) Server 'CNV_TPO2'
+dcvdevob bcpscor      1.4        19/08 15:07:50 10 00000000 (CNV_TPO2) Serveur Message number: 5701, Severity 10,State 1, Line 1 Changed database context to 'master'.
+
+dcvdevob bcpscor      1.4        19/08 15:07:50 10 00000000 (CNV_TPO2) Server 'CNV_TPO2'
+dcvdevob bcpscor      1.4        19/08 15:07:50 0 00000000 (CNV_TPO2) Debut de bcp out de la requete 'select  * from BEST..TI17PERMFIL  where IDF_CT = 'I17G_OMG_EX_LIF' order by IO '.
+dcvdevob bcpscor      1.4        19/08 15:07:50 0 00000000 (CNV_TPO2)  1 ligne copiee. 
+dcvdevob bcpscor      1.4        19/08 15:07:50 0 00000000 (CNV_TPO2) Commande executee avec succes.

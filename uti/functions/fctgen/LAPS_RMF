@@ -1,0 +1,84 @@
+#----------------------------------------------------------------------------
+# FUNCTION: LAPS_RMF
+#
+# The following parameters must be previously defined:
+# 2 parameters
+#	$1 : begin date
+#	$2 : end date
+#	LAPS_RMF_O=Laps
+#
+# Subject: This function is used to load by bcp data files
+#
+#----------------------------------------------------------------------------
+LAPS_RMF ()
+{
+#set -x
+
+if [ -z $1 ] || [ -z $2 ]
+then
+  return 0
+fi
+
+BEG=$1
+END=$2
+
+y1=`echo $BEG | awk '{print substr($0,0,4)}'`
+m1=`echo $BEG | awk '{print substr($0,5,2)}'`
+min1=`echo $BEG | awk '{print substr($0,11,2)}'`
+s1=`echo $BEG | awk '{print substr($0,13,2)}'`
+h1=`echo $BEG | awk '{print substr($0,9,2)}'`
+j1=`echo $BEG | awk '{print substr($0,7,2)}'`
+
+m2=`echo $END | awk '{print substr($0,5,2)}'`
+min2=`echo $END | awk '{print substr($0,11,2)}'`
+s2=`echo $END | awk '{print substr($0,13,2)}'`
+h2=`echo $END | awk '{print substr($0,9,2)}'`
+j2=`echo $END | awk '{print substr($0,7,2)}'`
+
+
+if [ $s1 -le $s2 ]
+then
+  let "s=$s2-$s1"
+else
+  let "s=60-$s1+$s2"
+  let "min1=$min1+1"
+fi
+
+if [ $min1 -le $min2 ]
+then
+  let "m=$min2-$min1"
+else
+  let "m=60-$min1+$min2"
+  let "h1=$h1+1"
+fi
+
+if [ $j1 -eq $j2 ]
+then
+  let "h=$h2-$h1"
+else
+  if [ $m1 -eq $m2 ]
+  then
+    let "h=24*($j2-$j1)-$h1+$h2"
+  else
+    case $m1 in
+	01|03|05|07|08|10|12) 
+		let "j1=31-$j1";;
+	02)
+		let "y=($y1/4)*4" 
+	 	if [ $y -eq $y1 ]
+                then
+		  let "j1=29-$j1"
+                else
+		  let "j1=28-$j1"
+		fi;;
+	04|06|09|11)
+		let "j1=30-$j1";;
+    esac
+    let "h=24*($j1+$j2)-$h1+$h2"
+  fi
+fi
+ 
+# LAPS_RMF_O=`printf "%02s:%02s:%02s" ${h} ${m} ${s}`  -- Updated for Phase1b Migration testing
+LAPS_RMF_O=`printf "%s:%s:%s" ${h} ${m} ${s}`
+return 0
+}

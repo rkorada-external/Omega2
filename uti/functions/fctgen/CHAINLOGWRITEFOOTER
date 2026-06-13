@@ -1,0 +1,36 @@
+#----------------------------------------------------------------------------
+# FUNCTION: CHAINLOGWRITEFOOTER
+# No input parameters:
+# Subject: Report Chain end
+#----------------------------------------------------------------------------
+#[001] 11/02/2021 JYP : Spira 84654: microAOC: make possible // runs by chain
+
+CHAINLOGWRITEFOOTER () {
+
+
+  # Detects if chain failed or succeeded
+  if test -s ${DABORT}/${FRSTN} 
+  then
+     CHAIN_STATUS=Failed
+  else
+     CHAIN_STATUS=Succeeded
+  fi
+
+  if [ -f ${DABORT}/${NCHAIN}_${IB}.wng ]
+  then
+    CHAIN_STATUS="${CHAIN_STATUS}-Warning"
+    /bin/rm -f ${DABORT}/${NCHAIN}_${IB}.wng
+  fi
+  
+  echo "# Elapsed Time :  ${LAPS_RMF_O}"
+  echo '# End of Chain : ' ${NCHAIN} ${CHAIN_STATUS}  " Date: " `date +"%Y/%m/%d %H:%M:%S"`
+
+   if [ ${MAX_RETURN_CODE} -ne 0 ]
+   then
+      echo '# Max Return Code is: ' ${MAX_RETURN_CODE}
+   fi
+
+   echo '#-------------------------------------------------------------------------' 
+}
+
+

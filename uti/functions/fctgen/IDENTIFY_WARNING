@@ -1,0 +1,28 @@
+#----------------------------------------------------------------------------
+# FUNCTION: IDENTIFY_WARNING
+# No input parameter:
+# Subject: Analyse warnig files to detect Warning mesaage presence
+# SCAN ALL ${NCHAIN}_*.wng FILE TO ANALYSE
+# call : IDENTIFY_WARNING
+# <2000/10/17> <H. GUIHEUX>
+#   
+#----------------------------------------------------------------------------
+IDENTIFY_WARNING () {
+#set -x
+
+   F_FOUND_WARNING=`grep "WARNING" ${DFILT}/${NCHAIN}_*${IB}*.wng 2>/dev/null | wc -l`
+   if [ "$F_FOUND_WARNING" -ge 1 ]
+   then
+      touch ${DABORT}/${NCHAIN}_${IB}.wng
+      # Set Warning variable to yes to inform the job that a warning has occured durind a step execution
+      WARNING=YES
+      ECHO_LOG "# Identified warning are on: " 
+     
+      for i in `grep -l WARNING ${DFILT}/${NCHAIN}_*${IB}*.wng 2>/dev/null`
+      do
+         ECHO_LOG '# -> ${DFILT}/'`basename $i`
+      done
+   fi
+
+}
+

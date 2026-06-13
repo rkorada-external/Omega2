@@ -1,0 +1,340 @@
+#!/bin/ksh
+#------------------------------------------------------------------------------------------------------------------------------------------------------------
+# FUNCTION: DBLOAD
+# Authors   : Nour Miloua, Vincent Gautier, Roger Cassis, Laurent Planche
+# Creation  : 15/10/2015
+#------------------------------------------------------------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Subject            : Generic Function to load data to Netezza Server
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Default options : -ctrlChars  : accept control chars in char/varchar fields (must escape NUL, CR and LF)
+#                   -crInString : accept unescaped CR in char/varchar fields (LF becomes only end of row)
+#                   -fillRecord
+#                   -bf <filename>           bad/rejected rows (overwrite if file already exists) to $DDBFILT location
+#                   -outputDir <dir>         location for output files (log and bad rows) to $DDBFILT
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Change Log:
+# 21/11/2015: Creation :spot:30171
+# 15/01/2016: Add DBLOG calls
+#[003] 16/11/2016 R. Cassis :spot:31493 Au STEPEND, le code retour est 1 et plus -1
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# -d DBLOAD_BASE        : Target Database (optional) -db
+#set -x
+usage() { 
+cat << EOF
+Usage:
+dbload -s DBLOAD_SCHEMA  -t *DBLOAD_TABLE -i *DBLOAD_I -r DBLOAD_PRE_TRUNCATE -e DBLOAD_SPECIAL_OPT -F DBLOAD_FS -R DBLOAD_RS  
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# NSTEP                 : STEP Identifier (Mandatory) defined from caller shell script or set by default to NLOAD_AUTONOMOUS_MODE
+# -s *DBLOAD_SCHEMA      : Name of schema to fill up (optional) - dbload option:  -schema
+# -t *DBLOAD_TABLE      : Name of table to fill up (mandatory) - dbload option: -t
+# -i *DBLOAD_I          : Path and name of Input File (mandatory) - dbload option: df
+# -r DBLOAD_PRE_TRUNCATE    : Truncate the table before Loading (YES/NO) Default = NO (optional)     
+# -e DBLOAD_SPECIAL_OPT : Special options which are not defined by default extra parameters (optional)  
+# -F DBLOAD_FS          : Field delimiter default ~ (optional) - dbload option: -delim
+# -R DBLOAD_RS          : Record delimiter default \n (optional) - dbload option: -recDelim
+# -m DBLOAD_MAXERRORS    : Maximum allowed error for dbload command  - dbload option: -maxErrors
+# -M DBLOAD_MODE        : if set to ODS or DWH, DBLOAD function will fetch active ODS/DWH from DELIVERY_${} database, to set DBSQL_DBNAME
+# -c DBLOAD_ENCODING    : encoding of the source file (optional). If populated, a nzconvert will be performed to change the file encoding
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Default options :     -ctrlChars  : accept control chars in char/varchar fields (must escape NUL, CR and LF)
+#                       -crInString : accept unescaped CR in char/varchar fields (LF becomes only end of row)
+#                       -fillRecord
+#                       -bf <filename>           bad/rejected rows (overwrite if file already exists) to $DDBFILT location
+#                       -outputDir <dir>         location for output files (log and bad rows) to $DDBFILT
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------
+EOF
+STEPEND 1
+exit -1
+}
+
+# Perform dbload generated command (See DBLOAD_TREAT_PARAMS)
+DBLOAD()
+{
+OPTIND=1
+DBLOAD_DBNAME='BLUDB'
+
+# Default NSTEP when none defined
+if [ -z "${NSTEP}" ] 
+then
+    NSTEP="DBLOAD_AUTONOMOUS_CALL"
+    IB=`hostname``date +%Y%m%d%H%M%S%N`
+fi
+
+# Default program name when none defined
+if [ -z "${PGM}" ]
+then
+    PGM=`basename $0 | cut -f1 -d'.'`
+fi
+
+typeset DBLOAD_OUTLOG=$DDBFILT/${NSTEP}_${IB}_DBLOAD.log
+typeset DBLOAD_OUTDBLOADLOG=$DDBFILT/${NSTEP}_${IB}_dbload.log
+typeset DBLOAD_OUTDBLOADBADLOG=$DDBFILT/${NSTEP}_${IB}_dbload.bad
+typeset DBLOAD_COMMAND="dbload "
+touch ${DBLOAD_OUTLOG}
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then 
+    ADT="${NSTEP}"
+    STEP_PRG=DBLOAD
+    export PRGLOG=`basename ${DBLOAD_OUTLOG}`
+    STEPSTART
+
+    #while getopts "rd:s:t:i:r:e:F:R:M:m:c:" o; do
+    while getopts "rs:t:i:r:e:F:R:M:m:c:" o; do
+        case "${o}" in
+        s)
+        DBLOAD_SCHEMA=${OPTARG}
+        ;;
+        t)
+        DBLOAD_TABLE=${OPTARG}
+        ;;
+        i)
+        DBLOAD_INPUT_DATAFILE=${OPTARG}
+        ;;
+        r)
+        DBLOAD_PRE_TRUNCATE='O'
+        ;;
+        e)    
+        DBLOAD_EXTRA_PARAMS=${OPTARG}
+        ;;    
+        F)
+        DBLOAD_FIELD_SEPARATOR=${OPTARG}
+        ;;
+        R)
+        DBLOAD_RECORD_SEPARATOR=${OPTARG}
+        ;;
+        M)
+        DBLOAD_MODE=${OPTARG}
+        ;;
+        m)
+        DBLOAD_MAXERRORS=${OPTARG} 
+        ;;
+        c)
+        DBLOAD_ENCODING=${OPTARG} 
+        ;;
+        * | -h)
+        usage
+        ;;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    # IIAS support only on dtaabase called BLUDB
+    # to emulate multi databases ==> change the SCHEMA
+    # Please do not alter the content 
+    DBLOAD_DBNAME=BLUDB
+    
+    
+
+    DBLOGINIT -l LEV2 -j ${PGM}
+    DBLOAD_TREAT_PARAMS
+    echo "[GENERATED COMMAND]       : $DBLOAD_COMMAND" >> $DBLOAD_OUTLOG
+    echo "[INPUT DATA FILE]         : $DBLOAD_INPUT_DATAFILE" >> $DBLOAD_OUTLOG
+    echo "[dbload LOG FILE]         : $DBLOAD_OUTDBLOADLOG" >> $DBLOAD_OUTLOG
+    echo "[dbload bad FILE]         : $DBLOAD_OUTDBLOADBADLOG" >> $DBLOAD_OUTLOG
+    echo "[DBLOAD LOG FILE]         : $DBLOAD_OUTLOG" >> $DBLOAD_OUTLOG
+
+    # Drop the _LOG table if it exists
+    DBLOAD_TABLE_LOG=${DBLOAD_TABLE}"_LOG"
+    DBLOAD_LOG_TABLE_EXISTS=`dbsql -d ${DBLOAD_DBNAME} -schema ${DBLOAD_SCHEMA} -q -F "~" -t -A -c "SELECT TABNAME FROM SYSCAT.TABLES  WHERE TABSCHEMA='${DBLOAD_SCHEMA}' AND TABNAME='${DBLOAD_TABLE_LOG}';"`
+    if [ "${DBLOAD_LOG_TABLE_EXISTS}" ]
+    then
+        dbsql -d ${DBLOAD_DBNAME} -schema ${DBLOAD_SCHEMA} -q -F "~" -t -A -c "DROP TABLE ${DBLOAD_SCHEMA}.${DBLOAD_TABLE_LOG};"
+    fi
+
+    # Drop the _BAD table if it exists
+    DBLOAD_TABLE_BAD=${DBLOAD_TABLE}"_BAD"
+    DBLOAD_BAD_TABLE_EXISTS=`dbsql -d ${DBLOAD_DBNAME} -schema ${DBLOAD_SCHEMA} -q -F "~" -t -A -c "SELECT TABNAME FROM SYSCAT.TABLES WHERE TABSCHEMA='${DBLOAD_SCHEMA}' AND TABNAME='${DBLOAD_TABLE_BAD}';"`
+    if [ "${DBLOAD_BAD_TABLE_EXISTS}" ]
+    then
+        dbsql -d ${DBLOAD_DBNAME} -schema ${DBLOAD_SCHEMA} -q -F "~" -t -A -c "DROP TABLE ${DBLOAD_SCHEMA}.${DBLOAD_TABLE_BAD};"
+    fi
+
+    eval ${DBLOAD_COMMAND}  >> $DBLOAD_OUTLOG 
+    DBLOAD_RETURN_CODE=$?
+
+    # Retrieve number of records read, bad and loaded from the DBLOAD log file
+    NB_RECORD_READ=`grep "number of records read:" ${DBLOAD_OUTDBLOADLOG} | awk '{print $NF}'`
+    NB_RECORD_BAD=`grep "number of bad records" ${DBLOAD_OUTDBLOADLOG} | awk '{print $NF}'`
+    NB_RECORD_LOAD=`grep "number of records loaded:" ${DBLOAD_OUTDBLOADLOG} | awk '{print $NF}'`
+
+    # Retrieve error logs lines from the dbload log file if bad records found 
+    # and load it into a _log table and load the bad file into a _bad table
+    if [[ ${NB_RECORD_BAD} != 0 ]]
+    then
+
+        # Retrieve error logs lines from the dbload log
+        tail -n +28 ${DBLOAD_OUTDBLOADLOG} > ${DBLOAD_OUTDBLOADLOG}.tmp
+        LOG_COUNT=`wc -l ${DBLOAD_OUTDBLOADLOG}.tmp | cut -f1 -d' '`
+        let x=${LOG_COUNT}-15
+        typeset DBLOAD_LOG_NB_RESULT=`printf "%.0f\n" $x`
+        head -n ${DBLOAD_LOG_NB_RESULT} ${DBLOAD_OUTDBLOADLOG}.tmp | tail -n +5 > ${DBLOAD_OUTDBLOADLOG}.tmp2
+
+        # Load log file into _LOG table
+        #dbsql -d ${DBLOAD_DBNAME} -schema ${DBLOAD_SCHEMA} -q -F "~" -t -A -c "CREATE TABLE ${DBLOAD_SCHEMA}.${DBLOAD_TABLE_LOG} (ERROR CHARACTER VARYING(4000)) DISTRIBUTE ON RANDOM;"
+        dbsql -d ${DBLOAD_DBNAME} -schema ${DBLOAD_SCHEMA} -q -F "~" -t -A -c "CREATE TABLE ${DBLOAD_SCHEMA}.${DBLOAD_TABLE_LOG} (ERROR NVARCHAR(4000)) DISTRIBUTE BY RANDOM;"
+	#TODO
+	echo " load -db ${DBLOAD_DBNAME} -schema ${DBLOAD_SCHEMA} -t ${DBLOAD_TABLE_LOG} -df ${DBLOAD_OUTDBLOADLOG}.tmp2"
+        #dbload -db ${DBLOAD_DBNAME} -schema ${DBLOAD_SCHEMA} -t ${DBLOAD_TABLE_LOG} -df "${DBLOAD_OUTDBLOADLOG}.tmp2" -delim '|' 
+        dbload -db ${DBLOAD_DBNAME} -schema ${DBLOAD_SCHEMA} -t ${DBLOAD_TABLE_LOG} -df "${DBLOAD_OUTDBLOADLOG}.tmp2" -delim '|' -ccsid 923
+
+        # Load bad file into _BAD table
+	#
+	# TOTO DTY exceed 32767
+        #dbsql -d ${DBLOAD_DBNAME} -schema ${DBLOAD_SCHEMA} -q -F "~" -t -A -c "CREATE TABLE ${DBLOAD_SCHEMA}.${DBLOAD_TABLE_BAD} (SOURCE_RECORD CHARACTER VARYING(64000)) DISTRIBUTE BY RANDOM;"
+
+        dbsql -d ${DBLOAD_DBNAME} -schema ${DBLOAD_SCHEMA} -q -F "~" -t -A -c "CREATE TABLE ${DBLOAD_SCHEMA}.${DBLOAD_TABLE_BAD} (SOURCE_RECORD VARCHAR(32000)) DISTRIBUTE BY RANDOM;"
+        #dbload -db ${DBLOAD_DBNAME} -schema ${DBLOAD_SCHEMA} -t ${DBLOAD_TABLE_BAD} -df "${DBLOAD_OUTDBLOADBADLOG}"  -delim '|' -truncString -ctrlChars -crInString -fillRecord 
+        dbload -db ${DBLOAD_DBNAME} -schema ${DBLOAD_SCHEMA} -t ${DBLOAD_TABLE_BAD} -df "${DBLOAD_OUTDBLOADBADLOG}"  -delim '|' -truncString -ctrlChars -crInString -fillRecord  -ccsid 923
+        
+    fi
+
+    if [ $DBLOAD_RETURN_CODE -ne 0 ]
+    then
+        export PRGANO=${DBLOAD_OUTDBLOADBADLOG}
+        echo "# Log file:  ${DBSQL_OUTLOG}"
+        echo "# Ano file:  ${DBSQL_OUTDBSQLLOG}"
+        DBLOGEND -l LEV2 -j ${PGM} -r ${DBLOAD_RETURN_CODE} -m "Error when loading file "${DBLOAD_INPUT_DATAFILE}
+        STEPEND ${DBLOAD_RETURN_CODE}
+    else
+        echo "# Log file:  ${DBLOAD_OUTLOG}"
+        echo "File "$DBLOAD_INPUT_DATAFILE" loaded into table "${DBLOAD_DBNAME}"."${DBLOAD_SCHEMA}"."${DBLOAD_TABLE}
+        echo "Number of rows in the input file:"${NB_RECORD_READ}
+        echo "Number of rows in the bad file:  "${NB_RECORD_BAD}
+        echo "Number of rows loaded:           "${NB_RECORD_LOAD}
+
+        # Remove temporary file
+        if [ -f ${DBLOAD_INPUT_DATAFILE}.encoded ]
+        then
+            rm ${DBLOAD_INPUT_DATAFILE}.encoded
+        fi
+    
+        DBLOGEND -l LEV2 -j ${PGM} -r 0 -m "File "$DBLOAD_INPUT_DATAFILE" ("${NB_RECORD_READ}" rows) loaded (ok="${NB_RECORD_LOAD}",bad="${NB_RECORD_BAD}") into table "${DBLOAD_DBNAME}"."${DBLOAD_SCHEMA}"."${DBLOAD_TABLE}
+    fi
+
+fi
+
+DBLOAD_DBSCHEMA=''
+DBLOAD_SCHEMA=''
+DBLOAD_TABLE=''
+DBLOAD_TABLE_LOG=''
+DBLOAD_TABLE_BAD=''
+DBLOAD_INPUT_DATAFILE=''
+DBLOAD_PRE_TRUNCATE=''
+DBLOAD_EXTRA_PARAMS=''
+DBLOAD_FIELD_SEPARATOR=''
+DBLOAD_RECORD_SEPARATOR=''
+DBLOAD_MAXERRORS=''
+DBLOAD_MODE=''
+STEPEND 0
+return 0
+}
+
+#Generated final dbload command from input options
+DBLOAD_TREAT_PARAMS()
+{
+
+if [ -z "${DBLOAD_TABLE}" -o -z "${DBLOAD_INPUT_DATAFILE}" -o -z "${DBLOAD_SCHEMA}" ] 
+then
+    echo "Missing mandatory parameters -z"
+    DBLOGEND -l LEV2 -j ${PGM} -r 1 -m "Missing mandatory parameters -z"
+    usage
+    STEPEND 1
+fi
+
+# If populated perform an encoding conversion in the source file before loading
+if [ "${DBLOAD_ENCODING}" ]
+then
+    echo "Performing encoding conversion"
+    # nzconvert is not available on IIAS, we will used UNIX conversion tool : iconv
+    #nzconvert -f ${DBLOAD_ENCODING} -t UTF-8 -df \"${DBLOAD_INPUT_DATAFILE}\" -of \"${DBLOAD_INPUT_DATAFILE}.encoded\"
+    #iconv -f ${DBLOAD_ENCODING} -t UTF-8 < \"${DBLOAD_INPUT_DATAFILE}\" > \"${DBLOAD_INPUT_DATAFILE}.encoded\"
+    
+    #echo "File encoding converted:"${DBLOAD_INPUT_DATAFILE}".encoded"
+    #TODO check during phase test if conversion is needed with DB2
+    #DBLOAD_COMMAND=${DBLOAD_COMMAND}" -t ${DBLOAD_TABLE} -df \"${DBLOAD_INPUT_DATAFILE}.encoded\""
+    DBLOAD_COMMAND=${DBLOAD_COMMAND}" -t ${DBLOAD_TABLE} -df \"${DBLOAD_INPUT_DATAFILE}\""
+else
+    DBLOAD_COMMAND=${DBLOAD_COMMAND}" -t ${DBLOAD_TABLE} -df \"${DBLOAD_INPUT_DATAFILE}\""
+fi
+
+# TODO DTY check to replace DBLOAD_DBNAME  by DBLOAD_DBSCHEMA 
+if [ -z ${DBLOAD_MODE} ] 
+then
+    echo "No DBLOAD MODE (-M) set, checking for DBLOAD_DBNAME (-d) parameter" >> ${DBLOAD_OUTLOG}
+    if [ -z "${DBLOAD_SCHEMA}" ]
+    then
+        echo "No DBLOAD_SCHEMA (-d) set, using Default database $DB_DATABASE"  >> ${DBLOAD_OUTLOG}
+        DBLOAD_SCHEMA=$DB_SCHEMA
+    else
+        echo "database parameter overrided: $DBLOAD_SCHEMA" >> ${DBLOAD_OUTLOG}
+    fi
+else
+    echo "[DBLOAD_MODE]:     ${DBLOAD_MODE}" >> ${DBLOAD_OUTLOG}
+    DBLOAD_SCHEMA=`$DUTI/functions/fctdb2/DBGETACTIVEDB.cmd -M ${DBLOAD_MODE}`
+fi
+DBLOAD_COMMAND=${DBLOAD_COMMAND}" -schema ${DBLOAD_SCHEMA}"
+
+
+# dty remove for IIAS implementation
+#if [ -z "${DBLOAD_SCHEMA}" ] 
+#then
+#    echo "Using ${DBLOAD_DBNAME} database default schema" >> ${DBLOAD_OUTLOG}
+#else
+#    echo "${DBLOAD_DBNAME} Database schema used: " ${DBLOAD_SCHEMA}  >> ${DBLOAD_OUTLOG}
+#    DBLOAD_COMMAND=${DBLOAD_COMMAND}" -schema ${DBLOAD_SCHEMA}"
+#fi
+
+if [ -z "${DBLOAD_MAXERRORS}" ] 
+then
+    echo "Using Default maximum number of errors"  >> ${DBLOAD_OUTLOG}
+    DBLOAD_RECORDSZ=`dbsql -d ${DBLOAD_DBNAME} -schema ${DBLOAD_SCHEMA} -A -t -r -c " SELECT   SUM( case TYPENAME WHEN 'DECIMAL' THEN (LENGTH + SCALE) / 2
+												WHEN 'VARCHAR' THEN CASE WHEN AVGCOLLENCHAR > 0 THEN AVGCOLLENCHAR  ELSE LENGTH END
+												ELSE LENGTH
+												END)
+											FROM SYSCAT.COLUMNS WHERE  TABSCHEMA = '${DBLOAD_SCHEMA}' and TABNAME = '${DBLOAD_TABLE}' "`
+    DBLOAD_FILESZ=`du ${DBLOAD_INPUT_DATAFILE} | cut -f1`
+    let x=${DBLOAD_FILESZ}/${DBLOAD_RECORDSZ}*0.1
+    typeset dbload_maxerrors=`printf "%.0f\n" $x`
+    DBLOAD_MAXERRORS=${dbload_maxerrors}
+else
+    echo "Setting maximium errors to : ${DBLOAD_MAXERRORS}" >> ${DBLOAD_OUTLOG}
+fi
+DBLOAD_COMMAND=${DBLOAD_COMMAND}" -maxErrors ${DBLOAD_MAXERRORS}"
+
+
+if [ -z "${DBLOAD_NEWLINE_CHAR}" ] ; then
+    echo "Using Default newline separator"  >> ${DBLOAD_OUTLOG}
+else
+    echo "Default field separator overided to : ${DBLOAD_NEWLINE_CHAR}" >> ${DBLOAD_OUTLOG}
+    DBLOAD_COMMAND=${DBLOAD_COMMAND}" -recDelim \"${DBLOAD_NEWLINE_CHAR}\""
+fi
+
+if [ -z "${DBLOAD_FIELD_SEPARATOR}" ] ; then
+    echo "Using Default field separator ~"  >> ${DBLOAD_OUTLOG}
+    DBLOAD_FIELD_SEPARATOR="~"
+else
+    echo "Default field separator overided to : ${DBLOAD_FIELD_SEPARATOR}" >> ${DBLOAD_OUTLOG}
+fi
+DBLOAD_COMMAND=${DBLOAD_COMMAND}" -delim \"${DBLOAD_FIELD_SEPARATOR}\""
+
+if [ -z ${DBLOAD_PRE_TRUNCATE} ]
+then
+    echo "target table wont be truncated"  >> ${DBLOAD_OUTLOG}
+else
+    echo "Truncating target table: " >> ${DBLOAD_OUTLOG}    
+    DBLOAD_TMPFILE=`mktemp -t DBLOAD.XXXXXXXXXX`
+    dbsql -d ${DBLOAD_DBNAME} -q -c "TRUNCATE TABLE ${DBLOAD_SCHEMA}.${DBLOAD_TABLE} IMMEDIATE" -o ${DBLOAD_TMPFILE} -F "~" -t -A
+    DBLOAD_TMP_CALL_RC=$?
+    if [ ${DBLOAD_TMP_CALL_RC} -ne 0 ]
+    then
+        echo "Error during target table TRUNCATE"
+        DBLOGEND -l LEV2 -j ${PGM} -r 1 -m "Error during target table TRUNCATE"
+        STEPEND ${DBLOAD_TMP_CALL_RC}
+    fi 
+fi
+
+DBLOAD_COMMAND=${DBLOAD_COMMAND}" -fillRecord -ctrlChars -crInString  -ccsid 923 -nullValue '' -outputDir "${DDBFILT}/" -lf ${DBLOAD_OUTDBLOADLOG}  -bf ${DBLOAD_OUTDBLOADBADLOG}  ${DBLOAD_EXTRA_PARAMS}"
+
+}

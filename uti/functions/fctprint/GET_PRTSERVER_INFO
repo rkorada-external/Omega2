@@ -1,0 +1,67 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_PRTSERVER_INFO
+#
+# 2 input parameters:
+# $1   :  PRDSIT_CF
+# $2   :  GEOSIT_CF
+#
+# Output parameters
+# PRTADDIP_CF : IP Address of the target ftp server
+# PRTUSR_CF   : User name for ftp connexion
+# PRTPWD_CF   : Password for ftp connexion
+# PRTENDADR_CF: Data Directory for the daemon
+# PRTCDFTP_CF : Remote directory for data transfer
+#
+# Subject: Technical Function about printing server (IP view: TADDIP)
+# Gets information to enable file transfer (Ip address, login, pwd, directory)
+#
+# Last update: 01/05/16
+# OFFMVREP_CF haded for Export Access management
+#----------------------------------------------------------------------------
+GET_PRTSERVER_INFO ()
+{
+#set -x
+ISQL_QRY=`CFTMP`
+ISQL_O=${DFILT}/${NSTEP}_${IB}_GET_PRTSERVER_INFO_O1.tmp
+ISQL_BASE='BREF'
+
+# The SQL Query
+# --------------
+INPUT_TEXT $ISQL_QRY <<EOF
+select
+    PRTADDIP_CF,
+    PRTUSR_CF,
+    PRTPWD_CF,
+    PRTENDADR_CF,
+    PRTCDFTP_CF,
+    case OFFMVREP_CF
+    when '' then  'DUMMY'
+    else OFFMVREP_CF
+    end
+   from TADDIP
+   where
+    PRDSIT_CF='${PRDSIT_CF}' and
+    GEOSIT_CF='${GEOSIT_CF}'
+exit
+EOF
+
+ISQL_FRES=${DFILT}/${NSTEP}_${IB}_GET_PRTSERVER_INFO_O2.tmp
+LIB_ERR="ERROR ON GET_PRTSERVER_INFO: $1 $2"
+
+STEP_NOECHO="YES"
+ISQL_INFO
+
+# Get the values from the result line
+PRTADDIP_CF=`cat ${ISQL_FRES} | awk '{print $1}'`
+PRTUSR_CF=`cat ${ISQL_FRES} | awk '{print $2}'`
+PRTPWD_CF=`cat ${ISQL_FRES} | awk '{print $3}'`
+PRTENDADR_CF=`cat ${ISQL_FRES} | awk '{print $4}'`
+PRTCDFTP_CF=`cat ${ISQL_FRES} | awk '{print $5}'`
+OFFMVREP_CF=`cat ${ISQL_FRES} | awk '{print $6}'`
+
+/bin/rm -f  ${ISQL_O} 2>&1
+/bin/rm -f  ${ISQL_FRES} 2>&1 
+LIB_ERR=""
+
+}
+

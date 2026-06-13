@@ -1,0 +1,114 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SWITCH_SYB_VERSION
+# 1 parameters must be previously defined:
+# NSTEP:        Number of STEP
+# $1:  Sybase version required (OLD or NEW)
+# Call SWITCH_SRV
+# Subject: Generic Function to switch server
+#----------------------------------------------------------------------------
+SWITCH_SYB_VERSION () {
+#set -x
+
+LIBEL="SWITCH TO SYBASE VERSION $1"
+STEPSTART 
+
+SYB_VERSION=$1
+
+# Determine la version sybase actuellement configuree
+# et determination des chaines de caracteres 
+# a substituer dans les variables d'environnement SYBASE
+# avant de les repositionner
+#
+# INFO: L'utilisation de la fonction ANTISLASH_SLASH ajoute un
+# un antislash a chaque slash contenu dans les variables SYBASE
+# afin que la substitution realisee avec sed puisse etre effective.
+if [ "${SYBASE}" = "${SYBASE_NEW}" ]
+then
+      #
+      ANTISLASH_SLASH `echo $SYBASE_NEW`
+      SYBASE_PREV=$ANTISLASH
+      #
+      ANTISLASH_SLASH `echo $SYBASE_PATH_NEW`
+      SYBASE_PATH_PREV=$ANTISLASH
+      #
+      ANTISLASH_SLASH `echo $SYBASE_SHLIB_PATH_NEW`
+      SYBASE_SHLIB_PATH_PREV=$ANTISLASH
+      #
+      ANTISLASH_SLASH `echo $SYBASE_LD_LIBRARY_PATH_NEW`
+      SYBASE_LD_LIBRARY_PREV=$ANTISLASH
+      #
+      ANTISLASH_SLASH `echo $SYBASE_LM_LICENSE_FILE_NEW`
+      SYBASE_LM_LICENSE_FILE_PREV=$ANTISLASH
+
+else
+      #
+      ANTISLASH_SLASH `echo $SYBASE_OLD`
+      SYBASE_PREV=$ANTISLASH
+      #
+      ANTISLASH_SLASH `echo $SYBASE_PATH_OLD`
+      SYBASE_PATH_PREV=$ANTISLASH
+      #
+      ANTISLASH_SLASH `echo $SYBASE_SHLIB_PATH_OLD`
+      SYBASE_SHLIB_PATH_PREV=$ANTISLASH
+      #
+      ANTISLASH_SLASH `echo $SYBASE_LD_LIBRARY_PATH_OLD`
+      SYBASE_LD_LIBRARY_PREV=$ANTISLASH
+      #
+      ANTISLASH_SLASH `echo $SYBASE_LM_LICENSE_FILE_OLD`
+      SYBASE_LM_LICENSE_FILE_PREV=$ANTISLASH
+fi
+
+   # Positionnement des variables Sybase de la version demandee
+   case ${SYB_VERSION} in
+        "OLD" )
+		export SYBASE=$SYBASE_OLD
+		export SYBASE_OCS=$SYBASE_OCS_OLD
+		export SYBASE_SYSAM=$SYBASE_SYSAM_OLD
+		export SYBASE_PATH=$SYBASE_PATH_OLD
+		export SYBASE_SHLIB_PATH=$SYBASE_SHLIB_PATH_OLD
+		export SYBASE_LD_LIBRARY_PATH=$SYBASE_LD_LIBRARY_PATH_OLD
+		export SYBASE_LM_LICENSE_FILE=$SYBASE_LM_LICENSE_FILE_OLD
+        	break;;
+         *)
+		export SYBASE=$SYBASE_NEW
+		export SYBASE_OCS=$SYBASE_OCS_NEW
+		export SYBASE_SYSAM=$SYBASE_SYSAM_NEW
+		export SYBASE_PATH=$SYBASE_PATH_NEW
+		export SYBASE_SHLIB_PATH=$SYBASE_SHLIB_PATH_NEW
+		export SYBASE_LD_LIBRARY_PATH=$SYBASE_LD_LIBRARY_PATH_NEW
+		export SYBASE_LM_LICENSE_FILE=$SYBASE_LM_LICENSE_FILE
+        	break;;
+      esac
+
+
+# Substitution  des chaines de caractere des variables courantes 
+# d'environnement SYBASE avant de les repositionner
+
+   FCMD=`CFTMP`
+   cat <<EOF >$FCMD
+   # Suppression des variables associees a la configuration sybase en cours
+   NEW_PATH=\`echo $PATH | sed 's/${SYBASE_PATH_PREV}//g; s/:: /:/g; s/::/:/g'\`
+   NEW_SHLIB_PATH=\`echo $SHLIB_PATH | sed 's/${SYBASE_SHLIB_PATH_PREV}//g;'\`
+   NEW_LD_LIBRARY_PATH=\`echo $LD_LIBRARY_PATH | sed 's/${SYBASE_LD_LIBRARY_PREV}//g;'\`
+   NEW_LM_LICENSE_FILE=\`echo $LM_LICENSE_FILE | sed 's/${SYBASE_LM_LICENSE_FILE_PREV}//g;'\`
+
+      SYBASE_LM_LICENSE_FILE_PREV=$ANTISLASH
+
+   # Activation des variables associees a la nouvelle configuration demandee
+   export PATH=$SYBASE_PATH:\$NEW_PATH
+   export SHLIB_PATH=$SYBASE_SHLIB_PATH:\$NEW_SHLIB_PATH
+   export LD_LIBRARY_PATH=$SYBASE_LD_LIBRARY_PATH:\$NEW_LD_LIBRARY_PATH
+   export LM_LICENSE_FILE=$SYBASE_LM_LICENSE_FILE:\$NEW_LM_LICENSE_FILE
+EOF
+
+# Execution du positionnement des variables
+.  $FCMD
+
+ECHO_LOG "# NEW SYBASE VARABLES DEFINED" 
+ECHO_LOG '# SYBASE         = '$SYBASE
+ECHO_LOG '#'
+
+STEPEND 0
+}
+
+

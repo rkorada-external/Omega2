@@ -1,0 +1,114 @@
+#----------------------------------------------------------------------------
+# FUNCTION: SCP_GET 
+#
+# The following parameters must be previously defined:
+# 7 parameters must be previously defined:
+# NSTEP  : STEP Identifier
+# SCP_DELAY	: Waiting Delay before each retry
+# SCP_NBRETRY	: Number of times the function tries to connect
+# SCP_IP	: IP Address of the target host
+# SCP_USR	: User of the target host
+# SCP_PWD	: Passwd of the user address
+# SCP_MODE	: transfer mode (default value ascii)
+# SCP_RDIR	: Remote directory (Host)
+# SCP_LDIR	: Local directory
+# SCP_I		: Input file to transfer
+# SCP_O		: Output file after transfer
+#
+# Subject: This function uses SCP program output command to transfer a file
+# to a target host
+# Last Modified: 22 May 2000 H. Guiheux
+# 	To make it compatible on Windows NT
+#[000] 02/06/2015 S. Raynaud :spot:28843 nouvelle fonction SCP
+#
+#historique des modifications :
+#----------------------------------------------------------------------------
+SCP_GET () {
+#set -x
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then ADT="${NSTEP}"
+   STEP_PRG=SCP_PUT
+   STEPSTART
+
+   # Transfert par SCP des fichiers .lis et .dae
+
+   LIBEL="Scp Transfer"
+
+   # DOUBLE_ANTISLASH ${SCP_RDIR}
+   # CDSCP1=${DB_ANTISLASH}
+
+   # move to local data directory
+   cd ${SCP_LDIR}
+
+   # test transfer mode value
+   # if [ "${SCP_MODE}" != "binary" ]
+   # then
+	# SCP_MODE="ascii"
+   # fi
+
+   # --- MAKE FILE TRANSFER ---
+   # --------------------------
+   # --------------------------
+   #
+   SCP_CUR_COUNTRETRY=0
+   while [ ${SCP_NBRETRY} -gt ${SCP_CUR_COUNTRETRY} ]
+   do
+
+      # Start SCP transfer
+      # ----------------------------
+      SCP_LOG=`CFTMP`
+     #$# ftp -n ${SCP_IP} <<EOF 1>${SCP_LOG} 2>&1 
+     #
+
+        if  [ `echo "$SCP_PSWD" | tr [a-z] [A-Z]` = "NOT_USED" ]
+	then
+		(expect -c "  
+   			set timeout 1
+   			spawn scp ${SCP_USR}@$SCP_IP:${SCP_RDIR}/${SCP_I} ${SCP_LDIR}/${SCP_O} 
+   			expect yes/no { send yes\r ; exp_continue }
+   			expect password: { send ${SCP_PSWD}\r }
+   			expect 100%
+   			sleep 1
+   			exit
+			"  ) 1>${SCP_LOG} 2>&1
+	else
+		(expect -c "  
+   			set timeout 1
+   			spawn scp -q ${SCP_USR}@$SCP_IP:${SCP_RDIR}/${SCP_I} ${SCP_LDIR}/${SCP_O} 
+   			expect yes/no { send yes\r ; exp_continue }
+   			expect 100%
+   			sleep 1
+   			exit
+			"  ) 1>${SCP_LOG} 2>&1
+
+	fi
+
+
+
+      if [ `grep 100% ${SCP_LOG} | wc -l ` -gt 0 ]
+      then
+         # OK
+         echo "# Transfer of " `basename ${SCP_I}` " succeeded  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+         echo "# " `grep bytes.sent ${SCP_LOG}`
+         break
+      else
+         # Error: Let's try again
+         echo "# Transfer of " `basename ${SCP_I}` "  failed  (" `date +"%Y/%m/%d %H:%M:%S"` ")"
+         cat ${SCP_LOG}
+         SCP_ERROR=1
+         let SCP_CUR_COUNTRETRY=SCP_CUR_COUNTRETRY+1
+      fi
+      sleep ${SCP_DELAY}
+
+   done
+   # --- END OF SCP CONNECTION ---
+
+
+   /bin/rm -f "${SCP_LOG}" >/dev/null 2>&1
+   STEPEND ${SCP_ERROR} 
+   return ${SCP_ERROR} 
+
+fi
+return 0
+}
+

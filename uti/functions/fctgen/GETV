@@ -1,0 +1,73 @@
+#! /bin/ksh
+#============================================================================
+# FUNCTION : GETV
+# The following parameters must be passed as arguments :
+# 
+# 1st parameter : 
+# FNAME :  Path and name of the file which contains the source query.
+#
+# 2nd parameter :
+# VNAME : the name of the variable we are looking for its value.
+#
+# The following parameter is optional : 
+#
+# 3nd parameter :
+# NQRY : Query number where we look for the value of the name of the variable
+# already passed as parameter.
+#
+# Subject : Generic function GETV.
+#============================================================================
+
+SPACES=[' '\\t\\r\\n\\v\\f]
+function GETV
+{
+FNAME=$1
+VNAME=$2
+NQRY=$3
+
+# Recorde separator
+#----------------------------------------------------------------------------
+RS='"EOQ"'
+
+# "ALL" variable used to get all record value
+#----------------------------------------------------------------------------
+ALL='$0'
+RSTR='$2'
+VVAL='$1'
+
+# Check if file existe 
+#----------------------------------------------------------------------------
+if [ ! -f "${FNAME}" ]; then
+   echo "Source file \"${FNAME}\" unknomn"
+   return 12
+fi 	
+
+# Check if Variable Name parameter is defined
+#----------------------------------------------------------------------------
+if [ "${VNAME}" == "" ]; then
+   echo "Expected variable name"
+   return 12
+fi
+# If variable name is "NBQRY", return number of request in the file
+#----------------------------------------------------------------------------
+if [ ${VNAME} == "NBQRY" ]; then
+   set /P VALUE= | awk "BEGIN {RS=${RS}} END {print NR}" ${FNAME}
+   return 0
+fi
+# if NQRY is not defined, the value of the first occurs of VNAME is returned
+#----------------------------------------------------------------------------
+if [ "${NQRY}" == "" ]; then
+   sed -r '{/".*#.*"/p;s/.*".*#.*"$//g;s/\/\/.*$//g};{/^$/d}'  ${FNAME} \
+   | awk "BEGIN {RS=${RS};} ${ALL} ~ /((${SPACES})+|^)${VNAME}(${SPACES})*=(${SPACES})*\"/ {print ${ALL}}" \
+   | awk -F "((${SPACES})+|^)${VNAME}(${SPACES})*=(${SPACES})*\"" "BEGIN {RS=${RS};} {print $RSTR}" \
+   | awk -F "\"" "BEGIN {RS=${RS};} {print ${VVAL}}"
+   return 0
+fi
+# Get value of variable name
+#----------------------------------------------------------------------------
+sed -r '{/".*#.*"/p;s/.*".*#.*"$//g;s/\/\/.*$//g};{/^$/d}' ${FNAME} \
+| awk "BEGIN {RS=${RS};} NR == ${NQRY} && ${ALL} ~ /((${SPACES})+|^)${VNAME}(${SPACES})*=(${SPACES})*\"/ {print ${ALL};}" \
+| awk -F "((${SPACES})+|^)${VNAME}(${SPACES})*=(${SPACES})*\"" "BEGIN {RS=${RS};} {print ${RSTR}}" \
+| awk -F "\"" "BEGIN {RS=${RS};} {print ${VVAL}}"
+return 0
+}

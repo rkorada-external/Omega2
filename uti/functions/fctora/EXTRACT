@@ -1,0 +1,83 @@
+#!/bin/ksh
+#---------------------------------------------------------------
+# Fichier :   EXTRACT.ksh
+# Log     :   
+# Auteur  :   T.Gascard
+# Date    :   O7.10.2009
+# Modif   :   G.Defendini 22/10/2009
+# But     :   extract table or query from database to flat file   
+# Usage   :  
+
+#EXTRACT_O: Path and name of Output File
+#EXTRACT_TABLE: Name of table to extract
+#EXTRACT_QRY: if set, will run the query and output it to $EXTRACT_O. EXTRACT_QRY and EXTRACT_TABLE are mutually exclusive.
+#EXTRACT_SCHEMA: schema where the query will be run or where the table is
+#EXTRACT_FS: field separator of the output file (default: '~',  optionnal)
+#EXTRACT_RS: row separator of the output file (default: '\n',  optionnal)
+
+EXTRACT ()
+{
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then
+    ADT="${NSTEP}"
+    STEP_PRG=EXTRACT
+    STEPSTART
+
+    [ "${FCT_DEBUG}" = "YES" ] && set -x
+
+    # define ANO filename
+    export PRGANO=${NSTEP}_${IB}_EXTRACT.ano
+    export PRGLOG=${NSTEP}_${IB}_EXTRACT.log
+
+    # Check input parameters
+    if [ -z "$EXTRACT_SCHEMA" ]
+    then
+        echo '# ERROR: EXTRACT_SCHEMA variable must be set'
+        STEPEND 99
+    fi 
+
+    if [ -z "$EXTRACT_O" ]
+    then
+        echo '# ERROR: EXTRACT_O  variable must be set'
+        STEPEND 99
+    fi
+
+    if [ -z "$EXTRACT_TABLE" -a -z  "$EXTRACT_QRY" ]
+    then
+        echo '# ERROR: EXTRACT_TABLE or EXTRACT_QRY  variables must be set'
+        STEPEND 99
+    fi
+
+    if [ -n "$EXTRACT_TABLE" -a -n  "$EXTRACT_QRY" ]
+    then
+        echo '# ERROR: EXTRACT_TABLE and EXTRACT_QRY  variables are mutually exlusive'
+        STEPEND 99
+    fi
+
+
+    # The user asked to extract a table
+    if [ -n "$EXTRACT_TABLE" ]
+    then
+        EXTRACT_QRY="select * from $EXTRACT_SCHEMA.$EXTRACT_TABLE"
+    fi
+
+    if [ -z "$EXTRACT_FS" ] 
+    then
+        EXTRACT_FS='~'
+    fi
+
+    # Call RUN_SQL
+    SQLPLUS_SPOOL="YES"
+    SQLPLUS_SCHEMA="$EXTRACT_SCHEMA"
+    SQLPLUS_QRY="$EXTRACT_QRY"
+    SQLPLUS_FS="$EXTRACT_FS"
+    SQLPLUS_RS="$EXTRACT_RS"
+    SQLPLUS_O="$EXTRACT_O"
+    RUN_SQL
+    RC=$?
+
+    unset EXTRACT_O EXTRACT_RS EXTRACT_FS EXTRACT_QRY EXTRACT_SCHEMA EXTRACT_TABLE
+    STEPEND ${RC}
+fi
+}
+

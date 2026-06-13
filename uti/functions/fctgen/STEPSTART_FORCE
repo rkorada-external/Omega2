@@ -1,0 +1,31 @@
+#----------------------------------------------------------------------------
+# FUNCTION: STEPSTART_FORCE
+# 1 input parameter:
+#   - mode (YES or NO)
+#   - message
+# Subject:   Disable/Enable Step Restart management
+# If mode = YES
+#   It forces function execution considered as a step, even if the 
+#   restart step is not reached
+# If mode = NO
+#    Cancel Function Execution Forcing. Step execution Rules are respected
+# 
+# call : STEPSTART_FORCE <mode>
+#   
+#----------------------------------------------------------------------------
+STEPSTART_FORCE () {
+
+if [ "$1" = "YES" ]
+then
+  export ADT_OLD=${ADT}
+  ADT=${NSTEP}"_FORCE"
+fi
+
+
+if [ "$1" = "NO" ]
+then
+  ADT=${ADT_OLD}
+fi
+
+}
+ 

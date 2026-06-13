@@ -1,0 +1,23 @@
+#----------------------------------------------------------------------------
+# FUNCTION: CREATE_RANDOMUSER
+# No input parameter:
+# Output: User number from Shell Process Id
+#
+# Subject: Generic Function to create random USER_CF value
+# It allows to pass a virtual user to stored procedures as
+# argument which need a unique user to work with the technical
+# tables (BTEC) for concurrent access management.
+# This function is needed because all batch processes uses
+# the same sybase logins.
+#----------------------------------------------------------------------------
+CREATE_RANDOMUSER () {
+VAL=$$
+if [ $$ -gt 9999 ]
+then
+   let VAL1=${VAL}/10000
+   let VAL1=${VAL1}\*10000
+   let VAL=${VAL}\-${VAL1}
+fi
+echo ${VAL}
+} 
+

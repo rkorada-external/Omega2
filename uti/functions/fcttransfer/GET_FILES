@@ -1,0 +1,72 @@
+#----------------------------------------------------------------------------
+# FUNCTION: GET_FILES
+#
+# The following parameters must be previously defined:
+# 5 parameters
+#   NSTEP            : STEP Identifier
+#   GET_FILES_DIR    : List of directories to look at (all or s1|s2|s3 ...)
+#   GET_FILES_PREFIX : Prefix of files to get
+#   GET_FILES_MERGE  : if YES, files are merged
+#   GET_FILES_O      : Output file
+#
+# 1 function : GET_SITES
+#
+# Subject:This function is used to get files from transfer directories
+#  and to merge them in GET_FILES_O if merge option is set to YES
+# 
+#----------------------------------------------------------------------------
+GET_FILES () {
+
+[ "${FCT_DEBUG}" = "YES" ] && set -x
+
+if [ "${RP}" = ""  -o "${RP}" = "${NSTEP}" -o "${ADT}" != "" ]
+then
+  ADT="${NSTEP}"
+  STEP_PRG=GET_FILES
+  STEPSTART         
+
+  if [ -z "${GET_FILES_PREFIX}" ]
+  then
+    echo "# !!! The GET_FILES_PREFIX variable must be initialized"
+    STEPEND 1
+  fi
+
+  # Get directory list in the file GET_SITES_O (cf function definition)
+  GET_SITES "${GET_FILES_DIR}" 
+
+  for DIR in `cat ${GET_SITES_O}`  
+  do
+    echo "# Get files from ${DIR} ..."
+    if [ -f ${DTRANSFER}/${DIR}/from/${OLDSYSTEM_FILE} ] && [ `echo ${DIR} | egrep "${OLDSYSTEM}" | wc -l` = 1 ] && [ ! -z "${OLDSYSTEM_FILE}" ]
+    then
+        /bin/cat ${DTRANSFER}/${DIR}/from/${OLDSYSTEM_FILE} >> ${GET_FILES_O}
+	/bin/mv ${DTRANSFER}/${DIR}/from/${OLDSYSTEM_FILE} ${DTRANSFER}/${DIR}/fromsave/${SVG}_${OLDSYSTEM_FILE}
+        continue
+    fi
+
+    for FILE in `ls -rt ${DTRANSFER}/${DIR}/from/${GET_FILES_PREFIX}*.dat 2>/dev/null`
+    do
+      if [ "${GET_FILES_MERGE}" = "YES" ]
+      then
+        /bin/cat ${FILE} >> ${GET_FILES_O}
+        if [ $? != 0 ]
+        then
+          echo "# !!!!!!  Concatenation failure for ${FILE}"
+          STEPEND 1
+        fi
+        /bin/rm -f ${FILE}  
+      else
+        /bin/mv ${FILE} ${GET_FILES_O} 
+        if [ $? != 0 ]
+        then
+          echo "# !!!!!!  Move failure for ${FILE}"
+          STEPEND 1
+        fi
+      fi
+    done
+  done
+STEPEND 0
+fi
+}
+
+
